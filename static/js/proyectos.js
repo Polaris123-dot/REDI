@@ -1804,6 +1804,7 @@ jQuery(document).ready(function($) {
             descripcion: $('#proyectoDescripcion').val().trim(),
             estado: $('#proyectoEstado').val(),
             visibilidad: $('#proyectoVisibilidad').val(),
+            documento_id: $('#proyectoDocumento').val() || null,  // Documento existente (opcional)
             autores: getAutoresData(),
             campos_dinamicos: {}
         };
@@ -1895,10 +1896,41 @@ jQuery(document).ready(function($) {
     // INICIALIZACIÓN
     // ========================================================================
     
-    // Cargar tipos de proyecto cuando se muestra el modal de proyecto (usar delegación)
+    // Cargar tipos de proyecto y documentos disponibles cuando se muestra el modal de proyecto
     $(document).on('show.bs.modal', '#modalProyecto', function() {
         loadTiposProyectoForSelect('#proyectoTipoProyecto');
+        loadDocumentosDisponibles();
     });
+    
+    /**
+     * Carga los documentos disponibles (sin proyecto) para el select
+     */
+    function loadDocumentosDisponibles() {
+        $.ajax({
+            url: '/repositorio/documentos/disponibles/',
+            method: 'GET',
+            headers: {
+                'X-CSRFToken': getCSRFToken()
+            },
+            success: function(response) {
+                if (response.success) {
+                    const select = $('#proyectoDocumento');
+                    select.empty();
+                    select.append('<option value="">Seleccione un documento existente (opcional)</option>');
+                    
+                    response.data.forEach(function(doc) {
+                        const tieneArchivo = doc.tiene_archivo ? ' (con PDF)' : ' (sin PDF)';
+                        select.append(
+                            `<option value="${doc.id}">${escapeHtml(doc.titulo)}${tieneArchivo}</option>`
+                        );
+                    });
+                }
+            },
+            error: function() {
+                console.error('Error al cargar documentos disponibles');
+            }
+        });
+    }
     
     // Cargar tipos de proyecto cuando se muestra el modal de campo (usar delegación)
     $(document).on('show.bs.modal', '#modalCampoTipoProyecto', function() {

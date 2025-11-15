@@ -90,6 +90,18 @@
     margin-right: 0.25rem;
     margin-bottom: 0.25rem;
   }
+
+  /* Estilos para el custom file input en modo oscuro */
+  .dark-mode .custom-file-label {
+    background-color: #3a4047;
+    color: #fff;
+    border-color: #6c757d;
+  }
+
+  .dark-mode .custom-file-label::after {
+    background-color: #454d55;
+    color: #fff;
+  }
 </style>
 {% endblock %}
 
@@ -153,6 +165,12 @@
           <a class="nav-link" id="documentos-tab" data-toggle="tab" href="#documentos" role="tab"
             aria-controls="documentos" aria-selected="false">
             <i class="fas fa-file"></i> Documentos
+          </a>
+        </li>
+        <li class="nav-item" role="presentation">
+          <a class="nav-link" id="archivos-tab" data-toggle="tab" href="#archivos" role="tab"
+            aria-controls="archivos" aria-selected="false">
+            <i class="fas fa-file-pdf"></i> Archivos
           </a>
         </li>
       </ul>
@@ -256,6 +274,44 @@
                       <th>Estado</th>
                       <th>Visibilidad</th>
                       <th>Fecha Creación</th>
+                      <th class="text-center">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab Archivos -->
+        <div class="tab-pane fade" id="archivos" role="tabpanel" aria-labelledby="archivos-tab">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="fas fa-file-pdf"></i> Gestión de Archivos
+              </h3>
+              <div class="card-tools">
+                <button type="button" class="btn btn-primary btn-sm" id="btnCrearArchivo">
+                  <i class="fas fa-plus"></i> Nuevo Archivo
+                </button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table id="tableArchivos" class="table table-bordered table-striped" style="width:100%">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Nombre</th>
+                      <th>Documento</th>
+                      <th>Versión</th>
+                      <th>Proyecto</th>
+                      <th>Tamaño</th>
+                      <th>Formato</th>
+                      <th>Principal</th>
+                      <th>Fecha Subida</th>
                       <th class="text-center">Acciones</th>
                     </tr>
                   </thead>
@@ -436,6 +492,74 @@
             <label>
               <input type="checkbox" id="coleccionEsPublica" name="es_publica" checked> Es pública
             </label>
+          </div>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> Guardar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Archivo -->
+<div class="modal fade" id="modalArchivo" tabindex="-1" role="dialog" aria-labelledby="modalArchivoLabel"
+  aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalArchivoLabel">Nuevo Archivo</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form id="formArchivo" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="modal-body">
+          <input type="hidden" id="archivoId" name="id">
+
+          <div class="form-group">
+            <label for="archivoDocumento">Documento <span class="text-danger">*</span></label>
+            <select class="form-control" id="archivoDocumento" name="documento_id" required>
+              <option value="">Seleccione un documento</option>
+            </select>
+            <small class="form-text text-muted">O seleccione una versión específica abajo</small>
+          </div>
+
+          <div class="form-group">
+            <label for="archivoVersion">Versión (Opcional)</label>
+            <select class="form-control" id="archivoVersion" name="version_id">
+              <option value="">Usar versión actual del documento</option>
+            </select>
+            <small class="form-text text-muted">Si no se especifica, se usará la versión actual del documento seleccionado</small>
+          </div>
+
+          <div class="form-group">
+            <label for="archivoFile">Archivo PDF <span class="text-danger">*</span></label>
+            <div class="custom-file">
+              <input type="file" class="custom-file-input" id="archivoFile" name="archivo" accept=".pdf" required>
+              <label class="custom-file-label" for="archivoFile">Seleccionar archivo...</label>
+            </div>
+            <small class="form-text text-muted">Solo archivos PDF. Tamaño máximo: 100MB</small>
+          </div>
+
+          <div class="form-group">
+            <label for="archivoDescripcion">Descripción</label>
+            <textarea class="form-control" id="archivoDescripcion" name="descripcion" rows="3"></textarea>
+          </div>
+
+          <div class="form-group">
+            <div class="form-check">
+              <input type="checkbox" class="form-check-input" id="archivoPrincipal" name="es_archivo_principal" value="true">
+              <label class="form-check-label" for="archivoPrincipal">
+                Marcar como archivo principal
+              </label>
+              <small class="form-text text-muted d-block">Si está marcado, este será el archivo principal de la versión</small>
+            </div>
           </div>
 
         </div>
@@ -769,7 +893,28 @@
     etiquetasForSelect: "{% url 'repositorio:etiquetas_for_select' %}",
     tiposRecursoForSelect: "{% url 'repositorio:tipos_recurso_for_select' %}",
     estadosDocumentoForSelect: "{% url 'repositorio:estados_documento_for_select' %}",
-    licenciasForSelect: "{% url 'repositorio:licencias_for_select' %}"
+    licenciasForSelect: "{% url 'repositorio:licencias_for_select' %}",
+    archivosList: "{% url 'repositorio:archivos_list' %}",
+    archivosPorDocumento: function (id) {
+      return "{% url 'repositorio:archivos_por_documento' 0 %}".replace('0', id.toString());
+    },
+    archivosPorVersion: function (id) {
+      return "{% url 'repositorio:archivos_por_version' 0 %}".replace('0', id.toString());
+    },
+    archivoCreate: "{% url 'repositorio:archivo_create' %}",
+    archivoDetail: function (id) {
+      return "{% url 'repositorio:archivo_detail' 0 %}".replace('0', id.toString());
+    },
+    archivoUpdate: function (id) {
+      return "{% url 'repositorio:archivo_update' 0 %}".replace('0', id.toString());
+    },
+    archivoDelete: function (id) {
+      return "{% url 'repositorio:archivo_delete' 0 %}".replace('0', id.toString());
+    },
+    archivoDownload: function (id) {
+      return "{% url 'repositorio:archivo_download' 0 %}".replace('0', id.toString());
+    },
+    documentosDisponibles: "{% url 'repositorio:documentos_disponibles' %}"
   };
 
   // Función para obtener CSRF token
@@ -783,6 +928,22 @@
 </script>
 <!-- Repositorio JS -->
 <script src="{% static 'js/repositorio.js' %}"></script>
+
+<!-- Script para actualizar el label del custom file input -->
+<script>
+  $(document).ready(function () {
+    $('#archivoFile').on('change', function () {
+      // Obtener el nombre del archivo
+      var fileName = $(this).val().split('\\').pop();
+      // Actualizar el label con el nombre del archivo
+      if (fileName) {
+        $(this).next('.custom-file-label').html(fileName);
+      } else {
+        $(this).next('.custom-file-label').html('Seleccionar archivo...');
+      }
+    });
+  });
+</script>
 {% endblock %}
 
 

@@ -7,7 +7,7 @@ $(document).ready(function() {
     // Variables globales - Declarar todas las tablas al inicio
     let tableTiposRecurso, tableEstadosDocumento, tableComunidades, 
         tableColecciones, tableLicencias, tableDocumentos, 
-        tableAutores, tableColaboradores;
+        tableAutores, tableColaboradores, tableArchivos;
     
     // ========================================================================
     // FUNCIONES AUXILIARES
@@ -1346,6 +1346,9 @@ $(document).ready(function() {
     if ($('#tableColaboradores').length > 0) {
         initTableColaboradores();
     }
+    if ($('#tableArchivos').length > 0) {
+        initTableArchivos();
+    }
     
     // Botones de acceso rápido
     $('#btnAccesoRapidoEstados').on('click', function() {
@@ -1371,6 +1374,8 @@ $(document).ready(function() {
             tableAutores.columns.adjust().responsive.recalc();
         } else if (target === '#colaboradores' && typeof tableColaboradores !== 'undefined' && tableColaboradores) {
             tableColaboradores.columns.adjust().responsive.recalc();
+        } else if (target === '#archivos' && typeof tableArchivos !== 'undefined' && tableArchivos) {
+            tableArchivos.columns.adjust().responsive.recalc();
         }
     });
     
@@ -2438,6 +2443,403 @@ $(document).ready(function() {
     });
     
     // ========================================================================
+    // ARCHIVOS
+    // ========================================================================
+    
+    /**
+     * Inicializa la tabla de Archivos
+     */
+    function initTableArchivos() {
+        if ($.fn.DataTable.isDataTable('#tableArchivos')) {
+            $('#tableArchivos').DataTable().destroy();
+        }
+        
+        tableArchivos = $('#tableArchivos').DataTable({
+            responsive: true,
+            processing: true,
+            serverSide: false,
+            ajax: {
+                url: REPOSITORIO_URLS.archivosList,
+                type: 'GET',
+                headers: {
+                    'Accept': 'application/json'
+                },
+                dataSrc: 'data',
+                error: function(xhr, error, thrown) {
+                    console.error('Error al cargar archivos:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Error al cargar los archivos'
+                    });
+                }
+            },
+            columns: [
+                { data: 'id' },
+                { 
+                    data: 'nombre_original',
+                    render: function(data, type, row) {
+                        return escapeHtml(data || 'N/A');
+                    }
+                },
+                { 
+                    data: 'documento_titulo',
+                    render: function(data, type, row) {
+                        if (data) {
+                            return '<a href="#" class="btn-ver-documento" data-id="' + row.documento_id + '">' + escapeHtml(data) + '</a>';
+                        }
+                        return 'N/A';
+                    }
+                },
+                { data: 'version_numero' },
+                { 
+                    data: 'proyecto_titulo',
+                    render: function(data, type, row) {
+                        if (data) {
+                            return escapeHtml(data);
+                        }
+                        return '-';
+                    }
+                },
+                { data: 'tamaño_formateado' },
+                { 
+                    data: 'formato',
+                    render: function(data) {
+                        return data ? data.toUpperCase() : 'N/A';
+                    }
+                },
+                { 
+                    data: 'es_archivo_principal',
+                    render: function(data) {
+                        if (data) {
+                            return '<span class="badge badge-success">Sí</span>';
+                        }
+                        return '<span class="badge badge-secondary">No</span>';
+                    }
+                },
+                { 
+                    data: 'fecha_subida',
+                    render: function(data) {
+                        if (data) {
+                            const date = new Date(data);
+                            return date.toLocaleDateString('es-ES');
+                        }
+                        return 'N/A';
+                    }
+                },
+                {
+                    data: null,
+                    orderable: false,
+                    render: function(data, type, row) {
+                        let html = '<div class="btn-group btn-group-sm" role="group">';
+                        html += '<button type="button" class="btn btn-info btn-ver-archivo" data-id="' + row.id + '" title="Ver">';
+                        html += '<i class="fas fa-eye"></i>';
+                        html += '</button>';
+                        if (row.archivo_url) {
+                            html += '<a href="' + row.archivo_url + '" class="btn btn-success btn-descargar-archivo" data-id="' + row.id + '" title="Descargar" target="_blank">';
+                            html += '<i class="fas fa-download"></i>';
+                            html += '</a>';
+                        }
+                        html += '<button type="button" class="btn btn-warning btn-editar-archivo" data-id="' + row.id + '" title="Editar">';
+                        html += '<i class="fas fa-edit"></i>';
+                        html += '</button>';
+                        html += '<button type="button" class="btn btn-danger btn-eliminar-archivo" data-id="' + row.id + '" data-nombre="' + escapeHtml(row.nombre_original) + '" title="Eliminar">';
+                        html += '<i class="fas fa-trash"></i>';
+                        html += '</button>';
+                        html += '</div>';
+                        return html;
+                    }
+                }
+            ],
+            order: [[0, 'desc']],
+            language: {
+                url: '/static/DataTables/i18n/Spanish.json'
+            }
+        });
+    }
+    
+    /**
+     * Carga los documentos disponibles en el select
+     */
+    function loadDocumentosForArchivo() {
+        $.ajax({
+            url: REPOSITORIO_URLS.documentosList,
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'X-CSRFToken': getCSRFToken()
+            },
+            success: function(response) {
+                if (response.success) {
+                    const select = $('#archivoDocumento');
+                    select.empty();
+                    select.append('<option value="">Seleccione un documento</option>');
+                    
+                    response.data.forEach(function(doc) {
+                        select.append(
+                            '<option value="' + doc.id + '">' + escapeHtml(doc.titulo) + '</option>'
+                        );
+                    });
+                }
+            }
+        });
+    }
+    
+    /**
+     * Abre el modal para crear un nuevo archivo
+     */
+    $('#btnCrearArchivo').on('click', function() {
+        $('#formArchivo')[0].reset();
+        $('#archivoId').val('');
+        $('#modalArchivoLabel').text('Nuevo Archivo');
+        loadDocumentosForArchivo();
+        $('#archivoVersion').empty().append('<option value="">Usar versión actual del documento</option>');
+        $('#modalArchivo').modal('show');
+    });
+    
+    /**
+     * Maneja el envío del formulario de archivo
+     */
+    $('#formArchivo').on('submit', function(e) {
+        e.preventDefault();
+        
+        const archivoId = $('#archivoId').val();
+        const formData = new FormData(this);
+        
+        // Validar que se haya seleccionado documento o versión
+        const documentoId = $('#archivoDocumento').val();
+        const versionId = $('#archivoVersion').val();
+        
+        if (!documentoId && !versionId) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Validación',
+                text: 'Debe seleccionar un documento o una versión',
+                confirmButtonText: 'Aceptar'
+            });
+            return;
+        }
+        
+        // Validar que se haya seleccionado un archivo (solo para crear)
+        if (!archivoId && !formData.get('archivo').size) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Validación',
+                text: 'Debe seleccionar un archivo PDF',
+                confirmButtonText: 'Aceptar'
+            });
+            return;
+        }
+        
+        let url = REPOSITORIO_URLS.archivoCreate;
+        let method = 'POST';
+        
+        if (archivoId) {
+            url = REPOSITORIO_URLS.archivoUpdate(archivoId);
+            method = 'POST';
+            formData.append('_method', 'PUT');
+        }
+        
+        showLoading();
+        
+        $.ajax({
+            url: url,
+            method: method,
+            data: formData,
+            processData: false,
+            contentType: false,
+            headers: {
+                'X-CSRFToken': getCSRFToken()
+            },
+            success: function(response) {
+                hideLoading();
+                if (response.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Éxito',
+                        text: response.message || 'Archivo guardado correctamente',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                    $('#modalArchivo').modal('hide');
+                    if (tableArchivos) {
+                        tableArchivos.ajax.reload(null, false);
+                    }
+                }
+            },
+            error: function(xhr) {
+                hideLoading();
+                let errorMessage = 'Error al guardar el archivo';
+                if (xhr.responseJSON && xhr.responseJSON.error) {
+                    errorMessage = xhr.responseJSON.error;
+                }
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: errorMessage,
+                    confirmButtonText: 'Aceptar'
+                });
+            }
+        });
+    });
+    
+    /**
+     * Abre el modal para editar un archivo
+     */
+    $(document).on('click', '.btn-editar-archivo', function() {
+        const archivoId = $(this).data('id');
+        const url = REPOSITORIO_URLS.archivoDetail(archivoId);
+        
+        showLoading();
+        $.ajax({
+            url: url,
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'X-CSRFToken': getCSRFToken()
+            },
+            success: function(response) {
+                hideLoading();
+                if (response.success) {
+                    const archivo = response.data;
+                    $('#archivoId').val(archivo.id);
+                    $('#archivoDescripcion').val(archivo.descripcion || '');
+                    $('#archivoPrincipal').prop('checked', archivo.es_archivo_principal);
+                    $('#modalArchivoLabel').text('Editar Archivo');
+                    
+                    // Cargar documentos y seleccionar el del archivo
+                    loadDocumentosForArchivo();
+                    setTimeout(function() {
+                        $('#archivoDocumento').val(archivo.documento_id);
+                    }, 500);
+                    
+                    // El archivo no se puede cambiar al editar
+                    $('#archivoFile').prop('required', false).closest('.form-group').hide();
+                    
+                    $('#modalArchivo').modal('show');
+                }
+            },
+            error: function() {
+                hideLoading();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Error al cargar el archivo'
+                });
+            }
+        });
+    });
+    
+    /**
+     * Elimina un archivo
+     */
+    $(document).on('click', '.btn-eliminar-archivo', function() {
+        const archivoId = $(this).data('id');
+        const archivoNombre = $(this).data('nombre');
+        const url = REPOSITORIO_URLS.archivoDelete(archivoId);
+        
+        Swal.fire({
+            icon: 'warning',
+            title: '¿Está seguro?',
+            text: `¿Desea eliminar el archivo "${archivoNombre}"? Esta acción no se puede deshacer.`,
+            showCancelButton: true,
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#dc3545'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                ajaxRequest(url, 'POST', { _method: 'DELETE' }, function(response) {
+                    if (response.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Éxito',
+                            text: response.message || 'Archivo eliminado correctamente',
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+                        if (tableArchivos) {
+                            tableArchivos.ajax.reload(null, false);
+                        }
+                    }
+                });
+            }
+        });
+    });
+    
+    /**
+     * Ver detalles de un archivo
+     */
+    $(document).on('click', '.btn-ver-archivo', function() {
+        const archivoId = $(this).data('id');
+        const url = REPOSITORIO_URLS.archivoDetail(archivoId);
+        
+        showLoading();
+        $.ajax({
+            url: url,
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'X-CSRFToken': getCSRFToken()
+            },
+            success: function(response) {
+                hideLoading();
+                if (response.success) {
+                    const archivo = response.data;
+                    let html = '<div class="table-responsive"><table class="table table-bordered">';
+                    html += '<tr><th>ID</th><td>' + archivo.id + '</td></tr>';
+                    html += '<tr><th>Nombre Original</th><td>' + escapeHtml(archivo.nombre_original) + '</td></tr>';
+                    html += '<tr><th>Documento</th><td>' + escapeHtml(archivo.documento_titulo) + '</td></tr>';
+                    html += '<tr><th>Versión</th><td>' + archivo.version_numero + '</td></tr>';
+                    html += '<tr><th>Tamaño</th><td>' + archivo.tamaño_formateado + '</td></tr>';
+                    html += '<tr><th>Formato</th><td>' + (archivo.formato || 'N/A').toUpperCase() + '</td></tr>';
+                    html += '<tr><th>Archivo Principal</th><td>' + (archivo.es_archivo_principal ? 'Sí' : 'No') + '</td></tr>';
+                    html += '<tr><th>MD5</th><td><code>' + (archivo.checksum_md5 || 'N/A') + '</code></td></tr>';
+                    html += '<tr><th>SHA256</th><td><code>' + (archivo.checksum_sha256 || 'N/A') + '</code></td></tr>';
+                    html += '<tr><th>Descripción</th><td>' + (archivo.descripcion || '-') + '</td></tr>';
+                    html += '<tr><th>Fecha Subida</th><td>' + (archivo.fecha_subida ? new Date(archivo.fecha_subida).toLocaleString('es-ES') : 'N/A') + '</td></tr>';
+                    html += '</table></div>';
+                    
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Detalles del Archivo',
+                        html: html,
+                        width: '800px',
+                        confirmButtonText: 'Cerrar'
+                    });
+                }
+            },
+            error: function() {
+                hideLoading();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Error al cargar los detalles del archivo'
+                });
+            }
+        });
+    });
+    
+    // Resetear el formulario cuando se cierra el modal
+    $('#modalArchivo').on('hidden.bs.modal', function() {
+        $('#formArchivo')[0].reset();
+        $('#archivoId').val('');
+        $('#archivoFile').prop('required', true).closest('.form-group').show();
+    });
+    
+    // ========================================================================
     // FIN DE INICIALIZACIÓN
     // ========================================================================
+    
+    // Inicializar tabla de archivos si existe
+    if ($('#tableArchivos').length > 0) {
+        initTableArchivos();
+    }
+    
+    // Recargar tabla de archivos cuando se muestra el tab
+    $('a[data-toggle="tab"]').on('shown.bs.tab', function(e) {
+        const target = $(e.target).attr('href');
+        if (target === '#archivos' && typeof tableArchivos !== 'undefined' && tableArchivos) {
+            tableArchivos.columns.adjust().responsive.recalc();
+        }
+    });
 }); // Fin de $(document).ready

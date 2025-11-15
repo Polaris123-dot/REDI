@@ -50,6 +50,7 @@ urlpatterns = [
     
     # URLs para Documentos
     path('documentos/', views.documentos_list, name='documentos_list'),
+    path('documentos/disponibles/', views.documentos_disponibles, name='documentos_disponibles'),
     path('documentos/crear/', views.documento_create, name='documento_create'),
     path('documentos/<int:documento_id>/', views.documento_detail, name='documento_detail'),
     path('documentos/<int:documento_id>/editar/', views.documento_update, name='documento_update'),
@@ -70,6 +71,16 @@ urlpatterns = [
     path('colaboradores/<int:colaborador_id>/', views.colaborador_detail, name='colaborador_detail'),
     path('colaboradores/<int:colaborador_id>/editar/', views.colaborador_update, name='colaborador_update'),
     path('colaboradores/<int:colaborador_id>/eliminar/', views.colaborador_delete, name='colaborador_delete'),
+    
+    # URLs para Archivos (PDFs)
+    path('archivos/', views.archivos_list, name='archivos_list'),
+    path('archivos/por-documento/<int:documento_id>/', views.archivos_por_documento, name='archivos_por_documento'),
+    path('archivos/por-version/<int:version_id>/', views.archivos_por_version, name='archivos_por_version'),
+    path('archivos/crear/', views.archivo_create, name='archivo_create'),
+    path('archivos/<int:archivo_id>/', views.archivo_detail, name='archivo_detail'),
+    path('archivos/<int:archivo_id>/editar/', views.archivo_update, name='archivo_update'),
+    path('archivos/<int:archivo_id>/eliminar/', views.archivo_delete, name='archivo_delete'),
+    path('archivos/<int:archivo_id>/descargar/', views.archivo_download, name='archivo_download'),
     
     # URLs auxiliares para selects
     path('usuarios/para-select/', views.usuarios_for_select, name='usuarios_for_select'),

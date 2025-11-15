@@ -622,8 +622,13 @@
           </div>
 
           <div class="form-group">
-            <label for="proyectoArchivo">Archivo PDF del Proyecto</label>
-            <input type="file" class="form-control" id="proyectoArchivo" name="archivo" accept=".pdf">
+            <label for="proyectoDocumento">Documento (PDF)</label>
+            <select class="form-control" id="proyectoDocumento" name="documento_id">
+              <option value="">Seleccione un documento existente (opcional)</option>
+            </select>
+            <small class="form-text text-muted">
+              Primero debe crear el documento con su PDF en la sección de Repositorio
+            </small>
           </div>
 
           <div class="row">

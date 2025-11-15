@@ -995,36 +995,25 @@ def proyecto_create(request):
         proyecto.full_clean()
         proyecto.save()
         
-        # Manejar subida de archivo
-        if 'archivo' in request.FILES:
-            uploaded_file = request.FILES['archivo']
-            
-            # 1. Crear Documento
-            documento = Documento.objects.create(
-                proyecto=proyecto,
-                creador=request.user,
-                titulo=proyecto.titulo, # Usar título del proyecto
-                resumen=proyecto.resumen, # Usar resumen del proyecto
-                visibilidad=proyecto.visibilidad
-            )
-            
-            # 2. Crear VersionDocumento
-            version = VersionDocumento.objects.create(
-                documento=documento,
-                numero_version=1,
-                creado_por=request.user,
-                es_version_actual=True
-            )
-            
-            # 3. Crear Archivo y asociarlo a la versión
-            Archivo.objects.create(
-                version=version,
-                archivo=uploaded_file,
-                nombre_original=uploaded_file.name,
-                tamaño_bytes=uploaded_file.size,
-                tipo_mime=uploaded_file.content_type,
-                es_archivo_principal=True
-            )
+        # Relacionar documento existente con el proyecto (opcional)
+        documento_id = data.get('documento_id')
+        if documento_id:
+            try:
+                documento = Documento.objects.get(id=documento_id)
+                # Verificar que el documento no tenga ya un proyecto asociado
+                if documento.proyecto:
+                    return JsonResponse({
+                        'success': False,
+                        'error': 'Este documento ya está asociado a otro proyecto'
+                    }, status=400)
+                # Asociar el documento al proyecto
+                documento.proyecto = proyecto
+                documento.save()
+            except Documento.DoesNotExist:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'El documento seleccionado no existe'
+                }, status=400)
 
         # Procesar campos dinámicos (enviados como JSON en un campo de texto)
         campos_dinamicos_str = data.get('campos_dinamicos', '{}')

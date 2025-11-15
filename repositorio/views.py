@@ -1,6 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
-from django.http import JsonResponse
+from django.http import JsonResponse, FileResponse
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 from django.contrib.auth.decorators import login_required
@@ -11,6 +11,8 @@ from django.contrib.auth.models import User
 from django.db import transaction
 import json
 import uuid
+import hashlib
+import os
 from datetime import datetime
 from .models import TipoRecurso, EstadoDocumento, Comunidad, Coleccion, Licencia, Documento, Autor, Colaborador, VersionDocumento, Archivo
 from catalogacion.models import Categoria, Etiqueta
@@ -1680,6 +1682,57 @@ def generar_handle():
 
 @login_required
 @require_http_methods(["GET"])
+def documentos_disponibles(request):
+    """Lista documentos disponibles (sin proyecto asociado) para seleccionar al crear proyecto"""
+    try:
+        documentos = Documento.objects.filter(
+            proyecto__isnull=True
+        ).select_related('tipo_recurso', 'coleccion', 'creador', 'estado').order_by('-fecha_creacion')
+        
+        documentos_data = []
+        for documento in documentos:
+            # Verificar si tiene archivo principal
+            tiene_archivo = False
+            archivo_principal = None
+            version_actual = documento.versiones.filter(es_version_actual=True).first()
+            if version_actual:
+                archivo_principal = version_actual.archivos.filter(es_archivo_principal=True).first()
+                tiene_archivo = archivo_principal is not None
+            
+            documento_dict = {
+                'id': documento.id,
+                'handle': documento.handle or '',
+                'titulo': documento.get_titulo(),
+                'resumen': documento.get_resumen() or '',
+                'tipo_recurso_id': documento.tipo_recurso.id if documento.tipo_recurso else None,
+                'tipo_recurso_nombre': documento.tipo_recurso.nombre if documento.tipo_recurso else '',
+                'coleccion_id': documento.coleccion.id if documento.coleccion else None,
+                'coleccion_nombre': documento.coleccion.nombre if documento.coleccion else '',
+                'creador_id': documento.creador.id,
+                'creador_nombre': documento.creador.get_full_name() or documento.creador.username,
+                'estado_id': documento.estado.id if documento.estado else None,
+                'estado_nombre': documento.estado.nombre if documento.estado else '',
+                'tiene_archivo': tiene_archivo,
+                'archivo_nombre': archivo_principal.nombre_original if archivo_principal else None,
+                'fecha_creacion': documento.fecha_creacion.strftime('%Y-%m-%d %H:%M:%S') if documento.fecha_creacion else None,
+            }
+            documentos_data.append(documento_dict)
+        
+        return JsonResponse({
+            'success': True,
+            'data': documentos_data,
+            'total': len(documentos_data)
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': f'Error al listar documentos disponibles: {str(e)}'
+        }, status=500)
+
+
+@login_required
+@require_http_methods(["GET"])
 def documentos_list(request):
     """Lista todos los documentos"""
     try:
@@ -1840,9 +1893,22 @@ def licencias_for_select(request):
 @require_http_methods(["POST"])
 @transaction.atomic
 def documento_create(request):
-    """Crea un nuevo documento"""
+    """Crea un nuevo documento con opción de subir archivo PDF"""
     try:
-        data = json.loads(request.body)
+        # Manejar tanto JSON como FormData (con archivo)
+        if request.FILES:
+            # Si hay archivos, los datos vienen en request.POST
+            data = request.POST.copy()
+            # Convertir campos JSON si vienen como strings
+            for key in ['categorias_ids', 'etiquetas_ids', 'temas', 'campos_personalizados', 'metadata_completa']:
+                if key in data and isinstance(data[key], str):
+                    try:
+                        data[key] = json.loads(data[key])
+                    except:
+                        pass
+        else:
+            # Si no hay archivos, los datos vienen en request.body como JSON
+            data = json.loads(request.body)
         
         # Validar proyecto (opcional pero recomendado)
         proyecto_id = data.get('proyecto_id')
@@ -2032,6 +2098,54 @@ def documento_create(request):
         
         documento.full_clean()
         documento.save()
+        
+        # Si se subió un archivo PDF, crear versión y archivo automáticamente
+        if 'archivo' in request.FILES:
+            uploaded_file = request.FILES['archivo']
+            
+            # Validar que sea un PDF
+            if uploaded_file.content_type not in ['application/pdf', '']:
+                if uploaded_file.content_type:
+                    return JsonResponse({
+                        'success': False,
+                        'error': 'Solo se permiten archivos PDF'
+                    }, status=400)
+            
+            # Validar tamaño del archivo (máximo 100MB)
+            max_size = 100 * 1024 * 1024  # 100MB
+            if uploaded_file.size > max_size:
+                return JsonResponse({
+                    'success': False,
+                    'error': f'El archivo es demasiado grande. Tamaño máximo: 100MB'
+                }, status=400)
+            
+            # Calcular checksums
+            md5_hash, sha256_hash = calcular_checksums(uploaded_file)
+            
+            # Crear versión inicial
+            version = VersionDocumento.objects.create(
+                documento=documento,
+                numero_version=1,
+                creado_por=request.user,
+                es_version_actual=True
+            )
+            
+            # Obtener extensión del archivo
+            nombre_archivo = uploaded_file.name
+            extension = os.path.splitext(nombre_archivo)[1].lower().lstrip('.')
+            
+            # Crear archivo
+            archivo = Archivo.objects.create(
+                version=version,
+                archivo=uploaded_file,
+                nombre_original=nombre_archivo,
+                tipo_mime=uploaded_file.content_type or 'application/pdf',
+                tamaño_bytes=uploaded_file.size,
+                checksum_md5=md5_hash,
+                checksum_sha256=sha256_hash,
+                es_archivo_principal=True,
+                formato=extension
+            )
         
         # Asignar categorías
         categorias_ids = data.get('categorias_ids', [])
@@ -3262,4 +3376,553 @@ def colaborador_delete(request, colaborador_id):
         return JsonResponse({
             'success': False,
             'error': f'Error al eliminar colaborador: {str(e)}'
+        }, status=500)
+
+
+# ========================================================================
+# ARCHIVOS (PDFs)
+# ========================================================================
+
+def calcular_checksums(archivo_file):
+    """Calcula MD5 y SHA256 de un archivo"""
+    md5_hash = hashlib.md5()
+    sha256_hash = hashlib.sha256()
+    
+    # Leer el archivo en chunks para archivos grandes
+    archivo_file.seek(0)  # Asegurar que estamos al inicio
+    for chunk in archivo_file.chunks():
+        md5_hash.update(chunk)
+        sha256_hash.update(chunk)
+    
+    archivo_file.seek(0)  # Resetear al inicio para guardar
+    return md5_hash.hexdigest(), sha256_hash.hexdigest()
+
+
+@login_required
+@require_http_methods(["GET"])
+def archivos_list(request):
+    """Lista todos los archivos - Soporta HTML y JSON"""
+    try:
+        archivos = Archivo.objects.select_related('version', 'version__documento', 'version__documento__proyecto').all().order_by('-fecha_subida')
+        archivos_data = []
+        
+        for archivo in archivos:
+            archivo_dict = {
+                'id': archivo.id,
+                'version_id': archivo.version.id,
+                'version_numero': archivo.version.numero_version,
+                'documento_id': archivo.version.documento.id,
+                'documento_titulo': archivo.version.documento.get_titulo(),
+                'proyecto_id': archivo.version.documento.proyecto.id if archivo.version.documento.proyecto else None,
+                'proyecto_titulo': archivo.version.documento.proyecto.titulo if archivo.version.documento.proyecto else None,
+                'nombre_original': archivo.nombre_original,
+                'archivo_url': archivo.archivo.url if archivo.archivo else None,
+                'tipo_mime': archivo.tipo_mime or '',
+                'tamaño_bytes': archivo.tamaño_bytes,
+                'tamaño_formateado': archivo.get_tamaño_formateado(),
+                'checksum_md5': archivo.checksum_md5 or '',
+                'checksum_sha256': archivo.checksum_sha256 or '',
+                'es_archivo_principal': archivo.es_archivo_principal,
+                'formato': archivo.formato or '',
+                'numero_paginas': archivo.numero_paginas,
+                'descripcion': archivo.descripcion or '',
+                'fecha_subida': archivo.fecha_subida.isoformat() if archivo.fecha_subida else None,
+            }
+            archivos_data.append(archivo_dict)
+        
+        # Si es una petición AJAX o con Accept: application/json, retornar JSON
+        if request.headers.get('Accept') == 'application/json' or request.GET.get('format') == 'json':
+            return JsonResponse({
+                'success': True,
+                'data': archivos_data,
+                'total': len(archivos_data)
+            })
+        
+        # Si no, renderizar el template HTML (redirigir al template de repositorio)
+        from django.shortcuts import redirect
+        return redirect('repositorio:repositorio_index')
+        
+    except Exception as e:
+        # Si es JSON, retornar error JSON
+        if request.headers.get('Accept') == 'application/json' or request.GET.get('format') == 'json':
+            return JsonResponse({
+                'success': False,
+                'error': f'Error al listar archivos: {str(e)}'
+            }, status=500)
+        # Si no, redirigir con error
+        from django.contrib import messages
+        messages.error(request, f'Error al listar archivos: {str(e)}')
+        return redirect('repositorio:repositorio_index')
+
+
+@login_required
+@require_http_methods(["GET"])
+def archivos_por_documento(request, documento_id):
+    """Lista todos los archivos de un documento (todas sus versiones)"""
+    try:
+        documento = get_object_or_404(Documento, id=documento_id)
+        
+        # Obtener todas las versiones del documento
+        versiones = VersionDocumento.objects.filter(documento=documento).order_by('-numero_version')
+        
+        archivos_data = []
+        versiones_data = []
+        
+        for version in versiones:
+            archivos_version = Archivo.objects.filter(version=version).order_by('-es_archivo_principal', 'fecha_subida')
+            
+            archivos_version_data = []
+            for archivo in archivos_version:
+                archivo_dict = {
+                    'id': archivo.id,
+                    'version_id': archivo.version.id,
+                    'version_numero': archivo.version.numero_version,
+                    'nombre_original': archivo.nombre_original,
+                    'archivo_url': archivo.archivo.url if archivo.archivo else None,
+                    'tipo_mime': archivo.tipo_mime or '',
+                    'tamaño_bytes': archivo.tamaño_bytes,
+                    'tamaño_formateado': archivo.get_tamaño_formateado(),
+                    'checksum_md5': archivo.checksum_md5 or '',
+                    'checksum_sha256': archivo.checksum_sha256 or '',
+                    'es_archivo_principal': archivo.es_archivo_principal,
+                    'formato': archivo.formato or '',
+                    'numero_paginas': archivo.numero_paginas,
+                    'descripcion': archivo.descripcion or '',
+                    'fecha_subida': archivo.fecha_subida.isoformat() if archivo.fecha_subida else None,
+                }
+                archivos_version_data.append(archivo_dict)
+                archivos_data.append(archivo_dict)
+            
+            versiones_data.append({
+                'id': version.id,
+                'numero_version': version.numero_version,
+                'es_version_actual': version.es_version_actual,
+                'notas_version': version.notas_version or '',
+                'fecha_creacion': version.fecha_creacion.isoformat() if version.fecha_creacion else None,
+                'archivos': archivos_version_data,
+                'archivos_count': len(archivos_version_data)
+            })
+        
+        return JsonResponse({
+            'success': True,
+            'data': archivos_data,
+            'versiones': versiones_data,
+            'documento': {
+                'id': documento.id,
+                'titulo': documento.get_titulo(),
+                'handle': documento.handle or '',
+            },
+            'total': len(archivos_data)
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': f'Error al listar archivos del documento: {str(e)}'
+        }, status=500)
+
+
+@login_required
+@require_http_methods(["GET"])
+def archivos_por_version(request, version_id):
+    """Lista los archivos de una versión específica"""
+    try:
+        version = get_object_or_404(VersionDocumento, id=version_id)
+        archivos = Archivo.objects.filter(version=version).order_by('-es_archivo_principal', 'fecha_subida')
+        archivos_data = []
+        
+        for archivo in archivos:
+            archivo_dict = {
+                'id': archivo.id,
+                'version_id': archivo.version.id,
+                'version_numero': archivo.version.numero_version,
+                'documento_id': archivo.version.documento.id,
+                'documento_titulo': archivo.version.documento.get_titulo(),
+                'nombre_original': archivo.nombre_original,
+                'archivo_url': archivo.archivo.url if archivo.archivo else None,
+                'tipo_mime': archivo.tipo_mime or '',
+                'tamaño_bytes': archivo.tamaño_bytes,
+                'tamaño_formateado': archivo.get_tamaño_formateado(),
+                'checksum_md5': archivo.checksum_md5 or '',
+                'checksum_sha256': archivo.checksum_sha256 or '',
+                'es_archivo_principal': archivo.es_archivo_principal,
+                'formato': archivo.formato or '',
+                'numero_paginas': archivo.numero_paginas,
+                'descripcion': archivo.descripcion or '',
+                'fecha_subida': archivo.fecha_subida.isoformat() if archivo.fecha_subida else None,
+            }
+            archivos_data.append(archivo_dict)
+        
+        return JsonResponse({
+            'success': True,
+            'data': archivos_data,
+            'version': {
+                'id': version.id,
+                'numero_version': version.numero_version,
+                'documento_id': version.documento.id,
+                'documento_titulo': version.documento.get_titulo(),
+            },
+            'total': len(archivos_data)
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': f'Error al listar archivos de la versión: {str(e)}'
+        }, status=500)
+
+
+@login_required
+@require_http_methods(["POST"])
+@transaction.atomic
+def archivo_create(request):
+    """Crea/Sube un nuevo archivo PDF a un documento o versión"""
+    try:
+        # Validar que se haya enviado un archivo
+        if 'archivo' not in request.FILES:
+            return JsonResponse({
+                'success': False,
+                'error': 'No se ha enviado ningún archivo'
+            }, status=400)
+        
+        uploaded_file = request.FILES['archivo']
+        
+        # Validar que sea un PDF
+        if uploaded_file.content_type not in ['application/pdf', '']:
+            if uploaded_file.content_type:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Solo se permiten archivos PDF'
+                }, status=400)
+        
+        # Puede venir documento_id o version_id
+        documento_id = request.POST.get('documento_id')
+        version_id = request.POST.get('version_id')
+        
+        version = None
+        
+        # Si viene documento_id, crear o usar versión actual
+        if documento_id:
+            try:
+                documento = Documento.objects.get(id=documento_id)
+                # Buscar versión actual del documento
+                version = documento.versiones.filter(es_version_actual=True).first()
+                
+                # Si no hay versión actual, crear una nueva
+                if not version:
+                    # Obtener el número de versión más alto
+                    ultima_version = documento.versiones.order_by('-numero_version').first()
+                    numero_version = (ultima_version.numero_version + 1) if ultima_version else 1
+                    
+                    version = VersionDocumento.objects.create(
+                        documento=documento,
+                        numero_version=numero_version,
+                        creado_por=request.user,
+                        es_version_actual=True
+                    )
+                    # Marcar otras versiones como no actuales
+                    documento.versiones.exclude(id=version.id).update(es_version_actual=False)
+            except Documento.DoesNotExist:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'El documento no existe'
+                }, status=400)
+        
+        # Si viene version_id, usar esa versión
+        elif version_id:
+            try:
+                version = VersionDocumento.objects.get(id=version_id)
+            except VersionDocumento.DoesNotExist:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'La versión no existe'
+                }, status=400)
+        
+        # Si no viene ni documento_id ni version_id, error
+        else:
+            return JsonResponse({
+                'success': False,
+                'error': 'Debe proporcionar documento_id o version_id'
+            }, status=400)
+        
+        # Validar tamaño del archivo (opcional: máximo 100MB)
+        max_size = 100 * 1024 * 1024  # 100MB
+        if uploaded_file.size > max_size:
+            return JsonResponse({
+                'success': False,
+                'error': f'El archivo es demasiado grande. Tamaño máximo: 100MB'
+            }, status=400)
+        
+        # Calcular checksums
+        md5_hash, sha256_hash = calcular_checksums(uploaded_file)
+        
+        # Determinar si es archivo principal
+        es_archivo_principal = request.POST.get('es_archivo_principal', 'false').lower() == 'true'
+        
+        # Si se marca como principal, desmarcar otros archivos principales de esta versión
+        if es_archivo_principal:
+            Archivo.objects.filter(version=version, es_archivo_principal=True).update(es_archivo_principal=False)
+        
+        # Obtener extensión del archivo
+        nombre_archivo = uploaded_file.name
+        extension = os.path.splitext(nombre_archivo)[1].lower().lstrip('.')
+        
+        # Crear el archivo
+        archivo = Archivo(
+            version=version,
+            archivo=uploaded_file,
+            nombre_original=nombre_archivo,
+            tipo_mime=uploaded_file.content_type or 'application/pdf',
+            tamaño_bytes=uploaded_file.size,
+            checksum_md5=md5_hash,
+            checksum_sha256=sha256_hash,
+            es_archivo_principal=es_archivo_principal,
+            formato=extension,
+            descripcion=request.POST.get('descripcion', '').strip() or None,
+        )
+        
+        archivo.full_clean()
+        archivo.save()
+        
+        # Retornar los datos del archivo creado
+        archivo_dict = {
+            'id': archivo.id,
+            'version_id': archivo.version.id,
+            'version_numero': archivo.version.numero_version,
+            'documento_id': archivo.version.documento.id,
+            'documento_titulo': archivo.version.documento.get_titulo(),
+            'nombre_original': archivo.nombre_original,
+            'archivo_url': archivo.archivo.url if archivo.archivo else None,
+            'tipo_mime': archivo.tipo_mime or '',
+            'tamaño_bytes': archivo.tamaño_bytes,
+            'tamaño_formateado': archivo.get_tamaño_formateado(),
+            'checksum_md5': archivo.checksum_md5 or '',
+            'checksum_sha256': archivo.checksum_sha256 or '',
+            'es_archivo_principal': archivo.es_archivo_principal,
+            'formato': archivo.formato or '',
+            'descripcion': archivo.descripcion or '',
+            'fecha_subida': archivo.fecha_subida.isoformat() if archivo.fecha_subida else None,
+        }
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Archivo subido exitosamente',
+            'data': archivo_dict
+        })
+        
+    except ValidationError as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=400)
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': f'Error al subir archivo: {str(e)}'
+        }, status=500)
+
+
+@login_required
+@require_http_methods(["GET"])
+def archivo_detail(request, archivo_id):
+    """Obtiene los detalles de un archivo"""
+    try:
+        archivo = get_object_or_404(
+            Archivo.objects.select_related('version', 'version__documento', 'version__documento__proyecto'),
+            id=archivo_id
+        )
+        
+        archivo_dict = {
+            'id': archivo.id,
+            'version_id': archivo.version.id,
+            'version_numero': archivo.version.numero_version,
+            'version_notas': archivo.version.notas_version or '',
+            'documento_id': archivo.version.documento.id,
+            'documento_titulo': archivo.version.documento.get_titulo(),
+            'proyecto_id': archivo.version.documento.proyecto.id if archivo.version.documento.proyecto else None,
+            'proyecto_titulo': archivo.version.documento.proyecto.titulo if archivo.version.documento.proyecto else None,
+            'nombre_original': archivo.nombre_original,
+            'archivo_url': archivo.archivo.url if archivo.archivo else None,
+            'tipo_mime': archivo.tipo_mime or '',
+            'tamaño_bytes': archivo.tamaño_bytes,
+            'tamaño_formateado': archivo.get_tamaño_formateado(),
+            'checksum_md5': archivo.checksum_md5 or '',
+            'checksum_sha256': archivo.checksum_sha256 or '',
+            'es_archivo_principal': archivo.es_archivo_principal,
+            'formato': archivo.formato or '',
+            'numero_paginas': archivo.numero_paginas,
+            'descripcion': archivo.descripcion or '',
+            'fecha_subida': archivo.fecha_subida.isoformat() if archivo.fecha_subida else None,
+        }
+        
+        return JsonResponse({
+            'success': True,
+            'data': archivo_dict
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': f'Error al obtener archivo: {str(e)}'
+        }, status=500)
+
+
+@login_required
+@require_http_methods(["POST", "PUT"])
+@transaction.atomic
+def archivo_update(request, archivo_id):
+    """Actualiza un archivo (metadatos, no el archivo en sí)"""
+    try:
+        archivo = get_object_or_404(Archivo, id=archivo_id)
+        
+        # Manejar tanto POST con _method como PUT directo
+        if request.method == 'POST':
+            data = request.POST
+        else:
+            # Para PUT, los datos pueden venir en request.body o request.POST
+            if request.body:
+                try:
+                    data = json.loads(request.body)
+                except:
+                    data = request.POST
+            else:
+                data = request.POST
+        
+        # Actualizar campos permitidos
+        if 'descripcion' in data:
+            archivo.descripcion = data.get('descripcion', '').strip() or None
+        
+        if 'es_archivo_principal' in data:
+            es_archivo_principal = data.get('es_archivo_principal', 'false').lower() == 'true'
+            archivo.es_archivo_principal = es_archivo_principal
+            
+            # Si se marca como principal, desmarcar otros archivos principales de esta versión
+            if es_archivo_principal:
+                Archivo.objects.filter(version=archivo.version, es_archivo_principal=True).exclude(id=archivo_id).update(es_archivo_principal=False)
+        
+        if 'numero_paginas' in data:
+            try:
+                archivo.numero_paginas = int(data.get('numero_paginas')) if data.get('numero_paginas') else None
+            except (ValueError, TypeError):
+                pass
+        
+        archivo.full_clean()
+        archivo.save()
+        
+        # Retornar los datos actualizados
+        archivo.refresh_from_db()
+        archivo_dict = {
+            'id': archivo.id,
+            'version_id': archivo.version.id,
+            'version_numero': archivo.version.numero_version,
+            'documento_id': archivo.version.documento.id,
+            'documento_titulo': archivo.version.documento.get_titulo(),
+            'nombre_original': archivo.nombre_original,
+            'archivo_url': archivo.archivo.url if archivo.archivo else None,
+            'tipo_mime': archivo.tipo_mime or '',
+            'tamaño_bytes': archivo.tamaño_bytes,
+            'tamaño_formateado': archivo.get_tamaño_formateado(),
+            'checksum_md5': archivo.checksum_md5 or '',
+            'checksum_sha256': archivo.checksum_sha256 or '',
+            'es_archivo_principal': archivo.es_archivo_principal,
+            'formato': archivo.formato or '',
+            'numero_paginas': archivo.numero_paginas,
+            'descripcion': archivo.descripcion or '',
+            'fecha_subida': archivo.fecha_subida.isoformat() if archivo.fecha_subida else None,
+        }
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Archivo actualizado exitosamente',
+            'data': archivo_dict
+        })
+        
+    except ValidationError as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=400)
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': f'Error al actualizar archivo: {str(e)}'
+        }, status=500)
+
+
+@login_required
+@require_http_methods(["POST", "DELETE"])
+@transaction.atomic
+def archivo_delete(request, archivo_id):
+    """Elimina un archivo"""
+    try:
+        archivo = get_object_or_404(Archivo, id=archivo_id)
+        
+        # Manejar tanto POST con _method como DELETE directo
+        if request.method == 'POST':
+            data = json.loads(request.body) if request.body else {}
+            if data.get('_method') != 'DELETE':
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Método no permitido'
+                }, status=405)
+        
+        # Guardar información antes de eliminar
+        nombre_archivo = archivo.nombre_original
+        archivo_path = archivo.archivo.path if archivo.archivo else None
+        
+        # Eliminar el archivo
+        archivo.delete()
+        
+        # Eliminar el archivo físico si existe
+        if archivo_path and os.path.exists(archivo_path):
+            try:
+                os.remove(archivo_path)
+            except Exception as e:
+                # Log el error pero no fallar la operación
+                pass
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Archivo "{nombre_archivo}" eliminado exitosamente'
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': f'Error al eliminar archivo: {str(e)}'
+        }, status=500)
+
+
+@login_required
+@require_http_methods(["GET"])
+def archivo_download(request, archivo_id):
+    """Descarga un archivo"""
+    try:
+        archivo = get_object_or_404(Archivo, id=archivo_id)
+        
+        if not archivo.archivo:
+            return JsonResponse({
+                'success': False,
+                'error': 'El archivo no existe'
+            }, status=404)
+        
+        # Verificar que el archivo físico existe
+        if not archivo.archivo.storage.exists(archivo.archivo.name):
+            return JsonResponse({
+                'success': False,
+                'error': 'El archivo físico no existe en el servidor'
+            }, status=404)
+        
+        # Retornar el archivo para descarga
+        response = FileResponse(
+            archivo.archivo.open('rb'),
+            as_attachment=True,
+            filename=archivo.nombre_original
+        )
+        return response
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': f'Error al descargar archivo: {str(e)}'
         }, status=500)
