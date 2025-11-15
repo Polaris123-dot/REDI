@@ -1,0 +1,156 @@
+
+{% load static %}
+                <!-- /.card -->
+            </div>
+            <!-- /.col-md-6 -->
+
+            <!-- /.col-md-6 -->
+          </div>
+          <!-- /.row -->
+        </div>
+        <!-- /.container-fluid -->
+      </div>
+      
+    </div>
+
+  <footer class="main-footer text-sm">
+    <div class="float-right d-none d-sm-block">
+      <b>Version</b> 4.0.0
+    </div>
+    <strong> Bienvenido al Sistema de Asistencia Automatizada "SAA" /01-04-24 <a href="https://adminlte.io">Polaris</a>.</strong> Derechos reservados.
+  </footer>
+
+
+<!-- ./wrapper -->
+{% block extra_js %}
+<!-- Aquí se agregarán los scripts JS específicos de cada página -->
+{% endblock %}
+<!-- REQUIRED SCRIPTS -->
+
+<!-- 1️⃣ jQuery (CDN temporal para prueba) -->
+<script src="{% static 'plugins/jquery/jquery.min.js' %}"></script>
+
+<!-- 2️⃣ Bootstrap -->
+<script src="{% static 'lib/adminlte-3.2.0/plugins/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+
+
+<!-- 3️⃣ Plugins que también dependen de jQuery -->
+<script src="{% static 'lib/adminlte-3.2.0/plugins/overlayScrollbars/js/jquery.overlayScrollbars.min.js' %}"></script>
+
+<!-- 4️⃣ AdminLTE principal -->
+<script src="{% static 'lib/adminlte-3.2.0/js/adminlte.min.js' %}"></script>
+
+<!-- 5️⃣ Librerías adicionales -->
+<script src="{% static 'DataTables/datatables.min.js' %}"></script>
+<script src="{% static 'plugins/sweetalert2/sweetalert2.all.min.js' %}"></script>
+
+<!-- 6️⃣ Script de Django JS reverse -->
+{# TODO: Instalar django-js-reverse si es necesario y agregar: <script src="{% url 'js_reverse' %}"></script> #}
+
+<script>
+  var toggleSwitch = document.querySelector('.theme-switch input[type="checkbox"]');
+  var currentTheme = localStorage.getItem('theme');
+  var mainHeader = document.querySelector('.main-header');
+  var mainSidebar = document.querySelector('.main-sidebar');
+
+  if (currentTheme) {
+    if (currentTheme === 'dark') {
+      if (!document.body.classList.contains('dark-mode')) {
+        document.body.classList.add("dark-mode");
+      }
+      if (mainHeader.classList.contains('navbar-light')) {
+        mainHeader.classList.add('navbar-dark');
+        mainHeader.classList.remove('navbar-light');
+      }
+      if (mainSidebar.classList.contains('sidebar-light-maroon')) {
+        mainSidebar.classList.add('sidebar-dark-success');
+        mainSidebar.classList.remove('sidebar-light-maroon');
+      }
+      toggleSwitch.checked = true;
+    }
+  }
+
+  function switchTheme(e) {
+    if (e.target.checked) {
+      if (!document.body.classList.contains('dark-mode')) {
+        document.body.classList.add("dark-mode");
+      }
+      if (mainHeader.classList.contains('navbar-light')) {
+        mainHeader.classList.add('navbar-dark');
+        mainHeader.classList.remove('navbar-light');
+      }
+      if (mainSidebar.classList.contains('sidebar-light-maroon')) {
+        mainSidebar.classList.add('sidebar-dark-success');
+        mainSidebar.classList.remove('sidebar-light-maroon');
+      }
+      localStorage.setItem('theme', 'dark');
+    } else {
+      if (document.body.classList.contains('dark-mode')) {
+        document.body.classList.remove("dark-mode");
+      }
+      if (mainHeader.classList.contains('navbar-dark')) {
+        mainHeader.classList.add('navbar-light');
+        mainHeader.classList.remove('navbar-dark');
+      }
+      if (mainSidebar.classList.contains('sidebar-dark-success')) {
+        mainSidebar.classList.add('sidebar-light-maroon');
+        mainSidebar.classList.remove('sidebar-dark-success');
+      }
+      localStorage.setItem('theme', 'light');
+    }
+  }
+
+  toggleSwitch.addEventListener('change', switchTheme, false);
+</script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    var checkbox = document.getElementById('checkbox');
+    var darkModeIcon = document.getElementById('darkModeIcon');
+    var mainSidebar = document.querySelector('.main-sidebar');
+
+    function updateThemeIcon() {
+      if (document.body.classList.contains('dark-mode')) {
+        darkModeIcon.innerHTML = '<i class="fas fa-sun"></i>';
+        if (!mainSidebar.classList.contains('sidebar-dark-success')) {
+          mainSidebar.classList.add('sidebar-dark-success');
+          mainSidebar.classList.remove('sidebar-light-maroon');
+        }
+      } else {
+        darkModeIcon.innerHTML = '<i class="fas fa-moon"></i>';
+        if (!mainSidebar.classList.contains('sidebar-light-maroon')) {
+          mainSidebar.classList.add('sidebar-light-maroon');
+          mainSidebar.classList.remove('sidebar-dark-success');
+        }
+      }
+    }
+
+    checkbox.addEventListener('change', function () {
+      if (this.checked) {
+        document.body.classList.add('dark-mode');
+      } else {
+        document.body.classList.remove('dark-mode');
+      }
+      updateThemeIcon();
+    });
+
+    updateThemeIcon();
+  });
+</script>
+
+<script>
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        document.body.classList.remove('sidebar-open');
+        document.body.classList.add('sidebar-closed', 'sidebar-collapse');
+    }
+});
+
+
+
+
+
+</script>
+
+</body>
+</html>

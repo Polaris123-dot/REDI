@@ -1,0 +1,490 @@
+{% load static %}
+{% include 'Nucleo/arriba.html' %}
+
+{% block extra_css %}
+<!-- DataTables CSS - Local -->
+<link rel="stylesheet" href="{% static 'DataTables/css/dataTables.bootstrap4.min.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/datatables-responsive/css/responsive.bootstrap4.min.css' %}">
+<!-- SweetAlert2 CSS -->
+<link rel="stylesheet" href="{% static 'plugins/sweetalert2/sweetalert2.min.css' %}">
+<style>
+  /* Estilos para tabs */
+  .nav-tabs .nav-link {
+    color: #495057;
+  }
+
+  .nav-tabs .nav-link.active {
+    color: #007bff;
+    font-weight: 600;
+  }
+
+  /* Estilos responsivos para botones */
+  .btn-group-sm .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+  }
+
+  /* En pantallas pequeñas, solo mostrar iconos */
+  @media (max-width: 767px) {
+    .btn-group-sm .btn span {
+      display: none !important;
+    }
+
+    .btn-group-sm .btn {
+      padding: 0.25rem 0.4rem;
+    }
+  }
+
+  /* En pantallas medianas y grandes, mostrar texto */
+  @media (min-width: 768px) {
+    .btn-group-sm .btn span {
+      display: inline !important;
+    }
+  }
+
+  /* Loading overlay */
+  .loading-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .loading-overlay.show {
+    display: flex;
+  }
+
+  .spinner-border-custom {
+    width: 3rem;
+    height: 3rem;
+    border-width: 0.3rem;
+  }
+
+  /* Estilos para badges de nivel de log */
+  .badge-log-debug {
+    background-color: #6c757d;
+  }
+
+  .badge-log-info {
+    background-color: #17a2b8;
+  }
+
+  .badge-log-warning {
+    background-color: #ffc107;
+    color: #212529;
+  }
+
+  .badge-log-error {
+    background-color: #dc3545;
+  }
+
+  .badge-log-critical {
+    background-color: #721c24;
+  }
+
+  /* Estilos para configuraciones no editables */
+  .config-no-editable {
+    opacity: 0.7;
+    background-color: #f8f9fa;
+  }
+
+  /* Estilos para filtros de logs */
+  .filtros-logs {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 15px;
+  }
+</style>
+{% endblock %}
+
+{% include 'Nucleo/centro.html' %}
+
+<!-- Content Header -->
+<div class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1 class="m-0">Configuración del Sistema</h1>
+      </div>
+      <div class="col-sm-6">
+        <ol class="breadcrumb float-sm-right d-none d-sm-flex">
+          <li class="breadcrumb-item"><a href="{% url 'usuarios:panel' %}">Inicio</a></li>
+          <li class="breadcrumb-item active">Configuración</li>
+        </ol>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-12">
+        <div class="btn-group" role="group">
+          <button type="button" class="btn btn-primary btn-sm" onclick="$('#configuraciones-tab').tab('show');">
+            <i class="fas fa-cog"></i> Configuraciones
+          </button>
+          <button type="button" class="btn btn-warning btn-sm" onclick="$('#logs-tab').tab('show');">
+            <i class="fas fa-file-alt"></i> Logs
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Main content -->
+<section class="content">
+  <div class="container-fluid">
+
+    <!-- Tabs Navigation -->
+    <ul class="nav nav-tabs" id="configuracionTabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <a class="nav-link active" id="configuraciones-tab" data-toggle="tab" href="#configuraciones" role="tab"
+          aria-controls="configuraciones" aria-selected="true">
+          <i class="fas fa-cog"></i> Configuraciones
+        </a>
+      </li>
+      <li class="nav-item" role="presentation">
+        <a class="nav-link" id="logs-tab" data-toggle="tab" href="#logs" role="tab"
+          aria-controls="logs" aria-selected="false">
+          <i class="fas fa-file-alt"></i> Logs del Sistema
+        </a>
+      </li>
+    </ul>
+
+    <!-- Tabs Content -->
+    <div class="tab-content" id="configuracionTabsContent">
+
+      <!-- Tab Configuraciones -->
+      <div class="tab-pane fade show active" id="configuraciones" role="tabpanel" aria-labelledby="configuraciones-tab">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fas fa-cog"></i> Gestión de Configuraciones
+            </h3>
+            <div class="card-tools">
+              <button type="button" class="btn btn-primary btn-sm" id="btnCrearConfiguracion">
+                <i class="fas fa-plus"></i> Nueva Configuración
+              </button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table id="tableConfiguraciones" class="table table-bordered table-striped" style="width:100%">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Clave</th>
+                    <th>Valor</th>
+                    <th>Tipo</th>
+                    <th>Categoría</th>
+                    <th>Descripción</th>
+                    <th>Editable</th>
+                    <th class="text-center">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Logs -->
+      <div class="tab-pane fade" id="logs" role="tabpanel" aria-labelledby="logs-tab">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fas fa-file-alt"></i> Logs del Sistema
+            </h3>
+            <div class="card-tools">
+              <button type="button" class="btn btn-danger btn-sm" id="btnLimpiarLogs">
+                <i class="fas fa-trash"></i> Limpiar Logs
+              </button>
+            </div>
+          </div>
+          <div class="card-body">
+            <!-- Filtros para logs -->
+            <div class="filtros-logs">
+              <div class="row">
+                <div class="col-md-3">
+                  <div class="form-group">
+                    <label for="filtroNivel">Nivel</label>
+                    <select class="form-control form-control-sm" id="filtroNivel">
+                      <option value="">Todos</option>
+                      <option value="DEBUG">DEBUG</option>
+                      <option value="INFO">INFO</option>
+                      <option value="WARNING">WARNING</option>
+                      <option value="ERROR">ERROR</option>
+                      <option value="CRITICAL">CRITICAL</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="form-group">
+                    <label for="filtroModulo">Módulo</label>
+                    <input type="text" class="form-control form-control-sm" id="filtroModulo" placeholder="Buscar módulo...">
+                  </div>
+                </div>
+                <div class="col-md-2">
+                  <div class="form-group">
+                    <label for="filtroLimit">Límite</label>
+                    <input type="number" class="form-control form-control-sm" id="filtroLimit" value="1000" min="100" max="10000" step="100">
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="form-group">
+                    <label>&nbsp;</label>
+                    <div>
+                      <button type="button" class="btn btn-sm btn-primary" id="btnAplicarFiltros">
+                        <i class="fas fa-filter"></i> Aplicar Filtros
+                      </button>
+                      <button type="button" class="btn btn-sm btn-secondary" id="btnLimpiarFiltros">
+                        <i class="fas fa-times"></i> Limpiar
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="table-responsive">
+              <table id="tableLogs" class="table table-bordered table-striped" style="width:100%">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Nivel</th>
+                    <th>Módulo</th>
+                    <th>Mensaje</th>
+                    <th>Usuario</th>
+                    <th>IP</th>
+                    <th>Fecha</th>
+                    <th class="text-center">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- Modal Configuración -->
+<div class="modal fade" id="modalConfiguracion" tabindex="-1" role="dialog" aria-labelledby="modalConfiguracionLabel"
+  aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalConfiguracionLabel">Nueva Configuración</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form id="formConfiguracion">
+        {% csrf_token %}
+        <div class="modal-body">
+          <input type="hidden" id="configuracionId" name="id">
+
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="configuracionClave">Clave <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="configuracionClave" name="clave" required
+                  placeholder="Ej: nombre_sistema, email_administrador">
+                <small class="form-text text-muted">Clave única para identificar la configuración</small>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="configuracionTipo">Tipo <span class="text-danger">*</span></label>
+                <select class="form-control" id="configuracionTipo" name="tipo" required>
+                  <option value="texto">Texto</option>
+                  <option value="numero">Número</option>
+                  <option value="booleano">Booleano</option>
+                  <option value="json">JSON</option>
+                  <option value="fecha">Fecha</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="configuracionValor">Valor</label>
+            <textarea class="form-control" id="configuracionValor" name="valor" rows="3"
+              placeholder="Valor de la configuración"></textarea>
+            <small class="form-text text-muted">Para valores booleanos, use: true/false. Para JSON, use formato JSON válido.</small>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="configuracionCategoria">Categoría</label>
+                <input type="text" class="form-control" id="configuracionCategoria" name="categoria"
+                  placeholder="Ej: Sistema, Email, Seguridad">
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="configuracionEsEditable">Editable</label>
+                <div class="form-check">
+                  <input type="checkbox" class="form-check-input" id="configuracionEsEditable" name="es_editable" checked>
+                  <label class="form-check-label" for="configuracionEsEditable">
+                    Permitir edición de esta configuración
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="configuracionDescripcion">Descripción</label>
+            <textarea class="form-control" id="configuracionDescripcion" name="descripcion" rows="2"
+              placeholder="Descripción de la configuración"></textarea>
+          </div>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> Guardar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Limpiar Logs -->
+<div class="modal fade" id="modalLimpiarLogs" tabindex="-1" role="dialog" aria-labelledby="modalLimpiarLogsLabel"
+  aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalLimpiarLogsLabel">Limpiar Logs</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form id="formLimpiarLogs">
+        {% csrf_token %}
+        <div class="modal-body">
+          <div class="alert alert-warning">
+            <i class="fas fa-exclamation-triangle"></i> <strong>Advertencia:</strong> Esta acción eliminará logs permanentemente y no se puede deshacer.
+          </div>
+
+          <div class="form-group">
+            <label for="limpiarNivel">Nivel</label>
+            <select class="form-control" id="limpiarNivel" name="nivel">
+              <option value="">Todos los niveles</option>
+              <option value="DEBUG">DEBUG</option>
+              <option value="INFO">INFO</option>
+              <option value="WARNING">WARNING</option>
+              <option value="ERROR">ERROR</option>
+              <option value="CRITICAL">CRITICAL</option>
+            </select>
+            <small class="form-text text-muted">Eliminar logs de un nivel específico</small>
+          </div>
+
+          <div class="form-group">
+            <label for="limpiarNivelMinimo">Nivel Mínimo</label>
+            <select class="form-control" id="limpiarNivelMinimo" name="nivel_minimo">
+              <option value="">No aplicar</option>
+              <option value="DEBUG">DEBUG y menores</option>
+              <option value="INFO">INFO y menores</option>
+              <option value="WARNING">WARNING y menores</option>
+              <option value="ERROR">ERROR y menores</option>
+              <option value="CRITICAL">CRITICAL y menores</option>
+            </select>
+            <small class="form-text text-muted">Eliminar logs de nivel menor o igual al seleccionado</small>
+          </div>
+
+          <div class="form-group">
+            <label for="limpiarDias">Días de antigüedad</label>
+            <input type="number" class="form-control" id="limpiarDias" name="dias" min="1" placeholder="Ej: 30">
+            <small class="form-text text-muted">Eliminar logs más antiguos que el número de días especificado</small>
+          </div>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-danger">
+            <i class="fas fa-trash"></i> Limpiar Logs
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner-border spinner-border-custom text-light" role="status">
+    <span class="sr-only">Cargando...</span>
+  </div>
+</div>
+
+{% include 'Nucleo/abajo.html' %}
+
+{% block extra_js %}
+<!-- Verificar que jQuery esté cargado antes de continuar -->
+<script>
+  if (typeof jQuery === 'undefined') {
+    console.error('jQuery no está cargado. Asegúrate de que jQuery se cargue antes de este bloque.');
+  }
+</script>
+<!-- DataTables JS - Local -->
+<script src="{% static 'DataTables/js/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'DataTables/js/dataTables.bootstrap4.min.js' %}"></script>
+<script src="{% static 'plugins/datatables-responsive/js/dataTables.responsive.min.js' %}"></script>
+<script src="{% static 'plugins/datatables-responsive/js/responsive.bootstrap4.min.js' %}"></script>
+<!-- SweetAlert2 JS -->
+<script src="{% static 'plugins/sweetalert2/sweetalert2.all.min.js' %}"></script>
+
+<script>
+  // URLs usando Django URL reverse
+  const CONFIGURACION_URLS = {
+    configuracionesList: "{% url 'configuracion:configuraciones_list' %}",
+    configuracionCreate: "{% url 'configuracion:configuracion_create' %}",
+    configuracionDetail: function (id) {
+      return "{% url 'configuracion:configuracion_detail' 0 %}".replace('0', id.toString());
+    },
+    configuracionUpdate: function (id) {
+      return "{% url 'configuracion:configuracion_update' 0 %}".replace('0', id.toString());
+    },
+    configuracionDelete: function (id) {
+      return "{% url 'configuracion:configuracion_delete' 0 %}".replace('0', id.toString());
+    },
+    logsList: "{% url 'configuracion:logs_list' %}",
+    logDetail: function (id) {
+      return "{% url 'configuracion:log_detail' 0 %}".replace('0', id.toString());
+    },
+    logDelete: function (id) {
+      return "{% url 'configuracion:log_delete' 0 %}".replace('0', id.toString());
+    },
+    logsLimpiar: "{% url 'configuracion:logs_limpiar' %}"
+  };
+
+  // Función para obtener CSRF token
+  function getCSRFToken() {
+    const token = document.querySelector('[name=csrfmiddlewaretoken]');
+    return token ? token.value : '';
+  }
+  
+  // Hacer disponible globalmente
+  window.getCSRFToken = getCSRFToken;
+</script>
+
+<!-- Script principal de configuración -->
+<script src="{% static 'js/configuracion.js' %}"></script>
+{% endblock %}
+
+
+

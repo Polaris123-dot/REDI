@@ -1,0 +1,452 @@
+{% load static %}
+{% include 'Nucleo/arriba.html' %}
+
+{% block extra_css %}
+<!-- DataTables CSS - Local -->
+<link rel="stylesheet" href="{% static 'DataTables/css/dataTables.bootstrap4.min.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/datatables-responsive/css/responsive.bootstrap4.min.css' %}">
+<!-- SweetAlert2 CSS -->
+<link rel="stylesheet" href="{% static 'plugins/sweetalert2/sweetalert2.min.css' %}">
+<!-- Select2 CSS -->
+<link rel="stylesheet" href="{% static 'plugins/select2/css/select2.min.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css' %}">
+<style>
+  /* Estilos para tabs */
+  .nav-tabs .nav-link {
+    color: #495057;
+  }
+
+  .nav-tabs .nav-link.active {
+    color: #007bff;
+    font-weight: 600;
+  }
+
+  /* Estilos responsivos para botones */
+  .btn-group-sm .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+  }
+
+  /* En pantallas pequeñas, solo mostrar iconos */
+  @media (max-width: 767px) {
+    .btn-group-sm .btn span {
+      display: none !important;
+    }
+
+    .btn-group-sm .btn {
+      padding: 0.25rem 0.4rem;
+    }
+  }
+
+  /* En pantallas medianas y grandes, mostrar texto */
+  @media (min-width: 768px) {
+    .btn-group-sm .btn span {
+      display: inline !important;
+    }
+  }
+
+  /* Badge para tipo de acceso */
+  .badge-tipo-acceso {
+    font-size: 0.75rem;
+    padding: 0.25em 0.5em;
+  }
+
+  /* Badge para período */
+  .badge-periodo {
+    font-size: 0.75rem;
+    padding: 0.25em 0.5em;
+  }
+</style>
+{% endblock %}
+
+{% include 'Nucleo/sidebar.html' %}
+
+<!-- Content Wrapper. Contains page content -->
+<div class="content-wrapper">
+  <!-- Content Header -->
+  <div class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-sm-6">
+          <h1 class="m-0">Estadísticas</h1>
+        </div>
+        <div class="col-sm-6">
+          <ol class="breadcrumb float-sm-right d-none d-sm-flex">
+            <li class="breadcrumb-item"><a href="{% url 'usuarios:panel' %}">Inicio</a></li>
+            <li class="breadcrumb-item active">Estadísticas</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main content -->
+  <section class="content">
+    <div class="container-fluid">
+      <!-- Tabs -->
+      <ul class="nav nav-tabs" id="estadisticasTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+          <a class="nav-link active" id="visitas-tab" data-toggle="tab" href="#visitas" role="tab" aria-controls="visitas" aria-selected="true">
+            <i class="fas fa-eye"></i> Visitas
+          </a>
+        </li>
+        <li class="nav-item" role="presentation">
+          <a class="nav-link" id="descargas-tab" data-toggle="tab" href="#descargas" role="tab" aria-controls="descargas" aria-selected="false">
+            <i class="fas fa-download"></i> Descargas
+          </a>
+        </li>
+        <li class="nav-item" role="presentation">
+          <a class="nav-link" id="agregadas-tab" data-toggle="tab" href="#agregadas" role="tab" aria-controls="agregadas" aria-selected="false">
+            <i class="fas fa-chart-bar"></i> Estadísticas Agregadas
+          </a>
+        </li>
+      </ul>
+
+      <!-- Tab Content -->
+      <div class="tab-content" id="estadisticasTabsContent">
+        <!-- Tab Visitas -->
+        <div class="tab-pane fade show active" id="visitas" role="tabpanel" aria-labelledby="visitas-tab">
+          <div class="card mt-3">
+            <div class="card-header">
+              <h3 class="card-title">Visitas de Documentos</h3>
+              <div class="card-tools">
+                <button type="button" class="btn btn-primary btn-sm" id="btnCrearVisita">
+                  <i class="fas fa-plus"></i> <span>Nueva Visita</span>
+                </button>
+              </div>
+            </div>
+            <div class="card-body">
+              <table id="tableVisitas" class="table table-bordered table-striped table-hover" style="width:100%">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Documento</th>
+                    <th>Usuario</th>
+                    <th>Tipo Acceso</th>
+                    <th>IP</th>
+                    <th>País</th>
+                    <th>Ciudad</th>
+                    <th>Fecha</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab Descargas -->
+        <div class="tab-pane fade" id="descargas" role="tabpanel" aria-labelledby="descargas-tab">
+          <div class="card mt-3">
+            <div class="card-header">
+              <h3 class="card-title">Descargas de Archivos</h3>
+              <div class="card-tools">
+                <button type="button" class="btn btn-primary btn-sm" id="btnCrearDescarga">
+                  <i class="fas fa-plus"></i> <span>Nueva Descarga</span>
+                </button>
+              </div>
+            </div>
+            <div class="card-body">
+              <table id="tableDescargas" class="table table-bordered table-striped table-hover" style="width:100%">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Archivo</th>
+                    <th>Documento</th>
+                    <th>Usuario</th>
+                    <th>IP</th>
+                    <th>Fecha</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab Estadísticas Agregadas -->
+        <div class="tab-pane fade" id="agregadas" role="tabpanel" aria-labelledby="agregadas-tab">
+          <div class="card mt-3">
+            <div class="card-header">
+              <h3 class="card-title">Estadísticas Agregadas</h3>
+              <div class="card-tools">
+                <button type="button" class="btn btn-primary btn-sm" id="btnCrearEstadisticaAgregada">
+                  <i class="fas fa-plus"></i> <span>Nueva Estadística</span>
+                </button>
+              </div>
+            </div>
+            <div class="card-body">
+              <table id="tableEstadisticasAgregadas" class="table table-bordered table-striped table-hover" style="width:100%">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Documento</th>
+                    <th>Período</th>
+                    <th>Fecha Inicio</th>
+                    <th>Visitas</th>
+                    <th>Descargas</th>
+                    <th>Visitas Únicas</th>
+                    <th>Descargas Únicas</th>
+                    <th>Tiempo Promedio</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- Modal Visita -->
+<div class="modal fade" id="modalVisita" tabindex="-1" role="dialog" aria-labelledby="modalVisitaLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalVisitaLabel">Nueva Visita de Documento</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form id="formVisita">
+        <div class="modal-body">
+          <input type="hidden" id="visita_id" name="visita_id">
+          <div class="form-group">
+            <label for="visita_documento_id">Documento <span class="text-danger">*</span></label>
+            <select class="form-control select2" id="visita_documento_id" name="documento_id" style="width: 100%;" required>
+              <option value="">Seleccionar documento...</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="visita_usuario_id">Usuario</label>
+            <select class="form-control select2" id="visita_usuario_id" name="usuario_id" style="width: 100%;">
+              <option value="">Seleccionar usuario...</option>
+            </select>
+            <small class="form-text text-muted">Dejar vacío para visitas anónimas</small>
+          </div>
+          <div class="form-group">
+            <label for="visita_tipo_acceso">Tipo de Acceso <span class="text-danger">*</span></label>
+            <select class="form-control" id="visita_tipo_acceso" name="tipo_acceso" required>
+              <option value="vista">Vista</option>
+              <option value="descarga">Descarga</option>
+              <option value="preview">Preview</option>
+            </select>
+          </div>
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="visita_ip_address">IP Address</label>
+                <input type="text" class="form-control" id="visita_ip_address" name="ip_address" placeholder="192.168.1.1">
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="visita_pais">País</label>
+                <input type="text" class="form-control" id="visita_pais" name="pais" placeholder="ES" maxlength="2">
+                <small class="form-text text-muted">Código de país (ISO 3166-1 alpha-2)</small>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="visita_ciudad">Ciudad</label>
+                <input type="text" class="form-control" id="visita_ciudad" name="ciudad" placeholder="Madrid">
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="visita_referer">Referer</label>
+                <input type="text" class="form-control" id="visita_referer" name="referer" placeholder="https://example.com">
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="visita_user_agent">User Agent</label>
+            <textarea class="form-control" id="visita_user_agent" name="user_agent" rows="2" placeholder="Mozilla/5.0..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Descarga -->
+<div class="modal fade" id="modalDescarga" tabindex="-1" role="dialog" aria-labelledby="modalDescargaLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalDescargaLabel">Nueva Descarga de Archivo</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form id="formDescarga">
+        <div class="modal-body">
+          <input type="hidden" id="descarga_id" name="descarga_id">
+          <div class="form-group">
+            <label for="descarga_archivo_id">Archivo <span class="text-danger">*</span></label>
+            <select class="form-control select2" id="descarga_archivo_id" name="archivo_id" style="width: 100%;" required>
+              <option value="">Seleccionar archivo...</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="descarga_usuario_id">Usuario</label>
+            <select class="form-control select2" id="descarga_usuario_id" name="usuario_id" style="width: 100%;">
+              <option value="">Seleccionar usuario...</option>
+            </select>
+            <small class="form-text text-muted">Dejar vacío para descargas anónimas</small>
+          </div>
+          <div class="form-group">
+            <label for="descarga_ip_address">IP Address</label>
+            <input type="text" class="form-control" id="descarga_ip_address" name="ip_address" placeholder="192.168.1.1">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Estadística Agregada -->
+<div class="modal fade" id="modalEstadisticaAgregada" tabindex="-1" role="dialog" aria-labelledby="modalEstadisticaAgregadaLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalEstadisticaAgregadaLabel">Nueva Estadística Agregada</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form id="formEstadisticaAgregada">
+        <div class="modal-body">
+          <input type="hidden" id="estadistica_agregada_id" name="estadistica_agregada_id">
+          <div class="form-group">
+            <label for="estadistica_agregada_documento_id">Documento <span class="text-danger">*</span></label>
+            <select class="form-control select2" id="estadistica_agregada_documento_id" name="documento_id" style="width: 100%;" required>
+              <option value="">Seleccionar documento...</option>
+            </select>
+          </div>
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="estadistica_agregada_periodo">Período <span class="text-danger">*</span></label>
+                <select class="form-control" id="estadistica_agregada_periodo" name="periodo" required>
+                  <option value="diario">Diario</option>
+                  <option value="semanal">Semanal</option>
+                  <option value="mensual">Mensual</option>
+                  <option value="anual">Anual</option>
+                </select>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="estadistica_agregada_fecha_inicio">Fecha de Inicio <span class="text-danger">*</span></label>
+                <input type="date" class="form-control" id="estadistica_agregada_fecha_inicio" name="fecha_inicio" required>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="estadistica_agregada_total_visitas">Total Visitas</label>
+                <input type="number" class="form-control" id="estadistica_agregada_total_visitas" name="total_visitas" value="0" min="0">
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="estadistica_agregada_total_descargas">Total Descargas</label>
+                <input type="number" class="form-control" id="estadistica_agregada_total_descargas" name="total_descargas" value="0" min="0">
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="estadistica_agregada_visitas_unicas">Visitas Únicas</label>
+                <input type="number" class="form-control" id="estadistica_agregada_visitas_unicas" name="visitas_unicas" value="0" min="0">
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="estadistica_agregada_descargas_unicas">Descargas Únicas</label>
+                <input type="number" class="form-control" id="estadistica_agregada_descargas_unicas" name="descargas_unicas" value="0" min="0">
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="estadistica_agregada_tiempo_promedio_lectura">Tiempo Promedio de Lectura (segundos)</label>
+            <input type="number" class="form-control" id="estadistica_agregada_tiempo_promedio_lectura" name="tiempo_promedio_lectura" min="0" placeholder="En segundos">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% include 'Nucleo/abajo.html' %}
+
+{% block extra_js %}
+<!-- DataTables JS - Local -->
+<script src="{% static 'DataTables/js/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'DataTables/js/dataTables.bootstrap4.min.js' %}"></script>
+<script src="{% static 'plugins/datatables-responsive/js/dataTables.responsive.min.js' %}"></script>
+<script src="{% static 'plugins/datatables-responsive/js/responsive.bootstrap4.min.js' %}"></script>
+<!-- SweetAlert2 JS -->
+<script src="{% static 'plugins/sweetalert2/sweetalert2.min.js' %}"></script>
+<!-- Select2 JS -->
+<script src="{% static 'plugins/select2/js/select2.full.min.js' %}"></script>
+<!-- Estadísticas JS -->
+<script src="{% static 'js/estadisticas.js' %}"></script>
+
+<script>
+  // URLs para las peticiones AJAX
+  const ESTADISTICAS_URLS = {
+    visitasList: '{% url "estadisticas:visitas_list" %}',
+    visitaCreate: '{% url "estadisticas:visita_create" %}',
+    visitaUpdate: function(id) { return '{% url "estadisticas:visita_update" 0 %}'.replace('0', id); },
+    visitaDelete: function(id) { return '{% url "estadisticas:visita_delete" 0 %}'.replace('0', id); },
+    visitaDetail: function(id) { return '{% url "estadisticas:visita_detail" 0 %}'.replace('0', id); },
+    descargasList: '{% url "estadisticas:descargas_list" %}',
+    descargaCreate: '{% url "estadisticas:descarga_create" %}',
+    descargaUpdate: function(id) { return '{% url "estadisticas:descarga_update" 0 %}'.replace('0', id); },
+    descargaDelete: function(id) { return '{% url "estadisticas:descarga_delete" 0 %}'.replace('0', id); },
+    descargaDetail: function(id) { return '{% url "estadisticas:descarga_detail" 0 %}'.replace('0', id); },
+    estadisticasAgregadasList: '{% url "estadisticas:estadisticas_agregadas_list" %}',
+    estadisticaAgregadaCreate: '{% url "estadisticas:estadistica_agregada_create" %}',
+    estadisticaAgregadaUpdate: function(id) { return '{% url "estadisticas:estadistica_agregada_update" 0 %}'.replace('0', id); },
+    estadisticaAgregadaDelete: function(id) { return '{% url "estadisticas:estadistica_agregada_delete" 0 %}'.replace('0', id); },
+    estadisticaAgregadaDetail: function(id) { return '{% url "estadisticas:estadistica_agregada_detail" 0 %}'.replace('0', id); },
+    documentosForSelect: '{% url "estadisticas:documentos_for_select" %}',
+    archivosForSelect: '{% url "estadisticas:archivos_for_select" %}',
+    usuariosForSelect: '{% url "estadisticas:usuarios_for_select" %}',
+  };
+
+  // Inicializar cuando el DOM esté listo
+  $(document).ready(function() {
+    initEstadisticas();
+  });
+</script>
+{% endblock %}
+
+
+

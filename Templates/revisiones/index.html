@@ -1,0 +1,564 @@
+{% load static %}
+{% include 'Nucleo/arriba.html' %}
+
+{% block extra_css %}
+<!-- DataTables CSS - Local -->
+<link rel="stylesheet" href="{% static 'DataTables/css/dataTables.bootstrap4.min.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/datatables-responsive/css/responsive.bootstrap4.min.css' %}">
+<!-- SweetAlert2 CSS -->
+<link rel="stylesheet" href="{% static 'plugins/sweetalert2/sweetalert2.min.css' %}">
+<!-- Select2 CSS -->
+<link rel="stylesheet" href="{% static 'plugins/select2/css/select2.min.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css' %}">
+<style>
+  /* Estilos para tabs */
+  .nav-tabs .nav-link {
+    color: #495057;
+  }
+
+  .nav-tabs .nav-link.active {
+    color: #007bff;
+    font-weight: 600;
+  }
+
+  /* Estilos responsivos para botones */
+  .btn-group-sm .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+  }
+
+  /* En pantallas pequeñas, solo mostrar iconos */
+  @media (max-width: 767px) {
+    .btn-group-sm .btn span {
+      display: none !important;
+    }
+
+    .btn-group-sm .btn {
+      padding: 0.25rem 0.4rem;
+    }
+  }
+
+  /* En pantallas medianas y grandes, mostrar texto */
+  @media (min-width: 768px) {
+    .btn-group-sm .btn span {
+      display: inline !important;
+    }
+  }
+
+  /* Loading overlay */
+  .loading-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .loading-overlay.show {
+    display: flex;
+  }
+
+  .spinner-border-custom {
+    width: 3rem;
+    height: 3rem;
+    border-width: 0.3rem;
+  }
+
+  /* Badge para estados */
+  .badge-estado {
+    font-size: 0.75rem;
+    padding: 0.25em 0.5em;
+  }
+
+  /* Input para JSON (opciones de criterios) */
+  .json-input {
+    font-family: 'Courier New', monospace;
+    font-size: 0.875rem;
+  }
+
+  /* Ocultar campos de valor según el tipo */
+  .valor-field {
+    display: none;
+  }
+
+  .valor-field.show {
+    display: block;
+  }
+</style>
+{% endblock %}
+
+{% include 'Nucleo/sidebar.html' %}
+
+<!-- Content Wrapper. Contains page content -->
+<div class="content-wrapper">
+  <!-- Content Header -->
+  <div class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-sm-6">
+          <h1 class="m-0">Revisiones</h1>
+        </div>
+        <div class="col-sm-6">
+          <ol class="breadcrumb float-sm-right d-none d-sm-flex">
+            <li class="breadcrumb-item"><a href="{% url 'usuarios:panel' %}">Inicio</a></li>
+            <li class="breadcrumb-item active">Revisiones</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main content -->
+  <section class="content">
+    <div class="container-fluid">
+      <!-- Tabs -->
+      <ul class="nav nav-tabs" id="revisionesTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+          <a class="nav-link active" id="criterios-tab" data-toggle="tab" href="#criterios" role="tab" aria-controls="criterios" aria-selected="true">
+            <i class="fas fa-list-check"></i> Criterios
+          </a>
+        </li>
+        <li class="nav-item" role="presentation">
+          <a class="nav-link" id="procesos-tab" data-toggle="tab" href="#procesos" role="tab" aria-controls="procesos" aria-selected="false">
+            <i class="fas fa-clipboard-list"></i> Procesos
+          </a>
+        </li>
+        <li class="nav-item" role="presentation">
+          <a class="nav-link" id="revisiones-tab" data-toggle="tab" href="#revisiones" role="tab" aria-controls="revisiones" aria-selected="false">
+            <i class="fas fa-user-check"></i> Revisiones
+          </a>
+        </li>
+        <li class="nav-item" role="presentation">
+          <a class="nav-link" id="evaluaciones-tab" data-toggle="tab" href="#evaluaciones" role="tab" aria-controls="evaluaciones" aria-selected="false">
+            <i class="fas fa-star"></i> Evaluaciones
+          </a>
+        </li>
+      </ul>
+
+      <!-- Tab Content -->
+      <div class="tab-content" id="revisionesTabsContent">
+        <!-- Tab Criterios -->
+        <div class="tab-pane fade show active" id="criterios" role="tabpanel" aria-labelledby="criterios-tab">
+          <div class="card mt-3">
+            <div class="card-header">
+              <h3 class="card-title">Criterios de Revisión</h3>
+              <div class="card-tools">
+                <button type="button" class="btn btn-primary btn-sm" id="btnCrearCriterio">
+                  <i class="fas fa-plus"></i> <span>Nuevo Criterio</span>
+                </button>
+              </div>
+            </div>
+            <div class="card-body">
+              <table id="tableCriterios" class="table table-bordered table-striped table-hover" style="width:100%">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Tipo</th>
+                    <th>Escala</th>
+                    <th>Opciones</th>
+                    <th>Obligatorio</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab Procesos -->
+        <div class="tab-pane fade" id="procesos" role="tabpanel" aria-labelledby="procesos-tab">
+          <div class="card mt-3">
+            <div class="card-header">
+              <h3 class="card-title">Procesos de Revisión</h3>
+              <div class="card-tools">
+                <button type="button" class="btn btn-primary btn-sm" id="btnCrearProceso">
+                  <i class="fas fa-plus"></i> <span>Nuevo Proceso</span>
+                </button>
+              </div>
+            </div>
+            <div class="card-body">
+              <table id="tableProcesos" class="table table-bordered table-striped table-hover" style="width:100%">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Documento</th>
+                    <th>Tipo</th>
+                    <th>Estado</th>
+                    <th>Iniciado Por</th>
+                    <th>Fecha Inicio</th>
+                    <th>Revisiones</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab Revisiones -->
+        <div class="tab-pane fade" id="revisiones" role="tabpanel" aria-labelledby="revisiones-tab">
+          <div class="card mt-3">
+            <div class="card-header">
+              <h3 class="card-title">Revisiones</h3>
+              <div class="card-tools">
+                <button type="button" class="btn btn-primary btn-sm" id="btnCrearRevision">
+                  <i class="fas fa-plus"></i> <span>Nueva Revisión</span>
+                </button>
+              </div>
+            </div>
+            <div class="card-body">
+              <table id="tableRevisiones" class="table table-bordered table-striped table-hover" style="width:100%">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Proceso</th>
+                    <th>Revisor</th>
+                    <th>Estado</th>
+                    <th>Calificación</th>
+                    <th>Recomendación</th>
+                    <th>Fecha Asignación</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab Evaluaciones -->
+        <div class="tab-pane fade" id="evaluaciones" role="tabpanel" aria-labelledby="evaluaciones-tab">
+          <div class="card mt-3">
+            <div class="card-header">
+              <h3 class="card-title">Evaluaciones de Criterios</h3>
+              <div class="card-tools">
+                <button type="button" class="btn btn-primary btn-sm" id="btnCrearEvaluacion">
+                  <i class="fas fa-plus"></i> <span>Nueva Evaluación</span>
+                </button>
+              </div>
+            </div>
+            <div class="card-body">
+              <table id="tableEvaluaciones" class="table table-bordered table-striped table-hover" style="width:100%">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Revisión</th>
+                    <th>Criterio</th>
+                    <th>Valor</th>
+                    <th>Comentarios</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- Modal Criterio -->
+<div class="modal fade" id="modalCriterio" tabindex="-1" role="dialog" aria-labelledby="modalCriterioLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalCriterioLabel">Nuevo Criterio de Revisión</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form id="formCriterio">
+        <div class="modal-body">
+          <input type="hidden" id="criterio_id" name="criterio_id">
+          <div class="form-group">
+            <label for="criterio_nombre">Nombre <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="criterio_nombre" name="criterio_nombre" required>
+          </div>
+          <div class="form-group">
+            <label for="criterio_descripcion">Descripción</label>
+            <textarea class="form-control" id="criterio_descripcion" name="criterio_descripcion" rows="3"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="criterio_tipo">Tipo <span class="text-danger">*</span></label>
+            <select class="form-control" id="criterio_tipo" name="criterio_tipo" required>
+              <option value="numerico">Numérico</option>
+              <option value="texto">Texto</option>
+              <option value="booleano">Booleano</option>
+              <option value="opcion">Opción</option>
+            </select>
+          </div>
+          <div class="form-group" id="criterio_escala_container">
+            <label for="criterio_escala_minima">Escala Mínima</label>
+            <input type="number" class="form-control" id="criterio_escala_minima" name="criterio_escala_minima" min="0">
+          </div>
+          <div class="form-group" id="criterio_escala_maxima_container">
+            <label for="criterio_escala_maxima">Escala Máxima</label>
+            <input type="number" class="form-control" id="criterio_escala_maxima" name="criterio_escala_maxima" min="1">
+          </div>
+          <div class="form-group" id="criterio_opciones_container" style="display: none;">
+            <label for="criterio_opciones">Opciones (JSON Array) <span class="text-danger">*</span></label>
+            <textarea class="form-control json-input" id="criterio_opciones" name="criterio_opciones" rows="3" placeholder='["Opción 1", "Opción 2", "Opción 3"]'></textarea>
+            <small class="form-text text-muted">Ingrese las opciones como un array JSON, por ejemplo: ["Excelente", "Bueno", "Regular", "Malo"]</small>
+          </div>
+          <div class="form-group">
+            <div class="form-check">
+              <input type="checkbox" class="form-check-input" id="criterio_es_obligatorio" name="criterio_es_obligatorio">
+              <label class="form-check-label" for="criterio_es_obligatorio">Obligatorio</label>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Proceso -->
+<div class="modal fade" id="modalProceso" tabindex="-1" role="dialog" aria-labelledby="modalProcesoLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalProcesoLabel">Nuevo Proceso de Revisión</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form id="formProceso">
+        <div class="modal-body">
+          <input type="hidden" id="proceso_id" name="proceso_id">
+          <div class="form-group">
+            <label for="proceso_documento_id">Documento <span class="text-danger">*</span></label>
+            <select class="form-control select2" id="proceso_documento_id" name="proceso_documento_id" style="width: 100%;" required>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="proceso_tipo_revision">Tipo de Revisión <span class="text-danger">*</span></label>
+            <select class="form-control" id="proceso_tipo_revision" name="proceso_tipo_revision" required>
+              <option value="peer_review">Peer Review</option>
+              <option value="editorial">Editorial</option>
+              <option value="administrativa">Administrativa</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="proceso_estado">Estado</label>
+            <select class="form-control" id="proceso_estado" name="proceso_estado">
+              <option value="pendiente">Pendiente</option>
+              <option value="en_revision">En Revisión</option>
+              <option value="aprobado">Aprobado</option>
+              <option value="rechazado">Rechazado</option>
+              <option value="requiere_cambios">Requiere Cambios</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="proceso_notas_generales">Notas Generales</label>
+            <textarea class="form-control" id="proceso_notas_generales" name="proceso_notas_generales" rows="3"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Revisión -->
+<div class="modal fade" id="modalRevision" tabindex="-1" role="dialog" aria-labelledby="modalRevisionLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalRevisionLabel">Nueva Revisión</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form id="formRevision">
+        <div class="modal-body">
+          <input type="hidden" id="revision_id" name="revision_id">
+          <div class="form-group">
+            <label for="revision_proceso_revision_id">Proceso de Revisión <span class="text-danger">*</span></label>
+            <select class="form-control select2" id="revision_proceso_revision_id" name="revision_proceso_revision_id" style="width: 100%;" required>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="revision_revisor_id">Revisor <span class="text-danger">*</span></label>
+            <select class="form-control select2" id="revision_revisor_id" name="revision_revisor_id" style="width: 100%;" required>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="revision_estado">Estado</label>
+            <select class="form-control" id="revision_estado" name="revision_estado">
+              <option value="asignado">Asignado</option>
+              <option value="en_progreso">En Progreso</option>
+              <option value="completado">Completado</option>
+              <option value="rechazado">Rechazado</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="revision_calificacion_general">Calificación General (1-5)</label>
+            <input type="number" class="form-control" id="revision_calificacion_general" name="revision_calificacion_general" min="1" max="5">
+          </div>
+          <div class="form-group">
+            <label for="revision_comentarios_publicos">Comentarios Públicos</label>
+            <textarea class="form-control" id="revision_comentarios_publicos" name="revision_comentarios_publicos" rows="3"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="revision_comentarios_privados">Comentarios Privados</label>
+            <textarea class="form-control" id="revision_comentarios_privados" name="revision_comentarios_privados" rows="3"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="revision_recomendacion">Recomendación</label>
+            <select class="form-control" id="revision_recomendacion" name="revision_recomendacion">
+              <option value="">Seleccionar...</option>
+              <option value="aprobar">Aprobar</option>
+              <option value="aprobar_con_cambios">Aprobar con Cambios</option>
+              <option value="rechazar">Rechazar</option>
+              <option value="requiere_revision">Requiere Revisión</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Evaluación -->
+<div class="modal fade" id="modalEvaluacion" tabindex="-1" role="dialog" aria-labelledby="modalEvaluacionLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalEvaluacionLabel">Nueva Evaluación de Criterio</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form id="formEvaluacion">
+        <div class="modal-body">
+          <input type="hidden" id="evaluacion_id" name="evaluacion_id">
+          <div class="form-group">
+            <label for="evaluacion_revision_id">Revisión <span class="text-danger">*</span></label>
+            <select class="form-control select2" id="evaluacion_revision_id" name="evaluacion_revision_id" style="width: 100%;" required>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="evaluacion_criterio_id">Criterio <span class="text-danger">*</span></label>
+            <select class="form-control select2" id="evaluacion_criterio_id" name="evaluacion_criterio_id" style="width: 100%;" required>
+            </select>
+          </div>
+          <div class="form-group valor-field" id="evaluacion_valor_numerico_container">
+            <label for="evaluacion_valor_numerico">Valor Numérico</label>
+            <input type="number" class="form-control" id="evaluacion_valor_numerico" name="evaluacion_valor_numerico" min="0">
+            <small class="form-text text-muted" id="evaluacion_escala_info"></small>
+          </div>
+          <div class="form-group valor-field" id="evaluacion_valor_texto_container">
+            <label for="evaluacion_valor_texto">Valor de Texto</label>
+            <textarea class="form-control" id="evaluacion_valor_texto" name="evaluacion_valor_texto" rows="3"></textarea>
+          </div>
+          <div class="form-group valor-field" id="evaluacion_valor_booleano_container">
+            <label for="evaluacion_valor_booleano">Valor Booleano</label>
+            <select class="form-control" id="evaluacion_valor_booleano" name="evaluacion_valor_booleano">
+              <option value="">Seleccionar...</option>
+              <option value="true">Sí</option>
+              <option value="false">No</option>
+            </select>
+          </div>
+          <div class="form-group valor-field" id="evaluacion_valor_opcion_container">
+            <label for="evaluacion_valor_opcion">Valor de Opción</label>
+            <select class="form-control" id="evaluacion_valor_opcion" name="evaluacion_valor_opcion">
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="evaluacion_comentarios">Comentarios</label>
+            <textarea class="form-control" id="evaluacion_comentarios" name="evaluacion_comentarios" rows="3"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner-border text-light spinner-border-custom" role="status">
+    <span class="sr-only">Cargando...</span>
+  </div>
+</div>
+
+{% include 'Nucleo/abajo.html' %}
+
+{% block extra_js %}
+<!-- DataTables JS - Local -->
+<script src="{% static 'DataTables/js/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'DataTables/js/dataTables.bootstrap4.min.js' %}"></script>
+<script src="{% static 'plugins/datatables-responsive/js/dataTables.responsive.min.js' %}"></script>
+<script src="{% static 'plugins/datatables-responsive/js/responsive.bootstrap4.min.js' %}"></script>
+<!-- SweetAlert2 JS -->
+<script src="{% static 'plugins/sweetalert2/sweetalert2.min.js' %}"></script>
+<!-- Select2 JS -->
+<script src="{% static 'plugins/select2/js/select2.full.min.js' %}"></script>
+<!-- Revisiones JS -->
+<script src="{% static 'js/revisiones.js' %}"></script>
+
+<script>
+  // URLs para las peticiones AJAX
+  const REVISIONES_URLS = {
+    criteriosList: '{% url "revisiones:criterios_list" %}',
+    criterioCreate: '{% url "revisiones:criterio_create" %}',
+    criterioUpdate: function(id) { return '{% url "revisiones:criterio_update" 0 %}'.replace('0', id); },
+    criterioDelete: function(id) { return '{% url "revisiones:criterio_delete" 0 %}'.replace('0', id); },
+    criterioDetail: function(id) { return '{% url "revisiones:criterio_detail" 0 %}'.replace('0', id); },
+    procesosList: '{% url "revisiones:procesos_list" %}',
+    procesoCreate: '{% url "revisiones:proceso_create" %}',
+    procesoUpdate: function(id) { return '{% url "revisiones:proceso_update" 0 %}'.replace('0', id); },
+    procesoDelete: function(id) { return '{% url "revisiones:proceso_delete" 0 %}'.replace('0', id); },
+    procesoDetail: function(id) { return '{% url "revisiones:proceso_detail" 0 %}'.replace('0', id); },
+    revisionesList: '{% url "revisiones:revisiones_list" %}',
+    revisionCreate: '{% url "revisiones:revision_create" %}',
+    revisionUpdate: function(id) { return '{% url "revisiones:revision_update" 0 %}'.replace('0', id); },
+    revisionDelete: function(id) { return '{% url "revisiones:revision_delete" 0 %}'.replace('0', id); },
+    revisionDetail: function(id) { return '{% url "revisiones:revision_detail" 0 %}'.replace('0', id); },
+    evaluacionesList: '{% url "revisiones:evaluaciones_list" %}',
+    evaluacionCreate: '{% url "revisiones:evaluacion_create" %}',
+    evaluacionUpdate: function(id) { return '{% url "revisiones:evaluacion_update" 0 %}'.replace('0', id); },
+    evaluacionDelete: function(id) { return '{% url "revisiones:evaluacion_delete" 0 %}'.replace('0', id); },
+    evaluacionDetail: function(id) { return '{% url "revisiones:evaluacion_detail" 0 %}'.replace('0', id); },
+    criteriosForSelect: '{% url "revisiones:criterios_for_select" %}',
+    documentosForSelect: '{% url "revisiones:documentos_for_select" %}',
+    usuariosForSelect: '{% url "revisiones:usuarios_for_select" %}',
+    procesosForSelect: '{% url "revisiones:procesos_for_select" %}',
+    revisionesForSelect: '{% url "revisiones:revisiones_for_select" %}',
+  };
+
+  // Inicializar cuando el DOM esté listo
+  $(document).ready(function() {
+    // El JavaScript de revisiones.js se inicializa automáticamente
+  });
+</script>
+{% endblock %}
+

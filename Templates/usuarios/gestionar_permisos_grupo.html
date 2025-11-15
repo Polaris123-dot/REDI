@@ -1,0 +1,227 @@
+{% load static %}
+{% include 'Nucleo/arriba.html' %}
+
+{% block extra_css %}
+<!-- Bootstrap Duallistbox -->
+<link rel="stylesheet" href="{% static 'plugins/bootstrap4-duallistbox/bootstrap-duallistbox.min.css' %}">
+<style>
+  .bootstrap-duallistbox-container .box1 {
+    border-right: 1px solid #ddd;
+  }
+  
+  .bootstrap-duallistbox-container .box2 {
+    border-left: 1px solid #ddd;
+  }
+  
+  .bootstrap-duallistbox-container .info {
+    background-color: #f8f9fa;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 4px;
+  }
+  
+  .bootstrap-duallistbox-container label {
+    font-weight: bold;
+    margin-bottom: 5px;
+  }
+</style>
+{% endblock %}
+
+{% include 'Nucleo/centro.html' %}
+
+{% block content %}
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0">Gestionar Permisos del Rol: {{ grupo.name }}</h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right d-none d-sm-flex">
+                        <li class="breadcrumb-item"><a href="{% url 'usuarios:lista_grupos' %}">Roles</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'usuarios:detalle_grupo' grupo.id %}">{{ grupo.name }}</a></li>
+                        <li class="breadcrumb-item active">Permisos</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <section class="content">
+        <div class="container-fluid">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+                <div class="row">
+                    <div class="col-12">
+                    <div class="card card-primary">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-key"></i> Permisos del Rol: {{ grupo.name }}
+                            </h3>
+                            <div class="card-tools">
+                                <span class="badge badge-primary">{{ permisos_asignados|length }} permiso{{ permisos_asignados|length|pluralize }} asignado{{ permisos_asignados|length|pluralize }}</span>
+                            </div>
+                        </div>
+                        <form method="post" id="permisos-form">
+                            {% csrf_token %}
+                            <div class="card-body">
+                                <div class="alert alert-info">
+                                    <h5><i class="icon fas fa-info"></i> Instrucciones</h5>
+                                    <p class="mb-2">
+                                        <strong>Permisos disponibles:</strong> Selecciona los permisos de la lista izquierda y muévelos a la derecha para asignarlos al rol.
+                                    </p>
+                                    <p class="mb-0">
+                                        <strong>Permisos seleccionados:</strong> Selecciona los permisos de la lista derecha y muévelos a la izquierda para quitarlos del rol.
+                                    </p>
+                                    <p class="mb-0 mt-2">
+                                        <small><strong>Nota:</strong> Mantén presionada la tecla "Control" (o "Comando" en Mac) para seleccionar múltiples permisos a la vez.</small>
+                                    </p>
+                                </div>
+
+                                <select multiple="multiple" size="20" name="permisos" id="permisos-duallistbox" class="form-control">
+                                    <!-- Permisos disponibles (no asignados) -->
+                                    {% for permiso in permisos_disponibles %}
+                                        <option value="{{ permiso.id }}" data-app="{{ permiso.content_type.app_label }}" data-model="{{ permiso.content_type.model }}">
+                                            {{ permiso.content_type.app_label|title }} | {{ permiso.content_type.model|title }} | {{ permiso.name }}
+                                        </option>
+                                    {% endfor %}
+                                    
+                                    <!-- Permisos ya asignados -->
+                                    {% for permiso in permisos_asignados %}
+                                        <option value="{{ permiso.id }}" selected data-app="{{ permiso.content_type.app_label }}" data-model="{{ permiso.content_type.model }}">
+                                            {{ permiso.content_type.app_label|title }} | {{ permiso.content_type.model|title }} | {{ permiso.name }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+
+                                <!-- Información sobre permisos -->
+                                <div class="mt-3">
+                                    <h5>Información sobre permisos:</h5>
+                                    <ul class="list-unstyled">
+                                        <li><i class="fas fa-check text-success"></i> <strong>Puede agregar (add):</strong> Permite crear nuevos registros</li>
+                                        <li><i class="fas fa-edit text-info"></i> <strong>Puede modificar (change):</strong> Permite editar registros existentes</li>
+                                        <li><i class="fas fa-trash text-danger"></i> <strong>Puede eliminar (delete):</strong> Permite eliminar registros</li>
+                                        <li><i class="fas fa-eye text-primary"></i> <strong>Puede ver (view):</strong> Permite visualizar registros</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="card-footer">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> Guardar Permisos
+                                </button>
+                                <a href="{% url 'usuarios:detalle_grupo' grupo.id %}" class="btn btn-secondary">
+                                    <i class="fas fa-arrow-left"></i> Volver al Detalle
+                                </a>
+                                <a href="{% url 'usuarios:lista_grupos' %}" class="btn btn-default">
+                                    <i class="fas fa-list"></i> Lista de Roles
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+                <!-- Resumen de permisos por aplicación -->
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="card card-info">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-list"></i> Resumen de Permisos por Aplicación
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Aplicación</th>
+                                            <th>Modelo</th>
+                                            <th>Permisos Disponibles</th>
+                                            <th>Permisos Asignados</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for key, data in permisos_por_app.items %}
+                                            <tr>
+                                                <td><strong>{{ data.app_label|title }}</strong></td>
+                                                <td>{{ data.model_name|title }}</td>
+                                                <td>
+                                                    {% for permiso in data.permisos %}
+                                                        {% if permiso not in permisos_asignados %}
+                                                            <span class="badge badge-secondary mr-1 mb-1">{{ permiso.name|truncatewords:3 }}</span>
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                </td>
+                                                <td>
+                                                    {% for permiso in data.permisos %}
+                                                        {% if permiso in permisos_asignados %}
+                                                            <span class="badge badge-success mr-1 mb-1">{{ permiso.name|truncatewords:3 }}</span>
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                    {% if not permisos_asignados %}
+                                                        <span class="text-muted">Ninguno asignado</span>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                        {% empty %}
+                                            <tr>
+                                                <td colspan="4" class="text-center">No hay permisos disponibles</td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Bootstrap4 Duallistbox -->
+<script src="{% static 'plugins/bootstrap4-duallistbox/jquery.bootstrap-duallistbox.min.js' %}"></script>
+<script>
+$(document).ready(function() {
+    $('#permisos-duallistbox').bootstrapDualListbox({
+        nonSelectedListLabel: 'Permisos de usuario disponibles',
+        selectedListLabel: 'Permisos de usuario seleccionados',
+        preserveSelectionOnMove: 'moved',
+        moveOnSelect: false,
+        nonSelectedFilter: '',
+        infoText: 'Mostrando todos los permisos ({0})',
+        infoTextFiltered: '<span class="label label-warning">Filtrado</span> {0} de {1} permisos',
+        infoTextEmpty: 'Lista vacía',
+        filterPlaceHolder: 'Filtrar',
+        filterTextClear: 'Mostrar todos',
+        moveSelectedLabel: 'Elegir',
+        moveAllLabel: 'Elegir todo',
+        removeSelectedLabel: 'Eliminar',
+        removeAllLabel: 'Eliminar todo',
+        selectorMinimalHeight: 400
+    });
+
+    // Mensaje de confirmación al guardar
+    $('#permisos-form').on('submit', function(e) {
+        var selectedCount = $('#permisos-duallistbox').val();
+        if (selectedCount && selectedCount.length > 0) {
+            return confirm('¿Estás seguro de guardar los cambios en los permisos?');
+        }
+    });
+});
+</script>
+{% endblock %}
+
+{% include 'Nucleo/abajo.html' %}
+

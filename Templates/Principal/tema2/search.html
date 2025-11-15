@@ -1,0 +1,301 @@
+
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" href="{% static 'img/LogoMr.ico' %}" type="image/x-icon">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ titulo_pagina|default:'Búsqueda de Proyectos' }}</title>
+    <link rel="stylesheet" href="{% static 'Personalizados/Paginaciones/styles.css' %}">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <h1>DocuArchive</h1>
+                </div>
+                <nav class="nav">
+                    <a href="{% url 'catalogo_publico:index' %}" class="nav-link">Inicio</a>
+                    <a href="{% url 'catalogo_publico:buscar' %}" class="nav-link active">Búsqueda</a>
+                    <a href="#" class="nav-link">Acerca de</a>
+                </nav>
+                <div class="header-actions">
+                    <a href="{% url 'usuarios:login' %}" class="header-login">Iniciar sesión</a>
+                    <button class="theme-toggle" id="themeToggle" aria-label="Cambiar tema">
+                        <span class="theme-icon">☀️</span>
+                    </button>
+                </div>
+                <button class="mobile-menu-toggle" id="mobileMenuToggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="search-page">
+        <div class="container-fluid">
+            <div class="search-layout">
+
+                <aside class="sidebar" id="sidebar">
+                    <button class="sidebar-close" id="sidebarClose" type="button">&times;</button>
+
+                    <form id="filtersForm" method="get" action="{% url 'catalogo_publico:buscar' %}">
+                        <div class="search-box-sidebar">
+                            <label for="sidebarSearch" class="sr-only">Término de búsqueda</label>
+                            <input type="text"
+                                   class="search-input"
+                                   placeholder="Buscar proyectos…"
+                                   id="sidebarSearch"
+                                   name="q"
+                                   value="{{ query|default:'' }}">
+                            <button type="submit" class="search-button" aria-label="Buscar">⌕</button>
+                        </div>
+
+                        <div class="filters">
+                            <div class="filter-group">
+                                <label class="filter-label" for="filterTipo">Tipo de publicación</label>
+                                <select id="filterTipo" name="tipo" class="form-control">
+                                    <option value="">Todos</option>
+                                    {% for tipo in tipos_proyecto %}
+                                        <option value="{{ tipo.id }}" {% if tipo.id == selected_tipo %}selected{% endif %}>
+                                            {{ tipo.nombre }}
+                                        </option>
+                                    {% empty %}
+                                        <option value="" disabled>No hay tipos disponibles</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="filter-group">
+                                <label class="filter-label" for="filterCategoria">Categoría</label>
+                                <select id="filterCategoria" name="categoria" class="form-control">
+                                    <option value="">Todas</option>
+                                    {% for categoria in categorias %}
+                                        <option value="{{ categoria.id }}" {% if categoria.id|stringformat:'s' == selected_categoria %}selected{% endif %}>
+                                            {{ categoria.nombre }}
+                                        </option>
+                                    {% empty %}
+                                        <option value="" disabled>No hay categorías disponibles</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="filter-group">
+                                <label class="filter-label" for="filterAutor">Autor</label>
+                                <select id="filterAutor" name="autor" class="form-control">
+                                    <option value="">Todos</option>
+                                    {% for autor in autores %}
+                                        {% if autor.get_full_name %}
+                                            <option value="{{ autor.id }}" {% if autor.id|stringformat:'s' == selected_autor %}selected{% endif %}>
+                                                {{ autor.get_full_name }} ({{ autor.username }})
+                                            </option>
+                                        {% else %}
+                                            <option value="{{ autor.id }}" {% if autor.id|stringformat:'s' == selected_autor %}selected{% endif %}>
+                                                {{ autor.username }}
+                                            </option>
+                                        {% endif %}
+                                    {% empty %}
+                                        <option value="" disabled>No hay autores disponibles</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="filter-group">
+                                <label class="filter-label" for="filterFechaInicio">Fecha de publicación</label>
+                                <div class="date-range">
+                                    <input type="date"
+                                           id="filterFechaInicio"
+                                           name="fecha_inicio"
+                                           value="{{ fecha_inicio }}"
+                                           class="form-control">
+                                    <span class="date-separator">a</span>
+                                    <input type="date"
+                                           id="filterFechaFin"
+                                           name="fecha_fin"
+                                           value="{{ fecha_fin }}"
+                                           class="form-control">
+                                </div>
+                            </div>
+
+                            <div class="filter-actions">
+                                <button type="submit" class="btn-apply-filters">
+                                    Aplicar filtros
+                                </button>
+                                <a href="{% url 'catalogo_publico:buscar' %}" class="btn-reset-filters">
+                                    Limpiar filtros
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </aside>
+
+                <div class="results-area">
+                    <button class="sidebar-toggle" id="sidebarToggle" type="button">☰ Filtros</button>
+
+                    <div class="results-header">
+                        <h2>{{ titulo_pagina|default:'Resultados de búsqueda' }}</h2>
+                        {% if page_obj %}
+                            <p class="results-count">
+                                {% if total_resultados %}
+                                    Mostrando {{ page_obj.start_index }}-{{ page_obj.end_index }} de {{ total_resultados }} resultados
+                                {% else %}
+                                    No se encontraron resultados
+                                {% endif %}
+                            </p>
+                        {% else %}
+                            <p class="results-count">{{ total_resultados|default:'0' }} resultados</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="results-list">
+                        {% if proyectos %}
+                            {% for proyecto in proyectos %}
+                                <article class="result-card">
+                                    <h3 class="result-title">
+                                        <a href="{{ proyecto.url }}">
+                                            {{ proyecto.titulo }}
+                                        </a>
+                                    </h3>
+                                    <div class="result-meta">
+                                        {% if proyecto.tipo_proyecto %}
+                                            <span class="meta-badge">{{ proyecto.tipo_proyecto }}</span>
+                                        {% endif %}
+                                        {% if proyecto.fecha_publicacion_str %}
+                                            <span class="meta-date">{{ proyecto.fecha_publicacion_str }}</span>
+                                        {% elif proyecto.fecha_publicacion %}
+                                            <span class="meta-date">{{ proyecto.fecha_publicacion|date:"d/m/Y" }}</span>
+                                        {% endif %}
+                                        {% if proyecto.autor %}
+                                            <span class="meta-author">Por: {{ proyecto.autor }}</span>
+                                        {% endif %}
+                                    {% if proyecto.editor %}
+                                        <span class="meta-editor">Editor: {{ proyecto.editor }}</span>
+                                    {% endif %}
+                                    </div>
+                                    <p class="result-description">
+                                        {{ proyecto.resumen|default:"Sin resumen disponible."|truncatewords:50 }}
+                                    </p>
+                                    <div class="result-actions">
+                                        <a class="btn btn-sm btn-primary" href="{{ proyecto.url }}">
+                                            Ver detalle
+                                        </a>
+                                    </div>
+                                </article>
+                            {% endfor %}
+                        {% else %}
+                            <div class="empty-state">
+                                <p class="text-muted mb-0">{{ sin_resultados_mensaje|default:'No se encontraron proyectos que coincidan con tu búsqueda.' }}</p>
+                                {% if query %}
+                                    <p class="text-muted mt-2" style="font-size: 0.9rem;">
+                                        <strong>Sugerencias:</strong><br>
+                                        • Verifica la ortografía de las palabras<br>
+                                        • Intenta con términos más generales<br>
+                                        • Usa menos palabras clave<br>
+                                        • Revisa los filtros aplicados
+                                    </p>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    {% if page_obj and is_paginated %}
+                        <div class="pagination">
+                            {% if page_obj.has_previous %}
+                                <a href="?{% if query_string %}{{ query_string }}&{% endif %}page={{ page_obj.previous_page_number }}" class="page-link page-prev">&laquo; Anterior</a>
+                            {% else %}
+                                <span class="page-link disabled page-prev">&laquo; Anterior</span>
+                            {% endif %}
+
+                            {% for i in page_obj.paginator.page_range %}
+                                {% if i == page_obj.number %}
+                                    <span class="page-link active">{{ i }}</span>
+                                {% elif i >= page_obj.number|add:'-2' and i <= page_obj.number|add:'2' %}
+                                    <a href="?{% if query_string %}{{ query_string }}&{% endif %}page={{ i }}" class="page-link">{{ i }}</a>
+                                {% endif %}
+                            {% endfor %}
+
+                            {% if page_obj.has_next %}
+                                <a href="?{% if query_string %}{{ query_string }}&{% endif %}page={{ page_obj.next_page_number }}" class="page-link page-next">Siguiente &raquo;</a>
+                            {% else %}
+                                <span class="page-link disabled page-next">Siguiente &raquo;</span>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 DocuArchive. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <script src="{% static 'Personalizados/Paginaciones/script.js' %}"></script>
+
+    <script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const currentPath = window.location.pathname;
+        document.querySelectorAll(".nav-link").forEach(link => {
+            link.classList.toggle(
+                "active",
+                currentPath === link.getAttribute("href")
+            );
+        });
+
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarClose = document.getElementById('sidebarClose');
+
+        if (sidebarToggle && sidebar) {
+            sidebarToggle.addEventListener('click', function () {
+                sidebar.classList.add('active');
+            });
+        }
+
+        if (sidebarClose && sidebar) {
+            sidebarClose.addEventListener('click', function () {
+                sidebar.classList.remove('active');
+            });
+        }
+
+        // Mejorar la experiencia de búsqueda: destacar términos de búsqueda en los resultados
+        const query = "{{ query|default:'' }}";
+        if (query) {
+            const queryWords = query.toLowerCase().split(/\s+/).filter(w => w.length > 2);
+            const resultTitles = document.querySelectorAll('.result-title a');
+            const resultDescriptions = document.querySelectorAll('.result-description');
+            
+            queryWords.forEach(word => {
+                resultTitles.forEach(title => {
+                    const text = title.innerHTML;
+                    const regex = new RegExp(`(${word})`, 'gi');
+                    title.innerHTML = text.replace(regex, '<mark style="background-color: var(--accent-primary); color: var(--accent-on-dark); padding: 0 2px;">$1</mark>');
+                });
+                
+                resultDescriptions.forEach(desc => {
+                    const text = desc.innerHTML;
+                    const regex = new RegExp(`(${word})`, 'gi');
+                    desc.innerHTML = text.replace(regex, '<mark style="background-color: var(--accent-primary); color: var(--accent-on-dark); padding: 0 2px;">$1</mark>');
+                });
+            });
+        }
+
+        // Auto-submit en cambios de filtros (opcional, descomentar si se desea)
+        // const filterSelects = document.querySelectorAll('.form-control');
+        // filterSelects.forEach(select => {
+        //     select.addEventListener('change', function() {
+        //         document.getElementById('filtersForm').submit();
+        //     });
+        // });
+    });
+    </script>
+</body>
+</html>

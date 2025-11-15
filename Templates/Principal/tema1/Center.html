@@ -1,0 +1,52 @@
+<div id="search-results">
+    {% if proyectos %}
+        {% for proyecto in proyectos %}
+        <div class="row bordered-container publication-item">
+            <div class="col-md-2">
+                <div class="image-container text-center">
+                    <img src="" alt="{{ proyecto.titulo }}" class="img-fluid main-image" style="display: none;">
+                    <i class="fas fa-scroll fa-3x icon-placeholder" aria-hidden="true"></i>
+                </div>
+            </div>
+            <div class="col-md-10">
+                <!-- Enlace hacia la URL del proyecto -->
+                <a href="{{ proyecto.url }}" class="publication-link">
+                    <h2 class="font-weight-bold title-text text-justify publication-title">{{ proyecto.titulo }}</h2>
+                </a>
+                <div class="d-flex justify-content-between align-items-center">
+                    <p class="text-success small-access mb-0">
+                        <i class="fas fa-lock-open" style="color: green; font-size: 10px;"></i> 
+                        Acceso abierto
+                    </p>
+
+                    <p class="text-center author-text mb-0"> 
+                        {% if proyecto.autor %}
+                            {{ proyecto.autor }}
+                        {% else %}
+                            Sin autor
+                        {% endif %}
+                    </p>
+                </div>
+                <br>
+                <div class="publication-content">
+                    <div class="summary-container">
+                        <p class="text-justify summary-text publication-summary">
+                            {{ proyecto.resumen|truncatewords:50 }}
+                        </p>
+                        <div class="summary-fade"></div>
+                    </div>
+                    {% if proyecto.resumen|length > 200 %}
+                    <button class="btn-show-more">Mostrar más</button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="row">
+            <div class="col-12">
+                <p class="text-center text-muted">No se encontraron proyectos. Intenta con otros términos de búsqueda.</p>
+            </div>
+        </div>
+    {% endif %}
+</div>

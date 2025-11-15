@@ -1,0 +1,115 @@
+{% load static %}
+{% include 'Nucleo/arriba.html' %}
+
+{% include 'Nucleo/centro.html' %}
+
+{% block content %}
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0">Eliminar Rol</h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right d-none d-sm-flex">
+                        <li class="breadcrumb-item"><a href="{% url 'usuarios:lista_grupos' %}">Roles</a></li>
+                        <li class="breadcrumb-item active">Eliminar</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12 col-lg-9">
+                    <div class="card card-danger">
+                        <div class="card-header">
+                            <h3 class="card-title">Confirmar Eliminación</h3>
+                        </div>
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="card-body">
+                                <p>¿Estás seguro de que deseas eliminar el rol <strong>{{ grupo.name }}</strong>?</p>
+                                {% if grupo.user_set.count > 0 %}
+                                    <div class="alert alert-warning">
+                                        <strong>Advertencia:</strong> Este rol tiene {{ grupo.user_set.count }} usuario{{ grupo.user_set.count|pluralize }} asignado{{ grupo.user_set.count|pluralize }}.
+                                        Al eliminar el rol, estos usuarios perderán este rol.
+                                    </div>
+                                    <p><strong>Usuarios afectados:</strong></p>
+                                    <ul>
+                                        {% for usuario in grupo.user_set.all %}
+                                            <li>{{ usuario.username }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                {% endif %}
+                            </div>
+                            <div class="card-footer">
+                                <button type="submit" class="btn btn-danger">
+                                    <i class="fas fa-trash"></i> Sí, Eliminar
+                                </button>
+                                <a href="{% url 'usuarios:detalle_grupo' grupo.id %}" class="btn btn-secondary">
+                                    <i class="fas fa-times"></i> Cancelar
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- ========================================== -->
+                <!-- PANEL LATERAL DERECHO - ACCIONES RÁPIDAS -->
+                <!-- ========================================== -->
+                <div class="col-12 col-lg-3 mt-3 mt-lg-0">
+                    <div class="card card-primary">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-bolt"></i> Acciones Rápidas
+                            </h3>
+                        </div>
+                        <div class="card-body p-0">
+                            <ul class="nav nav-pills flex-column">
+                                <li class="nav-item">
+                                    <a href="{% url 'usuarios:detalle_grupo' grupo.id %}" class="nav-link">
+                                        <i class="fas fa-arrow-left"></i> Volver al Rol
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{% url 'usuarios:lista_grupos' %}" class="nav-link">
+                                        <i class="fas fa-list"></i> Lista de Roles
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{% url 'usuarios:lista_usuarios' %}" class="nav-link">
+                                        <i class="fas fa-users"></i> Ver Usuarios
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{% url 'usuarios:crear_grupo' %}" class="nav-link">
+                                        <i class="fas fa-plus-circle"></i> Nuevo Rol
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="card card-warning">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-exclamation-triangle"></i> Advertencia
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-sm text-muted">
+                                Esta acción no se puede deshacer. Los usuarios perderán este rol.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}
+
+{% include 'Nucleo/abajo.html' %}
+

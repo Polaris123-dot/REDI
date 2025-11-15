@@ -1,0 +1,1250 @@
+{% load static %}
+
+<style>
+    /* Estilos básicos de paginación */
+.pagination {
+    display: flex;
+    list-style: none;
+    padding: 0;
+    margin: 20px 0;
+}
+
+.pagination .page-item {
+    margin: 0 5px;
+}
+
+.pagination .page-link {
+    display: block;
+    padding: 8px 12px;
+    color: #007bff;
+    text-decoration: none;
+    background-color: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.pagination .page-link:hover {
+    background-color: #007bff;
+    color: white;
+    text-decoration: none;
+}
+
+.pagination .page-item.active .page-link {
+    background-color: #007bff;
+    color: white;
+    border-color: #007bff;
+    pointer-events: none;
+}
+
+.pagination .page-item.disabled .page-link {
+    color: #6c757d;
+    pointer-events: none;
+    background-color: #fff;
+    border-color: #dee2e6;
+}
+
+/* Estilos para el hover y focos */
+.pagination .page-link:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+}
+
+.pagination .page-link[aria-label="Previous"],
+.pagination .page-link[aria-label="Next"] {
+    font-weight: bold;
+}
+
+.pagination .page-item.disabled .page-link[aria-label="Previous"],
+.pagination .page-item.disabled .page-link[aria-label="Next"] {
+    color: #ccc;
+}
+
+/* Estilo para el rango '...' */
+.pagination .page-item.disabled .page-link {
+    background-color: transparent;
+    border: none;
+}
+
+
+.highlighted {
+    background-color: #FFEB3B; /* Amarillo */
+    padding: 0 2px;
+    border-radius: 3px;
+    box-shadow: 0 1px 1px rgba(0,0,0,0.1);
+    font-weight: bold;
+}
+
+
+
+ /* Nuevos estilos corregidos */
+.hero-banner-wrapper {
+  overflow: hidden;
+  position: relative;
+}
+
+.hero-banner {
+  position: relative;
+  padding: 6rem 2rem;
+  background: 
+    linear-gradient(135deg, rgba(44, 62, 80, 0.92) 0%, rgba(52, 152, 219, 0.88) 100%),
+    url('https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80');
+  background-size: cover;
+  background-position: center;
+  color: white;
+  text-align: center;
+  margin: 0; /* Eliminamos cualquier margen */
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  
+  /* Aseguramos que cubra todo el ancho */
+  width: 100vw;
+  position: relative;
+  left: 50%;
+  right: 50%;
+  margin-left: -50vw;
+  margin-right: -50vw;
+}
+
+/* Resto de tus estilos se mantienen igual */
+.hero-title {
+  font-size: 2.8rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.hero-banner.visible .hero-title {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.hero-divider {
+    width: 100px;
+    height: 4px;
+    background: #e67e22;
+    margin: 0 auto 2rem;
+    border-radius: 2px;
+    opacity: 0;
+    transform: scaleX(0);
+    transform-origin: center;
+    transition: all 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.6s;
+}
+
+.hero-banner.visible .hero-divider {
+    opacity: 1;
+    transform: scaleX(1);
+}
+
+.hero-description {
+    max-width: 800px;
+    margin: 0 auto 3rem;
+    font-size: 1.2rem;
+    line-height: 1.8;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.8s ease 0.9s;
+}
+
+.hero-banner.visible .hero-description {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Estilos para el buscador */
+.hero-search-form {
+    max-width: 700px;
+    margin: 0 auto;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.8s ease 1.2s;
+}
+
+.hero-banner.visible .hero-search-form {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.search-container {
+    display: flex;
+    border-radius: 50px;
+    overflow: hidden;
+    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
+    transition: all 0.4s ease;
+}
+
+.search-container:focus-within {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 30px rgba(231, 126, 34, 0.4);
+}
+
+.search-container input {
+    flex: 1;
+    padding: 1.2rem 1.8rem;
+    border: none;
+    font-size: 1.1rem;
+    outline: none;
+    background: rgba(255, 255, 255, 0.95);
+}
+
+.search-container button {
+    background: #e67e22;
+    color: white;
+    border: none;
+    padding: 0 2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    font-weight: 600;
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+}
+
+.search-container button:hover {
+    background: #d35400;
+    padding: 0 2.5rem;
+}
+
+.search-icon {
+    font-size: 1.3rem;
+    transition: all 0.3s ease;
+}
+
+.search-container button:hover .search-icon {
+    transform: scale(1.2);
+}
+
+/* Efecto de partículas simplificado */
+.particle {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.6);
+    border-radius: 50%;
+    pointer-events: none;
+    opacity: 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .hero-banner {
+        padding: 4rem 1.5rem;
+    }
+    
+    .hero-title {
+        font-size: 2.2rem;
+    }
+    
+    .hero-description {
+        font-size: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .search-container {
+        flex-direction: column;
+        border-radius: 8px;
+    }
+    
+    .search-container input,
+    .search-container button {
+        width: 100%;
+        padding: 1rem;
+    }
+}
+
+
+
+    /* Estilos mejorados manteniendo la estructura original */
+.publication-list-enhanced {
+    animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.bordered-container {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    transition: all 0.3s ease;
+    background: white;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.bordered-container:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    border-color: #3498db;
+}
+
+.publication-item {
+    opacity: 0;
+    animation: slideUp 0.5s ease-out forwards;
+    animation-delay: calc(var(--animation-order) * 0.1s);
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.image-container {
+    position: relative;
+    overflow: hidden;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.image-container:hover {
+    transform: scale(1.03);
+}
+
+.main-image {
+    transition: all 0.5s ease;
+    filter: grayscale(20%);
+}
+
+.image-container:hover .main-image {
+    filter: grayscale(0%);
+}
+
+.icon-placeholder {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+}
+
+.publication-title {
+    color: #2c3e50;
+    transition: all 0.3s ease;
+    position: relative;
+    padding-bottom: 5px;
+}
+
+.publication-title:hover {
+    color: #3498db;
+}
+
+.publication-title::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: #3498db;
+    transition: width 0.3s ease;
+}
+
+.publication-title:hover::after {
+    width: 100%;
+}
+
+.small-access {
+    transition: all 0.3s ease;
+}
+
+.small-access:hover {
+    transform: translateX(5px);
+}
+
+.small-access i {
+    transition: all 0.3s ease;
+}
+
+.small-access:hover i {
+    transform: rotate(15deg);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .bordered-container {
+        padding: 1rem;
+    }
+    
+    .image-container {
+        margin-bottom: 1rem;
+    }
+}
+/* Estilos para el resumen controlado */
+.summary-container {
+    position: relative;
+    max-height: 6em; /* Ajusta esta altura según necesites */
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+
+.summary-fade {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2em;
+    background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,1));
+}
+
+.publication-summary {
+    margin-bottom: 0;
+    transition: all 0.3s ease;
+}
+
+.btn-show-more {
+    background: none;
+    border: none;
+    color: #3498db;
+    padding: 0.2rem 0;
+    font-size: 0.85rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    transition: all 0.3s ease;
+}
+
+.btn-show-more:hover {
+    color: #2980b9;
+}
+
+.btn-show-more::after {
+    content: '↓';
+    margin-left: 0.3rem;
+    font-size: 0.9rem;
+    transition: transform 0.3s ease;
+}
+
+.btn-show-more:hover::after {
+    transform: translateY(2px);
+}
+
+/* Clase para mostrar el contenido completo */
+.summary-expanded .publication-summary {
+    max-height: none;
+}
+
+.summary-expanded .summary-fade {
+    display: none;
+}
+
+.summary-expanded .btn-show-more::after {
+    content: '↑';
+}
+
+
+
+    /* Estilos para la transición y contador */
+.results-transition {
+    background-color: #f8f9fa;
+    padding: 1.5rem 0;
+    margin-top: -1px; /* Solapa ligeramente con la sección anterior */
+}
+
+.divider-line {
+    height: 2px;
+    background: linear-gradient(90deg, #3498db, #e67e22);
+    margin: 0 auto 1.5rem;
+    width: 100%;
+    position: relative;
+}
+
+.divider-line::after {
+    content: "";
+    position: absolute;
+    bottom: -5px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 30px;
+    height: 3px;
+    background-color: #2c3e50;
+}
+
+.results-counter {
+    text-align: center;
+    font-size: 1.2rem;
+    color: #2c3e50;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    display: inline-block;
+    background-color: #fff;
+    border-radius: 30px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    margin: 0 auto;
+    position: relative;
+    top: -10px;
+}
+
+.count-number {
+    font-weight: 700;
+    color: #e67e22;
+    font-size: 1.3rem;
+}
+
+/* Efectos de animación */
+.results-counter {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .results-counter {
+        font-size: 1rem;
+        top: -5px;
+    }
+    
+    .count-number {
+        font-size: 1.1rem;
+    }
+}
+
+
+
+.footer {
+            background-color: var(--color-primario);
+            color: white;
+            padding: 30px 0;
+            margin-top: 50px;
+        }
+
+
+
+
+    /* ====================== */
+/* ESTILOS PARA EL FOOTER */
+/* ====================== */
+
+.footer {
+    background: linear-gradient(135deg, #1a2a3a, #2c3e50);
+    color: white;
+    padding: 3rem 0 1.5rem;
+    margin-top: 4rem;
+    position: relative;
+    font-size: 0.95rem;
+}
+
+/* Barra decorativa superior */
+.footer::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, #3498db, #e67e22);
+}
+
+/* Contenedor principal */
+.footer .container {
+    position: relative;
+    z-index: 2;
+}
+
+/* Títulos de sección */
+.footer h5 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    position: relative;
+    display: inline-block;
+}
+
+.footer h5::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 0;
+    width: 40px;
+    height: 3px;
+    background-color: #e67e22;
+    border-radius: 3px;
+}
+
+/* Listas de enlaces */
+.footer ul {
+    list-style: none;
+    padding-left: 0;
+}
+
+.footer ul li {
+    margin-bottom: 0.8rem;
+    transition: all 0.3s ease;
+}
+
+.footer ul li:hover {
+    transform: translateX(5px);
+}
+
+.footer a {
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+    transition: all 0.3s ease;
+    display: inline-block;
+}
+
+.footer a:hover {
+    color: white;
+    text-decoration: none;
+}
+
+/* Iconos de contacto */
+.footer .fa-envelope,
+.footer .fa-phone {
+    width: 20px;
+    text-align: center;
+    margin-right: 8px;
+    color: #e67e22;
+}
+
+/* Redes sociales */
+.social-links {
+    margin-top: 1rem;
+}
+
+.social-links a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    margin-right: 12px;
+    transition: all 0.3s ease;
+}
+
+.social-links a:last-child {
+    margin-right: 0;
+}
+
+.social-links a:hover {
+    background: #e67e22;
+    transform: translateY(-3px);
+}
+
+.social-links i {
+    font-size: 1rem;
+}
+
+/* Línea divisoria */
+.footer hr {
+    border-color: rgba(255, 255, 255, 0.1);
+    margin: 2rem 0;
+}
+
+/* Copyright */
+.copyright {
+    text-align: center;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.85rem;
+    padding-top: 1rem;
+}
+
+/* Efecto de partículas decorativas (opcional) */
+.footer-particles {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.1;
+    pointer-events: none;
+}
+
+/* ====================== */
+/* RESPONSIVE DESIGN */
+/* ====================== */
+
+@media (max-width: 768px) {
+    .footer {
+        text-align: center;
+        padding: 2rem 0 1rem;
+    }
+    
+    .footer h5::after {
+        left: 50%;
+        transform: translateX(-50%);
+    }
+    
+    .footer ul li {
+        margin-bottom: 0.6rem;
+    }
+    
+    .social-links {
+        justify-content: center;
+    }
+    
+    .footer .col-md-4 {
+        margin-bottom: 2rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .footer {
+        padding: 1.5rem 0 1rem;
+    }
+    
+    .footer h5 {
+        font-size: 1rem;
+        margin-bottom: 1rem;
+    }
+}
+</style>
+
+
+
+
+{% include 'Principal/tema1/header.html' %}
+
+
+<div class="hero-banner-wrapper">
+    <div class="hero-banner">
+      <!-- Contenido actual del hero banner -->
+      <h1 class="hero-title">Bienvenido al Repositorio Digital Marelliano</h1>
+      <div class="hero-divider"></div>
+      <p class="hero-description">Una plataforma digital diseñada para almacenar, preservar y difundir la producción académica...</p>
+      
+      <form class="hero-search-form" onsubmit="event.preventDefault(); currentPage = 1; realizarBusqueda(); return false;">
+        <div class="search-container">
+          <input type="search" id="search" name="q" value="{{ query|default:'' }}" placeholder="Buscar artículos, publicaciones, recursos..." aria-label="Buscar">
+          <button type="submit">
+            <span class="search-icon">⌕</span>
+            <span class="search-text">Buscar</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+
+
+<!-- Línea divisora y contador -->
+<div class="results-transition">
+    <div class="container">
+        <div class="divider-line"></div>
+        <div class="results-counter">
+            <i class="fas fa-search me-2"></i>
+            <span class="count-number" id="total-resultados">{% if total_resultados %}{{ total_resultados }}{% else %}{{ total_proyectos|default:0 }}{% endif %}</span> proyectos encontrados
+        </div>
+    </div>
+</div>
+
+
+        <main class="container mt-5">
+
+
+
+                <div class="row">
+                    <div class="col-md-8"> <!-- Columna para el texto -->
+                        <!-- Nueva fila para las dos secciones -->
+    
+                        {% include 'Principal/tema1/Center.html' %}
+
+
+                    </div>
+
+
+                    <div class="col-md-4">
+                        <!-- Panel de Información colapsable -->
+            
+                        {% include 'Principal/tema1/panel_informacion.html' %}
+
+                    </div>
+                </div>
+            
+                </div>
+
+
+        <ul id="pagination-controls" class="pagination"></ul>
+
+        </main>
+
+            <!-- ===== Sección: Promoción Universitaria ===== -->
+        <section class="university-promo py-5 bg-light">
+            <div class="container">
+                <h2 class="text-center mb-5"><i class="fas fa-university me-2"></i> Nuestro Instituto</h2>
+                
+                <div class="row g-4">
+                    <!-- Card 1: Investigación -->
+                    <div class="col-md-4">
+                        <div class="card h-100 border-0 shadow-sm hover-transform">
+                            <div class="card-icon-header bg-primary text-white text-center py-3">
+                                <i class="fas fa-flask fa-3x"></i>
+                            </div>
+                            <div class="card-body">
+                                <h3 class="h5">Investigación de Vanguardia</h3>
+                                <p>Rankeada entre las investigaciones de nivel</p>
+                                <a href="#" class="btn btn-sm btn-outline-primary">Ver</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card 2: Admisiones -->
+                    <div class="col-md-4">
+                        <div class="card h-100 border-0 shadow-sm hover-transform">
+                            <div class="card-icon-header bg-success text-white text-center py-3">
+                                <i class="fas fa-user-graduate fa-3x"></i>
+                            </div>
+                            <div class="card-body">
+                                <h3 class="h5">Admisiones 2026</h3>
+                                <p>Postula a nuestras carreras. Becas disponibles para talentos destacados.</p>
+                                <a href="#" class="btn btn-sm btn-outline-success">Postular ahora</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card 3: Eventos -->
+                    <div class="col-md-4">
+                        <div class="card h-100 border-0 shadow-sm hover-transform">
+                            <div class="card-icon-header bg-warning text-white text-center py-3">
+                                <i class="fas fa-calendar-alt fa-3x"></i>
+                            </div>
+                            <div class="card-body">
+                                <h3 class="h5">Próximos Eventos</h3>
+                                <ul class="list-unstyled">
+                                    <li class="mb-2"><i class="fas fa-microphone me-2"></i> Seminario IA - 15 Oct</li>
+                                    <li><i class="fas fa-book me-2"></i> Feria Editorial - 22 Nov</li>
+                                </ul>
+                                <a href="#" class="btn btn-sm btn-outline-warning">Ver calendario</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Banner Promocional (Full-width) -->
+                <div class="row mt-5">
+                    <div class="col-12">
+                        <div class="promo-banner p-4 rounded-3" style="background: linear-gradient(90deg, #2c3e50, #3498db);">
+                            <div class="row align-items-center">
+                                <div class="col-md-8 text-white">
+                                    <h3 class="h2 mb-3">¡Conoce mas sobre nosotros!</h3>
+                                    <p class="mb-0">disponible para futuros estudiantes y colaboradores.</p>
+                                </div>
+                                <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                                    <a href="#" class="btn btn-light btn-lg">Iniciar Tour</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+
+{% include 'Principal/tema1/footer.html' %}
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+
+
+<script>
+
+
+    // Script para animaciones escalonadas
+document.addEventListener('DOMContentLoaded', function() {
+    const publications = document.querySelectorAll('.publication-item');
+    
+    publications.forEach((pub, index) => {
+        pub.style.setProperty('--animation-order', index);
+        
+        // Efecto de aparición progresiva
+        setTimeout(() => {
+            pub.style.animation = 'slideUp 0.5s ease-out forwards';
+        }, index * 100);
+    });
+    
+    // Efecto hover para el icono de acceso
+    const accessIcons = document.querySelectorAll('.small-access i');
+    accessIcons.forEach(icon => {
+        icon.addEventListener('mouseenter', function() {
+            this.classList.remove('fa-lock');
+            this.classList.add('fa-lock-open');
+        });
+        
+        icon.addEventListener('mouseleave', function() {
+            this.classList.remove('fa-lock-open');
+            this.classList.add('fa-lock');
+        });
+    });
+});
+
+// Script para controlar el "Mostrar más/menos"
+document.addEventListener('DOMContentLoaded', function() {
+    const showMoreButtons = document.querySelectorAll('.btn-show-more');
+    
+    showMoreButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const container = this.closest('.publication-content').querySelector('.summary-container');
+            container.classList.toggle('summary-expanded');
+            
+            if (container.classList.contains('summary-expanded')) {
+                this.textContent = 'Mostrar menos';
+            } else {
+                this.textContent = 'Mostrar más';
+            }
+        });
+    });
+});
+</script>
+
+<script>
+    
+   
+        let currentPage = 1; // Página actual
+
+        // Función para realizar la búsqueda con filtros
+function realizarBusqueda() {
+    var query = $('#search').val() || $('#search-input').val() || ''; // Obtener el valor de búsqueda
+    var fecha_inicio = $('#fecha-inicio').val() || ''; // Obtener el valor del filtro de fecha de inicio
+    var fecha_fin = $('#fecha-fin').val() || ''; // Obtener el valor del filtro de fecha de fin
+    var autor = $('#autor-select').val() || ''; // Obtener el valor del filtro de autor
+    var tema = $('#tema-select').val() || ''; // Obtener el valor del filtro de tipo de proyecto
+    var sede = $('#sede-select').val() || ''; // Obtener el valor del filtro de categoría
+
+    $.ajax({
+        url: '{% url "catalogo_publico:buscar_ajax" %}',
+        data: {
+            'query': query,
+            'page': currentPage,
+            'fecha_inicio': fecha_inicio,
+            'fecha_fin': fecha_fin,
+            'autor': autor,
+            'tema': tema,
+            'sede': sede
+        },
+        success: function(data) {
+            console.log("Resultados correctos", data);
+            $('#search-results').empty(); // Limpiar resultados anteriores
+
+            // Actualizar contador
+            if (data.total !== undefined) {
+                $('#total-resultados').text(data.total);
+            }
+
+            // Mostrar resultados
+            if (data.resultados && data.resultados.length > 0) {
+                // Obtener el término de búsqueda y dividirlo en palabras
+                var searchTerm = query.toLowerCase();
+                var searchWords = searchTerm.split(/\s+/).filter(word => word.length > 0);
+                
+                $.each(data.resultados, function(index, resultado) {
+                    // Resaltar palabras en el título
+                    var highlightedTitle = highlightWords(resultado.titulo, searchWords);
+                    // Resaltar palabras en el resumen
+                    var highlightedSummary = highlightWords(resultado.resumen || '', searchWords);
+
+                    var resultadoHTML = `
+                        <div class="row bordered-container publication-item">
+                            <div class="col-md-2">
+                                <div class="image-container text-center">
+                                    <img src="" alt="${escapeHtml(resultado.titulo)}" class="img-fluid main-image" style="display: none;">
+                                    <i class="fas fa-scroll fa-3x icon-placeholder" aria-hidden="true"></i>
+                                </div>
+                            </div>
+                            <div class="col-md-10">
+                                <a href="${resultado.url}" class="publication-link">
+                                    <h2 class="font-weight-bold title-text text-justify publication-title">${highlightedTitle}</h2>
+                                </a>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <p class="text-success small-access mb-0">
+                                        <i class="fas fa-lock-open" style="color: green; font-size: 10px;"></i> 
+                                        Acceso abierto
+                                    </p>`;
+                    
+                    if (resultado.autor) {
+                        resultadoHTML += `<p class="text-center author-text mb-0">${escapeHtml(resultado.autor)}</p>`;
+                    } else {
+                        resultadoHTML += `<p class="text-center author-text mb-0">Sin autor</p>`;
+                    }
+
+                    resultadoHTML += `
+                                </div>
+                                <br>
+                                <div class="publication-content">
+                                    <div class="summary-container">
+                                        <p class="text-justify summary-text publication-summary">${highlightedSummary}</p>
+                                        <div class="summary-fade"></div>
+                                    </div>
+                                    ${resultado.resumen && resultado.resumen.length > 200 ? '<button class="btn-show-more">Mostrar más</button>' : ''}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+                    $('#search-results').append(resultadoHTML);
+                });
+
+            } else {
+                $('#search-results').append('<div class="row"><div class="col-12"><p class="text-center text-muted">No se encontraron resultados.</p></div></div>');
+            }
+            
+            // Actualizar controles de paginación
+            if (data.total_pages !== undefined) {
+                updatePagination(data.total_pages, data.current_page);
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error("Error en búsqueda:", error);
+            $('#search-results').append('<div class="row"><div class="col-12"><p class="text-center text-danger">Error al realizar la búsqueda. Por favor, intente nuevamente.</p></div></div>');
+        }
+    });
+}
+
+
+
+        // Función para resaltar palabras en el texto
+function highlightWords(text, words) {
+    if (!text || !words.length) return text || '';
+    
+    // Crear expresión regular para buscar todas las palabras (insensible a mayúsculas)
+    var regex = new RegExp('(' + words.map(word => escapeRegExp(word)).join('|') + ')', 'gi');
+    
+    return text.replace(regex, '<span class="highlighted">$1</span>');
+}
+
+// Función para escapar caracteres especiales en regex
+function escapeRegExp(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+// Función para escapar HTML
+function escapeHtml(text) {
+    if (!text) return '';
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return String(text).replace(/[&<>"']/g, m => map[m]);
+}
+
+</script>
+<script src="{% static 'Personalizados/Paginaciones/paginate.js' %}"></script>
+
+<script>
+    // Función para actualizar la paginación
+    function updatePagination(totalPages, currentPage) {
+        $('#pagination-controls').empty(); // Limpiar controles anteriores
+
+        // Enlace a la página anterior
+        if (currentPage > 1) {
+            $('#pagination-controls').append(`
+                <li class="page-item">
+                    <a class="page-link" href="#" data-page="${currentPage - 1}" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+            `);
+        } else {
+            $('#pagination-controls').append(`
+                <li class="page-item disabled">
+                    <span class="page-link" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </span>
+                </li>
+            `);
+        }
+
+        // Mostrar las páginas alrededor de la actual
+        const range = 4; // Cuántas páginas mostrar a la izquierda y derecha de la actual
+        const startPage = Math.max(1, currentPage - range);
+        const endPage = Math.min(totalPages, currentPage + range);
+
+        // Enlace a la primera página con "..."
+        if (startPage > 1) {
+            $('#pagination-controls').append(`
+                <li class="page-item">
+                    <a class="page-link" href="#" data-page="1">1</a>
+                </li>
+            `);
+            if (startPage > 2) {
+                $('#pagination-controls').append(`
+                    <li class="page-item disabled"><span class="page-link">...</span></li>
+                `);
+            }
+        }
+
+        // Enlaces a las páginas del rango calculado
+        for (let i = startPage; i <= endPage; i++) {
+            if (i === currentPage) {
+                $('#pagination-controls').append(`
+                    <li class="page-item active">
+                        <span class="page-link">${i} <span class="sr-only">(current)</span></span>
+                    </li>
+                `);
+            } else {
+                $('#pagination-controls').append(`
+                    <li class="page-item">
+                        <a class="page-link" href="#" data-page="${i}">${i}</a>
+                    </li>
+                `);
+            }
+        }
+
+        // Enlace a la última página con "..."
+        if (endPage < totalPages) {
+            if (endPage < totalPages - 1) {
+                $('#pagination-controls').append(`
+                    <li class="page-item disabled"><span class="page-link">...</span></li>
+                `);
+            }
+            $('#pagination-controls').append(`
+                <li class="page-item">
+                    <a class="page-link" href="#" data-page="${totalPages}">${totalPages}</a>
+                </li>
+            `);
+        }
+
+        // Enlace a la página siguiente
+        if (currentPage < totalPages) {
+            $('#pagination-controls').append(`
+                <li class="page-item">
+                    <a class="page-link" href="#" data-page="${currentPage + 1}" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+            `);
+        } else {
+            $('#pagination-controls').append(`
+                <li class="page-item disabled">
+                    <span class="page-link" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                    </span>
+                </li>
+            `);
+        }
+        
+        // Agregar event listeners para los enlaces de paginación
+        $('#pagination-controls').off('click', '.page-link').on('click', '.page-link', function(e) {
+            e.preventDefault();
+            const page = $(this).data('page');
+            if (page && !$(this).parent().hasClass('disabled')) {
+                currentPage = page;
+                realizarBusqueda();
+                // Scroll suave hacia arriba
+                $('html, body').animate({ scrollTop: $('.hero-banner').offset().top }, 500);
+            }
+        });
+    }
+</script>
+
+<script>
+    $(document).ready(function () {
+        // Obtener los parámetros de la URL
+        const urlParams = new URLSearchParams(window.location.search);
+        
+        // Crear un objeto para almacenar solo los parámetros válidos
+        const params = {};
+        
+        // Validar y agregar parámetros que no sean null
+        ['q', 'query', 'fecha_inicio', 'fecha_fin', 'autor', 'tema', 'sede'].forEach(param => {
+            const value = urlParams.get(param);
+            if (value !== null && value !== '') {
+                params[param] = value; // Solo agregar si no es null
+            }
+        });
+        
+        console.log("Parámetros de búsqueda:", params);
+
+        // Si hay un query (q o query), ingresarlo en el input de búsqueda
+        if (params.q) {
+            $('#search').val(params.q);
+            $('#search-input').val(params.q);
+        } else if (params.query) {
+            $('#search').val(params.query);
+            $('#search-input').val(params.query);
+        }
+
+        // Si hay parámetros de búsqueda, realizar la búsqueda automáticamente
+        if (params.q || params.query || Object.keys(params).length > 0) {
+            currentPage = 1;
+            realizarBusqueda();
+        } else {
+            // Si no hay búsqueda, mostrar proyectos recientes (ya están en el template)
+            // El contador se actualizará automáticamente
+            if ($('#total-resultados').text() === '--' || $('#total-resultados').text() === '0') {
+                // Si no hay total, intentar obtenerlo del contexto
+                {% if total_proyectos %}
+                    $('#total-resultados').text({{ total_proyectos }});
+                {% endif %}
+            }
+        }
+    });
+
+
+
+// Script usando solo jQuery (que ya tienes en AdminLTE)
+$(document).ready(function() {
+    // Mostrar el banner con efecto
+    $('.hero-banner').addClass('visible');
+    
+    // Crear partículas simples
+    function createParticles() {
+        const banner = $('.hero-banner');
+        for (let i = 0; i < 20; i++) {
+            const particle = $('<div class="particle"></div>');
+            particle.css({
+                left: Math.random() * 100 + '%',
+                top: Math.random() * 100 + '%',
+                opacity: Math.random() * 0.5 + 0.1,
+                width: Math.random() * 5 + 2 + 'px',
+                height: particle.css('width')
+            });
+            banner.append(particle);
+            
+            // Animación con jQuery
+            particle.animate({opacity: 0.6}, 2000);
+            animateParticle(particle);
+        }
+    }
+    
+    function animateParticle(particle) {
+        const duration = Math.random() * 5000 + 5000;
+        const newPos = {
+            left: Math.random() * 100 + '%',
+            top: Math.random() * 100 + '%'
+        };
+        
+        particle.animate(newPos, {
+            duration: duration,
+            easing: 'linear',
+            complete: function() {
+                animateParticle(particle);
+            }
+        });
+    }
+    
+    createParticles();
+    
+    // Efecto hover para el botón de búsqueda
+    $('.search-container button').hover(
+        function() {
+            $(this).find('.search-icon').css('transform', 'scale(1.2)');
+        },
+        function() {
+            $(this).find('.search-icon').css('transform', 'scale(1)');
+        }
+    );
+});
+</script>
+

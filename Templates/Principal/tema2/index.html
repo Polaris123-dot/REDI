@@ -1,0 +1,183 @@
+{% load static %}
+
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" href="{% static 'img/LogoMr.ico' %}" type="image/x-icon">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentación - Inicio</title>
+    
+    <link rel="stylesheet" href="{% static 'Personalizados/Paginaciones/styles.css' %}">
+
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <h1>DocuArchive</h1>
+                </div>
+                <nav class="nav">
+                    <a href="{% url 'catalogo_publico:index' %}" class="nav-link active">Inicio</a>
+                    <a href="{% url 'catalogo_publico:buscar' %}" class="nav-link">Búsqueda</a>
+                    <!--<a href="detail.html" class="nav-link">Proyectos</a>-->
+                    <a href="#" class="nav-link">Acerca de</a>
+                </nav>
+                <div class="header-actions">
+                    <a href="{% url 'usuarios:login' %}" class="header-login">Iniciar sesión</a>
+                    <button class="theme-toggle" id="themeToggle" aria-label="Cambiar tema">
+                        <span class="theme-icon">☀️</span>
+                    </button>
+                </div>
+                <button class="mobile-menu-toggle" id="mobileMenuToggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section class="hero">
+            <div class="container">
+                <h2 class="hero-title">Repositorio Digital Marelliano</h2>
+                <p class="hero-subtitle">Descubre investigaciones, proyectos y recursos académicos disponibles para toda la comunidad.</p>
+
+                <form class="search-box-hero" action="{% url 'catalogo_publico:buscar' %}" method="get">
+                    <input type="text"
+                           class="search-input-hero"
+                           name="q"
+                           value=""
+                           placeholder="Buscar proyectos, autores o palabras clave…"
+                           aria-label="Buscar proyectos">
+                    <button type="submit" class="search-button-hero">
+                        Buscar
+                    </button>
+                </form>
+
+                <div class="hero-metrics">
+                    <div class="metric-card">
+                        <span class="metric-value">{{ total_proyectos|default:'0' }}</span>
+                        <span class="metric-label">Proyectos publicados</span>
+                    </div>
+                    <div class="metric-card">
+                        <span class="metric-value">{{ total_autores|default:'0' }}</span>
+                        <span class="metric-label">Autores participantes</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="featured-projects">
+            <div class="container">
+                <div class="section-header">
+                    <h3 class="section-title mb-2">Proyectos Destacados</h3>
+                    <p class="section-subtitle text-muted">Selección de trabajos publicados recientemente en el repositorio.</p>
+                </div>
+
+                {% if proyectos_destacados %}
+                    <div class="projects-grid">
+                        {% for proyecto in proyectos_destacados %}
+                            <article class="project-card">
+                                <div class="project-icon">📄</div>
+                                <h4 class="project-title">
+                                    <a href="{{ proyecto.url }}">
+                                        {{ proyecto.titulo }}
+                                    </a>
+                                </h4>
+                                <p class="project-description">{{ proyecto.resumen|default:"Sin resumen disponible."|truncatewords:30 }}</p>
+                                <div class="project-meta">
+                                    {% if proyecto.tipo_proyecto %}
+                                        <span class="meta-item">Tipo: {{ proyecto.tipo_proyecto }}</span>
+                                    {% endif %}
+                                    {% if proyecto.autor %}
+                                        <span class="meta-item">Autoría: {{ proyecto.autor|truncatewords:4 }}</span>
+                                    {% endif %}
+                                    {% if proyecto.editor %}
+                                        <span class="meta-item">Editor: {{ proyecto.editor }}</span>
+                                    {% endif %}
+                                    {% if proyecto.fecha_publicacion %}
+                                        <span class="meta-item">Publicado: {{ proyecto.fecha_publicacion|date:"Y" }}</span>
+                                    {% endif %}
+                                </div>
+                                <a class="project-link" href="{{ proyecto.url }}">
+                                    Ver detalle
+                                </a>
+                            </article>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="empty-state text-center">
+                        <p class="text-muted mb-0">Aún no hay proyectos destacados para mostrar.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </section>
+
+        <section class="recent-projects">
+            <div class="container">
+                <div class="section-header d-flex justify-content-between align-items-center flex-wrap">
+                    <div>
+                        <h3 class="section-title mb-1">Últimos proyectos incorporados</h3>
+                        <p class="section-subtitle text-muted mb-0">Explora los trabajos más recientes disponibles en acceso público.</p>
+                    </div>
+                    <a href="{% url 'catalogo_publico:buscar' %}" class="cta-button">
+                        Ver todos los proyectos
+                    </a>
+                </div>
+
+                {% if proyectos_recientes %}
+                    <div class="recent-list">
+                        {% for proyecto in proyectos_recientes %}
+                            <article class="recent-item">
+                                <div class="recent-item-header">
+                                    <h4 class="recent-title">
+                                        <a href="{{ proyecto.url }}">
+                                            {{ proyecto.titulo }}
+                                        </a>
+                                    </h4>
+                                    {% if proyecto.fecha_publicacion %}
+                                        <span class="recent-date">
+                                            {{ proyecto.fecha_publicacion|date:"d/m/Y" }}
+                                        </span>
+                                    {% endif %}
+                                </div>
+                                <p class="recent-summary mb-2">{{ proyecto.resumen|default:"Sin resumen disponible."|truncatewords:40 }}</p>
+                                <div class="recent-meta">
+                                    {% if proyecto.autor %}
+                                        <span class="meta-item"><strong>Autoría:</strong> {{ proyecto.autor }}</span>
+                                    {% endif %}
+                                    {% if proyecto.editor %}
+                                        <span class="meta-item"><strong>Editor:</strong> {{ proyecto.editor }}</span>
+                                    {% endif %}
+                                    {% if proyecto.tipo_proyecto %}
+                                        <span class="meta-item"><strong>Tipo:</strong> {{ proyecto.tipo_proyecto }}</span>
+                                    {% endif %}
+                                    {% if proyecto.fecha_publicacion %}
+                                        <span class="meta-item"><strong>Fecha:</strong> {{ proyecto.fecha_publicacion|date:"d/m/Y" }}</span>
+                                    {% endif %}
+                                </div>
+                            </article>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="empty-state text-center">
+                        <p class="text-muted mb-0">Todavía no se han publicado proyectos en el repositorio.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 DocuArchive. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <script src="{% static 'Personalizados/Paginaciones/script.js' %}"></script>
+</body>
+</html>

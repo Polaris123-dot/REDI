@@ -1,0 +1,378 @@
+{% load static %}
+
+<!-- En el head -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
+<div id="panelInfo">
+    <div class="card">
+        <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-sliders-h fa-lg mr-3"></i> <!-- Icono de controles deslizantes -->
+                    <div>
+                        <h5 class="mb-0">Filtros Avanzados</h5>
+                        <small class="text-muted">Personaliza tu búsqueda</small>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-sm btn-toggle-panel" id="closePanelBtn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            <form id="filterForm">
+                <!-- Input de búsqueda -->
+                <div class="input-group mb-3">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">
+                            <i class="fas fa-search"></i>
+                        </span>
+                    </div>
+                    <input id="search-input" class="form-control" type="search" 
+                           placeholder="Buscar por palabras clave..." aria-label="Buscar">
+                </div>
+
+                <!-- Filtro: Fecha de publicación -->
+                <div class="form-group mb-3">
+                    <label class="filter-label">
+                        <i class="far fa-calendar-alt mr-2"></i> Rango de fechas
+                    </label>
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">
+                                <i class="far fa-clock"></i>
+                            </span>
+                        </div>
+                        <select id="fecha-inicio" class="form-control">
+                            <option value="">Cargando rangos...</option>
+                        </select>
+                    </div>
+                </div>
+
+
+
+                <!-- Filtro: Temas -->
+                <div class="form-group mb-3">
+                    <label class="filter-label">
+                        <i class="fas fa-tags mr-2"></i> Tipos de Proyecto
+                    </label>
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">
+                                <i class="fas fa-bookmark"></i>
+                            </span>
+                        </div>
+                        <select id="tema-select" class="form-control">
+                            <option value="">Seleccione un tipo</option>
+                            <!-- Las opciones se cargarán dinámicamente via AJAX -->
+                        </select>
+                    </div>
+                </div>
+
+                
+
+
+
+                <!-- Filtro: Sede -->
+                <div class="form-group mb-3">
+                    <label class="filter-label">
+                        <i class="fas fa-map-marker-alt mr-2"></i> Ubicación geográfica
+                    </label>
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">
+                                <i class="fas fa-university"></i>
+                            </span>
+                        </div>
+                        <select id="sede-select" class="form-control">
+                            <option value="">Seleccione una categoría</option>
+                            <!-- Las opciones se cargarán dinámicamente via AJAX -->
+                        </select>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-apply-filters btn-block mt-2">
+                    <i class="fas fa-filter mr-2"></i>Aplicar Filtros
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<style>
+    /* Variables tipográficas y de color */
+    :root {
+      --color-primario: #2c3e50;       /* Azul oscuro académico */
+      --color-secundario: #3498db;     /* Azul claro para acentos */
+      --color-texto: #333333;          /* Negro suave */
+      --color-borde: #e0e0e0;          /* Gris claro para bordes */
+      --border-radius: 4px;            /* Bordes ligeramente redondeados */
+      --font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; /* Tipografía formal */
+    }
+    
+    /* Estructura principal del panel */
+    #panelInfo .card {
+      border: 1px solid var(--color-borde);
+      border-radius: var(--border-radius);
+      box-shadow: none; /* Eliminamos sombras para mayor formalidad */
+      font-family: var(--font-family);
+    }
+    
+    /* Encabezado del panel */
+    #panelInfo .card-header {
+      background-color: white;
+      border-bottom: 2px solid var(--color-secundario);
+      color: var(--color-primario);
+      font-weight: 600;
+      font-size: 1.1rem;
+      padding: 1rem 1.25rem;
+    }
+    
+    /* Cuerpo del panel */
+    #panelInfo .card-body {
+      background-color: white;
+      padding: 1.5rem;
+    }
+    
+    /* Elementos del formulario */
+    #panelInfo .form-group label {
+      color: var(--color-primario);
+      font-weight: 500;
+      font-size: 0.9rem;
+      margin-bottom: 0.5rem;
+      display: block;
+    }
+    
+    #panelInfo .form-control,
+    #panelInfo .custom-select {
+      border: 1px solid var(--color-borde);
+      border-radius: var(--border-radius);
+      color: var(--color-texto);
+      font-size: 0.9rem;
+      padding: 0.5rem 0.75rem;
+      height: auto;
+    }
+    
+    #panelInfo .form-control:focus,
+    #panelInfo .custom-select:focus {
+      border-color: var(--color-secundario);
+      box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.1);
+    }
+    
+    /* Botón de filtrar */
+    #panelInfo .btn-warning {
+      background-color: var(--color-secundario);
+      border-color: var(--color-secundario);
+      color: white;
+      font-weight: 500;
+      padding: 0.5rem 1rem;
+      transition: all 0.2s;
+    }
+    
+    #panelInfo .btn-warning:hover {
+      background-color: #2980b9;
+      border-color: #2980b9;
+    }
+    
+    /* Iconos */
+    #panelInfo .input-group-text {
+      background-color: white;
+      border-color: var(--color-borde);
+      color: var(--color-secundario);
+    }
+    
+    /* Grupo de inputs */
+    #panelInfo .input-group {
+      margin-bottom: 1.25rem;
+    }
+    
+    /* Botón de cerrar */
+    #panelInfo .close {
+      opacity: 0.7;
+      transition: opacity 0.2s;
+    }
+    
+    #panelInfo .close:hover {
+      opacity: 1;
+    }
+    
+    /* Efectos de hover en selects */
+    #panelInfo .custom-select:hover {
+      border-color: var(--color-secundario);
+    }
+    
+    /* Agrega esto a tu CSS */
+.select-loading {
+    position: relative;
+}
+
+.select-loading:after {
+    content: "";
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 16px;
+    border: 2px solid #ccc;
+    border-top-color: #3498db;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: translateY(-50%) rotate(360deg); }
+}
+
+
+.sugerencias-autores {
+    position: absolute;
+    z-index: 1000;
+    width: calc(100% - 30px); /* Ajustar al ancho del input */
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid #ced4da;
+    border-radius: 0 0 4px 4px;
+    box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+}
+
+.sugerencia-autor {
+    padding: 8px 15px;
+    cursor: pointer;
+    border-bottom: 1px solid #f8f9fa;
+}
+
+.sugerencia-autor:hover {
+    background-color: #f8f9fa;
+}
+
+.sugerencia-autor:last-child {
+    border-bottom: none;
+}
+    </style>
+
+<!-- En tu template base (antes de cualquier script que use jQuery) -->
+
+
+<!-- Al final del body (después de jQuery) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+<script src="{% static 'lib/adminlte-3.2.0/plugins/jquery/jquery.min.js' %}"></script>
+
+<script>
+    $(document).ready(function() {
+        // Cargar todos los selectores al iniciar
+        cargarOpcionesFiltros();
+        cargarTiposProyecto();
+        cargarCategorias();
+    
+        // Eventos para recargar si es necesario
+        $('#fecha-inicio').on('focus mousedown', function() {
+            if ($(this).children('option').length <= 1) {
+                cargarOpcionesFiltros();
+            }
+        });
+        
+        // Sincronizar el input de búsqueda del panel con el del hero
+        $('#search-input').on('keyup', function(e) {
+            if (e.key === 'Enter') {
+                $('#search').val($(this).val());
+                currentPage = 1;
+                realizarBusqueda();
+            }
+        });
+        
+        // Sincronizar el input de búsqueda del hero con el del panel
+        $('#search').on('keyup', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                $('#search-input').val($(this).val());
+                currentPage = 1;
+                realizarBusqueda();
+            }
+        });
+    });
+    
+    function cargarOpcionesFiltros() {
+        var $select = $('#fecha-inicio');
+        if ($select.children('option').length > 1) return; // Ya está cargado
+        
+        $select.prop('disabled', true).addClass('select-loading');
+        
+        $.ajax({
+            url: '{% url "catalogo_publico:obtener_opciones_filtros" %}',
+            type: 'GET',
+            dataType: 'json',
+            success: function(data) {
+                $select.empty().append('<option value="">Seleccione un rango</option>');
+                
+                if(data.rangos_fechas) {
+                    data.rangos_fechas.sort((a, b) => {
+                        return parseInt(b.valor.split('-')[0]) - parseInt(a.valor.split('-')[0]);
+                    });
+                    
+                    $.each(data.rangos_fechas, function(index, rango) {
+                        $select.append($('<option></option>').val(rango.valor).text(rango.texto));
+                    });
+                }
+            },
+            error: function() {
+                $select.empty().append('<option value="">Error al cargar rangos</option>');
+            },
+            complete: function() {
+                $select.prop('disabled', false).removeClass('select-loading');
+            }
+        });
+    }
+    
+    function cargarTiposProyecto() {
+        var $select = $('#tema-select');
+        $select.prop('disabled', true).addClass('select-loading');
+        
+        $.ajax({
+            url: '{% url "catalogo_publico:obtener_tipos_proyecto" %}',
+            type: 'GET',
+            dataType: 'json',
+            success: function(data) {
+                $select.empty().append('<option value="">Seleccione un tipo</option>');
+                
+                if(data.tipos_proyecto) {
+                    $.each(data.tipos_proyecto, function(index, tipo) {
+                        $select.append($('<option></option>').val(tipo.id).text(tipo.nombre));
+                    });
+                }
+            },
+            error: function() {
+                $select.empty().append('<option value="">Error al cargar tipos</option>');
+            },
+            complete: function() {
+                $select.prop('disabled', false).removeClass('select-loading');
+            }
+        });
+    }
+    
+    function cargarCategorias() {
+        var $select = $('#sede-select');
+        $select.prop('disabled', true).addClass('select-loading');
+        
+        $.ajax({
+            url: '{% url "catalogo_publico:obtener_categorias" %}',
+            type: 'GET',
+            dataType: 'json',
+            success: function(data) {
+                $select.empty().append('<option value="">Seleccione una categoría</option>');
+                
+                if(data.categorias) {
+                    $.each(data.categorias, function(index, categoria) {
+                        $select.append($('<option></option>').val(categoria.id).text(categoria.nombre));
+                    });
+                }
+            },
+            error: function() {
+                $select.empty().append('<option value="">Error al cargar categorías</option>');
+            },
+            complete: function() {
+                $select.prop('disabled', false).removeClass('select-loading');
+            }
+        });
+    }
+    </script>

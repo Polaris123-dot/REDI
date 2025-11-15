@@ -1,0 +1,444 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REDIMA</title>
+    <link rel="icon" href="{% static 'img/LogoMr.ico' %}" type="image/x-icon">
+    <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"> -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    
+    <link href="{% static 'Personalizados/bootstrap.min.css' %}" rel="stylesheet">
+    <link href="{% static 'plugins\fontawesome-free\css\all.min.css' %}" rel="stylesheet">
+    
+    <style>
+        /* [Mantener todos los estilos CSS existentes] */
+        #animated-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: #1e2a38;
+        }
+
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            font-family: 'Roboto', sans-serif;
+            color: #fff;
+            overflow: hidden;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .card {
+            max-width: 750px;
+            width: 100%;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            transition: transform 0.4s ease, box-shadow 0.4s ease;
+            background: #ffffff;
+            color: #1e2a38;
+        }
+
+        .card:hover {
+            transform: scale(1.02);
+            box-shadow: 0 12px 50px rgba(0, 0, 0, 0.3);
+        }
+
+        #welcome-section {
+            padding: 3rem;
+            background: linear-gradient(135deg, #1f3b5b, #1e2a38);
+            color: #fff;
+            text-align: center;
+        }
+
+        h2 {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            font-size: 2rem;
+        }
+
+        #form-section {
+            padding: 3rem;
+        }
+
+        .form-control {
+            border: none;
+            border-bottom: 2px solid #ddd;
+            background-color: transparent;
+            box-shadow: none;
+        }
+
+        .form-control:focus {
+            border-bottom: 2px solid #1f3b5b;
+            box-shadow: 0 4px 15px rgba(31, 59, 91, 0.3);
+        }
+
+        .input-group-text {
+            background-color: transparent;
+            border: none;
+            color: #1f3b5b;
+        }
+
+        .btn-dark {
+            background-color: #1f3b5b;
+            color: #fff;
+        }
+
+        .btn-dark:hover {
+            background-color: #1e2a38;
+        }
+
+        /* Estilos para mensajes de error */
+        .error-message {
+            color: #dc3545;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+            display: none;
+        }
+        
+        .alert-danger {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+            padding: 0.75rem 1.25rem;
+            margin-bottom: 1rem;
+            border: 1px solid transparent;
+            border-radius: 0.25rem;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Fondo Animado -->
+    <canvas id="animated-background"></canvas>
+
+    <div class="container d-flex justify-content-center">
+        <div class="card shadow-lg">
+            <div class="row g-0">
+                
+                <!-- Sección de bienvenida -->
+                <div class="col-md-6 d-flex flex-column justify-content-center align-items-center d-none d-md-flex" id="welcome-section">
+                    <h2 class="text-uppercase fw-bold fs-4 fs-md-1">BIENVENIDO</h2>
+                    <br>
+                    <p class="fs-6 fs-md-3">Estudiantes del Instituto Superior San José Marello</p>
+                    <img src="MARELIANO.jpg" alt="Imagen de bienvenida" class="img-fluid" style="max-width: 100%; height: auto;">
+                </div>
+                
+                <!-- Sección de formulario -->
+                <div class="col-md-6" id="form-section">
+                    <!-- Mensaje de error general -->
+                    <div id="general-error" class="alert-danger"></div>
+                    
+                    <!-- Formulario de Login -->
+                    <div id="login-form">
+                        <h2 class="fw-bold fs-4 fs-md-1">Instituto Superior San José Marello</h2>
+                        <form id="login-formulario" action="{% url 'usuarios:login' %}" method="post">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label for="username" class="form-label fs-6 fs-md-4"></label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fa-solid fa-user"></i></span>
+                                    <input type="text" class="form-control fs-6 fs-md-4" placeholder="Usuario" name="username" id="username" required>
+                                </div>
+                                <div id="username-error" class="error-message"></div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="password" class="form-label fs-6 fs-md-4"></label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fa-solid fa-lock"></i></span>
+                                    <input type="password" class="form-control fs-6 fs-md-4" id="password" placeholder="Contraseña" name="password" required>
+                                    <span class="input-group-text" id="toggle-password" style="cursor: pointer;"><i class="fa-solid fa-eye"></i></span>
+                                </div>
+                                <div id="password-error" class="error-message"></div>
+                            </div>
+                            <!-- <div class="mb-3 form-check d-flex align-items-center">
+                                <input type="checkbox" class="form-check-input me-2" id="remember-me" name="remember_me">
+                                <label class="form-check-label fs-6 fs-md-4" for="remember-me">Recordar</label>
+                            </div> -->
+                            <button type="button" class="btn btn-dark w-100 mb-2 fs-6 fs-md-4" id="login-btn">Login</button>
+                            <p class="text-center fs-6 fs-md-4">¿No tienes una cuenta? <a href="#" id="switch-to-signup">Registrarse</a></p>
+                        </form>
+                    </div>
+    
+                    <!-- Formulario de Sign Up -->
+                    <div id="signup-form" style="display: none;">
+                        <h2 class="fw-bold fs-4 fs-md-1">Instituto Superior San José Marello</h2>
+                        <form id="signup-formulario">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label for="new-username" class="form-label fs-6 fs-md-4"></label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fa-solid fa-user"></i></span>
+                                    <input type="text" class="form-control fs-6 fs-md-4" id="new-username" name="new_username" placeholder="Usuario">
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="new-email" class="form-label fs-6 fs-md-4"></label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fa-solid fa-envelope"></i></span>
+                                    <input type="email" class="form-control fs-6 fs-md-4" id="new-email" name="new_email" placeholder="Email">
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="new-password" class="form-label fs-6 fs-md-4"></label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fa-solid fa-lock"></i></span>
+                                    <input type="password" class="form-control fs-6 fs-md-4" id="new-password" name="new_password" placeholder="Contraseña">
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-dark w-100 mb-2 fs-6 fs-md-4" id="signup-btn">Registrarse</button>
+                            <p class="text-center fs-6 fs-md-4">¿Ya tienes una cuenta? <a href="#" id="switch-to-login">Iniciar sesión</a></p>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="{% static 'lib/adminlte-3.2.0/plugins/jquery/jquery.min.js' %}"></script>
+    <script src="{% static 'lib/adminlte-3.2.0/plugins/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+
+    <script>
+        // Función para mostrar mensajes de error
+        function showError(elementId, message) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.style.display = 'block';
+        }
+
+        // Función para ocultar mensajes de error
+        function hideError(elementId) {
+            const element = document.getElementById(elementId);
+            element.style.display = 'none';
+        }
+
+        // Función para mostrar error general
+        function showGeneralError(message) {
+            const element = document.getElementById('general-error');
+            element.textContent = message;
+            element.style.display = 'block';
+            setTimeout(() => {
+                element.style.display = 'none';
+            }, 5000);
+        }
+
+        // Función para enviar el formulario de login
+        function submitLoginForm() {
+            // Ocultar errores previos
+            hideError('username-error');
+            hideError('password-error');
+            document.getElementById('general-error').style.display = 'none';
+
+            const form = document.getElementById('login-formulario');
+            const formData = new FormData(form);
+            
+            // Validación básica
+            const username = formData.get('username');
+            const password = formData.get('password');
+            
+            if (!username) {
+                showError('username-error', 'Por favor ingresa tu usuario');
+                return;
+            }
+            
+            if (!password) {
+                showError('password-error', 'Por favor ingresa tu contraseña');
+                return;
+            }
+
+            // Mostrar loading en el botón
+            const loginBtn = document.getElementById('login-btn');
+            const originalText = loginBtn.innerHTML;
+            loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Iniciando sesión...';
+            loginBtn.disabled = true;
+
+            // Enviar solicitud AJAX
+            fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = data.redirect_url;
+                } else {
+                    showGeneralError(data.message || 'Error al iniciar sesión');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showGeneralError('Error de conexión. Por favor intenta nuevamente.');
+            })
+            .finally(() => {
+                // Restaurar botón
+                loginBtn.innerHTML = originalText;
+                loginBtn.disabled = false;
+            });
+        }
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            // Botón de login
+            document.getElementById('login-btn').addEventListener('click', submitLoginForm);
+            
+            // Alternar entre Login y Sign Up
+            document.getElementById('switch-to-signup').addEventListener('click', function(event) {
+                event.preventDefault();
+                document.getElementById('login-form').style.display = 'none';
+                document.getElementById('signup-form').style.display = 'block';
+            });
+
+            document.getElementById('switch-to-login').addEventListener('click', function(event) {
+                event.preventDefault();
+                document.getElementById('signup-form').style.display = 'none';
+                document.getElementById('login-form').style.display = 'block';
+            });
+
+            // Controlar visibilidad de la contraseña
+            const togglePassword = document.getElementById('toggle-password');
+            const passwordInput = document.getElementById('password');
+
+            togglePassword.addEventListener('click', function() {
+                const type = passwordInput.type === 'password' ? 'text' : 'password';
+                passwordInput.type = type;
+                this.innerHTML = type === 'password' ? '<i class="fa-solid fa-eye"></i>' : '<i class="fa-solid fa-eye-slash"></i>';
+            });
+
+            // Permitir enviar formulario con Enter
+            document.getElementById('login-formulario').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    submitLoginForm();
+                }
+            });
+        });
+
+        // [Mantener el código del fondo animado igual]
+        const canvas = document.getElementById('animated-background');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const wave = {
+            y: canvas.height / 2,
+            length: 0.015,
+            amplitude: 150,
+            frequency: 0.02
+        };
+
+        const particlesArray = [];
+        const numParticles = 100;
+        const bubblesArray = [];
+        const numBubbles = 30;
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 3 + 1;
+                this.speedX = Math.random() * 1.5 - 0.75;
+                this.speedY = Math.random() * 1.5 - 0.75;
+            }
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+
+                if (this.x < 0 || this.x > canvas.width) this.speedX *= -1;
+                if (this.y < 0 || this.y > canvas.height) this.speedY *= -1;
+            }
+            draw() {
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.closePath();
+                ctx.fill();
+            }
+        }
+
+        class Bubble {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 10 + 5;
+                this.speedY = Math.random() * 1 + 0.5;
+            }
+            update() {
+                this.y -= this.speedY;
+                if (this.y < 0) {
+                    this.y = canvas.height;
+                    this.x = Math.random() * canvas.width;
+                }
+            }
+            draw() {
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.closePath();
+                ctx.fill();
+            }
+        }
+
+        function initParticles() {
+            for (let i = 0; i < numParticles; i++) {
+                particlesArray.push(new Particle());
+            }
+        }
+
+        function initBubbles() {
+            for (let i = 0; i < numBubbles; i++) {
+                bubblesArray.push(new Bubble());
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#1e2a38';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            particlesArray.forEach(particle => {
+                particle.update();
+                particle.draw();
+            });
+
+            bubblesArray.forEach(bubble => {
+                bubble.update();
+                bubble.draw();
+            });
+
+            drawWave();
+            requestAnimationFrame(animate);
+        }
+
+        function drawWave() {
+            ctx.beginPath();
+            ctx.moveTo(0, canvas.height / 2);
+            for (let i = 0; i < canvas.width; i++) {
+                ctx.lineTo(i, wave.y + Math.sin(i * wave.length + wave.frequency) * wave.amplitude);
+            }
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        initParticles();
+        initBubbles();
+        animate();
+    </script>
+</body>
+</html>

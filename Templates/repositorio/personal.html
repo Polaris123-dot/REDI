@@ -1,0 +1,478 @@
+{% load static %}
+{% include 'Nucleo/arriba.html' %}
+
+{% block extra_css %}
+<!-- DataTables CSS - Local -->
+<link rel="stylesheet" href="{% static 'DataTables/css/dataTables.bootstrap4.min.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/datatables-responsive/css/responsive.bootstrap4.min.css' %}">
+<!-- SweetAlert2 CSS -->
+<link rel="stylesheet" href="{% static 'plugins/sweetalert2/sweetalert2.min.css' %}">
+<style>
+  /* Estilos para tabs */
+  .nav-tabs .nav-link {
+    color: #495057;
+  }
+
+  .nav-tabs .nav-link.active {
+    color: #007bff;
+    font-weight: 600;
+  }
+
+  /* Estilos responsivos para botones */
+  .btn-group-sm .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+  }
+
+  /* En pantallas pequeñas, solo mostrar iconos */
+  @media (max-width: 767px) {
+    .btn-group-sm .btn span {
+      display: none !important;
+    }
+
+    .btn-group-sm .btn {
+      padding: 0.25rem 0.4rem;
+    }
+  }
+
+  /* En pantallas medianas y grandes, mostrar texto */
+  @media (min-width: 768px) {
+    .btn-group-sm .btn span {
+      display: inline !important;
+    }
+  }
+
+  /* Loading overlay */
+  .loading-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .loading-overlay.show {
+    display: flex;
+  }
+
+  .spinner-border-custom {
+    width: 3rem;
+    height: 3rem;
+    border-width: 0.3rem;
+  }
+
+  /* JSON input styling */
+  .json-input {
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+  }
+
+  /* Colores adicionales para botones */
+  .btn-purple {
+    background-color: #6f42c1;
+    border-color: #6f42c1;
+    color: #fff;
+  }
+
+  .btn-purple:hover {
+    background-color: #5a32a3;
+    border-color: #5a32a3;
+    color: #fff;
+  }
+
+  .btn-teal {
+    background-color: #20c997;
+    border-color: #20c997;
+    color: #fff;
+  }
+
+  .btn-teal:hover {
+    background-color: #1aa179;
+    border-color: #1aa179;
+    color: #fff;
+  }
+</style>
+{% endblock %}
+
+{% include 'Nucleo/sidebar.html' %}
+
+<!-- Content Wrapper. Contains page content -->
+<div class="content-wrapper">
+  <!-- Content Header -->
+  <div class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-sm-6">
+          <h1 class="m-0">Personal del Repositorio</h1>
+        </div>
+        <div class="col-sm-6">
+          <ol class="breadcrumb float-sm-right d-none d-sm-flex">
+            <li class="breadcrumb-item"><a href="{% url 'usuarios:panel' %}">Inicio</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'repositorio:index' %}">Repositorio</a></li>
+            <li class="breadcrumb-item active">Personal</li>
+          </ol>
+        </div>
+      </div>
+      <!-- Accesos Rápidos -->
+      <div class="row">
+        <div class="col-12">
+          <div class="btn-group" role="group">
+            <a href="{% url 'repositorio:configuracion' %}" class="btn btn-info btn-sm">
+              <i class="fas fa-cog"></i> Configuración
+            </a>
+            <a href="{% url 'repositorio:organizacion' %}" class="btn btn-success btn-sm">
+              <i class="fas fa-sitemap"></i> Organización
+            </a>
+            <a href="{% url 'repositorio:personal' %}" class="btn btn-purple btn-sm active">
+              <i class="fas fa-users"></i> Personal
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main content -->
+  <section class="content">
+    <div class="container-fluid">
+
+      <!-- Tabs Navigation -->
+      <ul class="nav nav-tabs" id="personalTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+          <a class="nav-link active" id="autores-tab" data-toggle="tab" href="#autores" role="tab"
+            aria-controls="autores" aria-selected="true">
+            <i class="fas fa-user-edit"></i> Autores
+          </a>
+        </li>
+        <li class="nav-item" role="presentation">
+          <a class="nav-link" id="colaboradores-tab" data-toggle="tab" href="#colaboradores" role="tab"
+            aria-controls="colaboradores" aria-selected="false">
+            <i class="fas fa-users-cog"></i> Colaboradores
+          </a>
+        </li>
+      </ul>
+
+      <!-- Tabs Content -->
+      <div class="tab-content" id="personalTabsContent">
+
+        <!-- Tab Autores -->
+        <div class="tab-pane fade show active" id="autores" role="tabpanel" aria-labelledby="autores-tab">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="fas fa-user-edit"></i> Gestión de Autores
+              </h3>
+              <div class="card-tools">
+                <button type="button" class="btn btn-primary btn-sm" id="btnCrearAutor">
+                  <i class="fas fa-plus"></i> Nuevo Autor
+                </button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table id="tableAutores" class="table" style="width:100%">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Nombre Completo</th>
+                      <th>Documento</th>
+                      <th>Usuario</th>
+                      <th>Email</th>
+                      <th>Orden</th>
+                      <th>Principal</th>
+                      <th>Correspondiente</th>
+                      <th class="text-center">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab Colaboradores -->
+        <div class="tab-pane fade" id="colaboradores" role="tabpanel" aria-labelledby="colaboradores-tab">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="fas fa-users-cog"></i> Gestión de Colaboradores
+              </h3>
+              <div class="card-tools">
+                <button type="button" class="btn btn-primary btn-sm" id="btnCrearColaborador">
+                  <i class="fas fa-plus"></i> Nuevo Colaborador
+                </button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table id="tableColaboradores" class="table" style="width:100%">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Usuario</th>
+                      <th>Documento</th>
+                      <th>Rol</th>
+                      <th>Fecha Asignación</th>
+                      <th class="text-center">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+</div>
+<!-- /.content-wrapper -->
+
+<!-- Modal para Autor -->
+<div class="modal fade" id="modalAutor" tabindex="-1" role="dialog" aria-labelledby="modalAutorLabel"
+  aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalAutorLabel">Nuevo Autor</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form id="formAutor">
+        {% csrf_token %}
+        <div class="modal-body">
+          <input type="hidden" id="autorId" name="id">
+
+          <div class="form-group">
+            <label for="autorDocumento">Documento <span class="text-danger">*</span></label>
+            <select class="form-control" id="autorDocumento" name="documento_id" required>
+              <option value="">Seleccione un documento</option>
+            </select>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="autorNombre">Nombre <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="autorNombre" name="nombre" required>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="autorApellidos">Apellidos <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="autorApellidos" name="apellidos" required>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="autorUsuario">Usuario (Opcional)</label>
+            <select class="form-control" id="autorUsuario" name="usuario_id">
+              <option value="">Ninguno (Autor independiente)</option>
+            </select>
+            <small class="form-text text-muted">Si el autor está registrado en el sistema, puede vincularlo a un
+              usuario</small>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="autorEmail">Email</label>
+                <input type="email" class="form-control" id="autorEmail" name="email">
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="autorORCID">ORCID ID</label>
+                <input type="text" class="form-control" id="autorORCID" name="orcid_id" maxlength="19"
+                  placeholder="0000-0000-0000-0000">
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="autorAfiliacion">Afiliación</label>
+            <input type="text" class="form-control" id="autorAfiliacion" name="afiliacion"
+              placeholder="Institución o universidad">
+          </div>
+
+          <div class="row">
+            <div class="col-md-4">
+              <div class="form-group">
+                <label for="autorOrden">Orden de Autor</label>
+                <input type="number" class="form-control" id="autorOrden" name="orden_autor" value="1" min="1">
+                <small class="form-text text-muted">Orden en que aparece el autor (1 = primer autor)</small>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-group">
+                <label>
+                  <input type="checkbox" id="autorPrincipal" name="es_autor_principal"> Autor Principal
+                </label>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-group">
+                <label>
+                  <input type="checkbox" id="autorCorrespondiente" name="es_correspondiente"> Autor Correspondiente
+                </label>
+              </div>
+            </div>
+          </div>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> Guardar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para Colaborador -->
+<div class="modal fade" id="modalColaborador" tabindex="-1" role="dialog" aria-labelledby="modalColaboradorLabel"
+  aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalColaboradorLabel">Nuevo Colaborador</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form id="formColaborador">
+        {% csrf_token %}
+        <div class="modal-body">
+          <input type="hidden" id="colaboradorId" name="id">
+
+          <div class="form-group">
+            <label for="colaboradorDocumento">Documento <span class="text-danger">*</span></label>
+            <select class="form-control" id="colaboradorDocumento" name="documento_id" required>
+              <option value="">Seleccione un documento</option>
+            </select>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="colaboradorUsuario">Usuario <span class="text-danger">*</span></label>
+                <select class="form-control" id="colaboradorUsuario" name="usuario_id" required>
+                  <option value="">Seleccione un usuario</option>
+                </select>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="colaboradorRol">Rol <span class="text-danger">*</span></label>
+                <select class="form-control" id="colaboradorRol" name="rol" required>
+                  <option value="">Seleccione un rol</option>
+                  <option value="editor">Editor</option>
+                  <option value="revisor">Revisor</option>
+                  <option value="colaborador">Colaborador</option>
+                  <option value="supervisor">Supervisor</option>
+                  <option value="patrocinador">Patrocinador</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="colaboradorPermisos">Permisos (JSON)</label>
+            <textarea class="form-control json-input" id="colaboradorPermisos" name="permisos" rows="4"
+              placeholder='{"permiso1": true, "permiso2": false}'></textarea>
+            <small class="form-text text-muted">Objeto JSON con permisos específicos del colaborador</small>
+          </div>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> Guardar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner-border spinner-border-custom text-light" role="status">
+    <span class="sr-only">Cargando...</span>
+  </div>
+</div>
+
+{% include 'Nucleo/abajo.html' %}
+
+{% block extra_js %}
+<!-- DataTables JS - Local -->
+<script src="{% static 'DataTables/js/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'DataTables/js/dataTables.bootstrap4.min.js' %}"></script>
+<script src="{% static 'plugins/datatables-responsive/js/dataTables.responsive.min.js' %}"></script>
+<script src="{% static 'plugins/datatables-responsive/js/responsive.bootstrap4.min.js' %}"></script>
+<!-- SweetAlert2 -->
+<script src="{% static 'plugins/sweetalert2/sweetalert2.all.min.js' %}"></script>
+
+<!-- URL Reverse Helper -->
+<script>
+  // Configuración de URLs usando URL reverse
+  const REPOSITORIO_URLS = {
+    usuariosForSelect: "{% url 'repositorio:usuarios_for_select' %}",
+    documentosList: "{% url 'repositorio:documentos_list' %}",
+    autoresList: "{% url 'repositorio:autores_list' %}",
+    autoresPorDocumento: function (id) {
+      return "{% url 'repositorio:autores_por_documento' 0 %}".replace('0', id.toString());
+    },
+    autorCreate: "{% url 'repositorio:autor_create' %}",
+    autorDetail: function (id) {
+      return "{% url 'repositorio:autor_detail' 0 %}".replace('0', id.toString());
+    },
+    autorUpdate: function (id) {
+      return "{% url 'repositorio:autor_update' 0 %}".replace('0', id.toString());
+    },
+    autorDelete: function (id) {
+      return "{% url 'repositorio:autor_delete' 0 %}".replace('0', id.toString());
+    },
+    colaboradoresList: "{% url 'repositorio:colaboradores_list' %}",
+    colaboradoresPorDocumento: function (id) {
+      return "{% url 'repositorio:colaboradores_por_documento' 0 %}".replace('0', id.toString());
+    },
+    colaboradorCreate: "{% url 'repositorio:colaborador_create' %}",
+    colaboradorDetail: function (id) {
+      return "{% url 'repositorio:colaborador_detail' 0 %}".replace('0', id.toString());
+    },
+    colaboradorUpdate: function (id) {
+      return "{% url 'repositorio:colaborador_update' 0 %}".replace('0', id.toString());
+    },
+    colaboradorDelete: function (id) {
+      return "{% url 'repositorio:colaborador_delete' 0 %}".replace('0', id.toString());
+    }
+  };
+
+  // Función para obtener CSRF token
+  function getCSRFToken() {
+    const token = document.querySelector('[name=csrfmiddlewaretoken]');
+    return token ? token.value : '';
+  }
+  
+  // Hacer disponible globalmente
+  window.getCSRFToken = getCSRFToken;
+</script>
+<!-- Repositorio JS -->
+<script src="{% static 'js/repositorio.js' %}"></script>
+{% endblock %}
+
+

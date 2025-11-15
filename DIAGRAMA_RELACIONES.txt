@@ -1,0 +1,271 @@
+================================================================================
+DIAGRAMA DE RELACIONES - REPOSITORIO DIGITAL DE INVESTIGACIÓN
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         GESTIÓN DE USUARIOS                                  │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+usuarios (1) ───────< (N) usuario_roles (N) >─────── (1) roles
+    │                                                        │
+    │                                                        │
+    └──────────< (N) usuario_roles >──────────────┘        │
+                                                             │
+                                                             │
+roles (1) ───────< (N) rol_permisos (N) >─────── (1) permisos
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    ESTRUCTURA JERÁRQUICA                                     │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+comunidades (1) ───< (N) comunidades [padre]
+    │
+    └──────────< (N) colecciones
+                      │
+                      └──────────< (N) colecciones [padre]
+                      │
+                      └──────────< (N) documentos
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                      GESTIÓN DE DOCUMENTOS                                   │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+documentos (1) ───────< (N) versiones_documento
+    │                           │
+    │                           └──────────< (N) archivos
+    │
+    ├─────── (1) tipos_recurso
+    │
+    ├─────── (1) estados_documento
+    │
+    ├─────── (1) colecciones
+    │
+    ├─────── (1) usuarios [creador]
+    │
+    ├─────── (0..1) licencias
+    │
+    └───────< (N) autores
+              │
+              ├─────── (0..1) usuarios
+              │
+              └─────── (N) autores por documento
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                        METADATOS                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+esquemas_metadatos (1) ───────< (N) campos_metadatos
+                                        │
+                                        └──────────< (N) metadatos_documento
+                                                           │
+                                                           └─────── (1) documentos
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    CATEGORIZACIÓN Y ETIQUETAS                                │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+categorias (1) ───< (N) categorias [padre]
+    │
+    └──────────< (N) documento_categorias (N) >─────── (1) documentos
+
+etiquetas (1) ───────< (N) documento_etiquetas (N) >─────── (1) documentos
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    REVISIÓN Y APROBACIÓN                                     │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+documentos (1) ───────< (N) procesos_revision
+                          │
+                          ├─────── (1) usuarios [iniciado_por]
+                          │
+                          └──────────< (N) revisiones
+                                        │
+                                        ├─────── (1) usuarios [revisor]
+                                        │
+                                        └──────────< (N) evaluaciones_criterios
+                                                          │
+                                                          └─────── (1) criterios_revision
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    ESTADÍSTICAS Y ANALYTICS                                  │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+documentos (1) ───────< (N) visitas_documento
+    │                           │
+    │                           └─────── (0..1) usuarios
+    │
+    └──────────< (N) estadisticas_agregadas
+
+archivos (1) ───────< (N) descargas_archivo
+                        │
+                        └─────── (0..1) usuarios
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    CITAS Y REFERENCIAS                                       │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+documentos (1) ───────< (N) citas [documento_citado]
+    │                           │
+    │                           └─────── (1) documentos [documento_que_cita]
+    │
+    └──────────< (N) referencias_bibliograficas
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    INTERACCIÓN SOCIAL                                        │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+documentos (1) ───────< (N) comentarios
+    │                           │
+    │                           ├─────── (1) usuarios
+    │                           │
+    │                           └─────── (0..1) comentarios [padre]
+    │
+    └──────────< (N) valoraciones
+                      │
+                      └─────── (1) usuarios
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    NOTIFICACIONES                                            │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+usuarios (1) ───────< (N) notificaciones
+    │                           │
+    │                           ├─────── (1) tipos_notificacion
+    │                           │
+    │                           └─────── (0..1) documentos
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    BÚSQUEDA                                                  │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+documentos (1) ─────── (1) indices_busqueda
+
+usuarios (0..1) ───────< (N) busquedas
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    RELACIONES ENTRE DOCUMENTOS                               │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+documentos (1) ───────< (N) relaciones_documentos [origen]
+    │                           │
+    │                           └─────── (1) documentos [destino]
+    │
+    └──────────< (N) enlaces_externos
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    COLABORADORES                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+documentos (1) ───────< (N) colaboradores
+                          │
+                          └─────── (1) usuarios
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    DERECHOS Y LICENCIAS                                      │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+documentos (1) ───────< (N) derechos_documento
+
+licencias ──────── (referenciada por documentos)
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    CONFIGURACIÓN Y LOGS                                      │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+configuracion_sistema (independiente)
+
+logs_sistema
+    │
+    └─────── (0..1) usuarios
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    SISTEMA DE PROYECTOS Y CAMPOS DINÁMICOS                  │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+tipos_proyecto (1) ───────< (N) campos_tipo_proyecto
+    │                                  │
+    │                                  │
+    └──────────< (N) proyectos         │
+                │                       │
+                │                       └──────────< (N) valores_campo_proyecto
+                │
+                ├───────< (N) proyecto_etiquetas (N) >─────── (1) etiquetas
+                │
+                └───────< (N) proyecto_categorias (N) >─────── (1) categorias
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         MODELO DE PUBLICACIONES                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+publicaciones (1) ───────< (N) publicacion_proyectos (N) >─────── (1) proyectos
+    │
+    ├───────< (N) publicacion_etiquetas (N) >─────── (1) etiquetas
+    │
+    └───────< (N) publicacion_categorias (N) >─────── (1) categorias
+
+publicaciones (1) ─────── (1) auth_user [editor]
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                            PERFIL DE USUARIO                                │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+auth_user (1) ─────── (1) usuarios_persona [persona]
+    │
+    └─────── (información básica: username, email, first_name, last_name)
+    
+usuarios_persona contiene:
+    - Información institucional (institución, departamento, cargo)
+    - Identificadores académicos (ORCID, Google Scholar, ResearchGate)
+    - Biografía y foto de perfil
+    - Preferencias y estado
+
+
+================================================================================
+RESUMEN DE RELACIONES PRINCIPALES
+================================================================================
+
+DOCUMENTOS (núcleo central):
+  - Pertenece a: colecciones
+  - Tiene: versiones, archivos, autores, metadatos, categorías, etiquetas
+  - Relacionado con: citas, relaciones, enlaces externos
+  - Tiene: revisiones, comentarios, valoraciones, estadísticas
+  - Tiene: colaboradores, derechos, licencias
+
+USUARIOS:
+  - Tiene: roles, permisos
+  - Crea: documentos, comentarios, revisiones
+  - Recibe: notificaciones
+  - Hace: búsquedas, visitas, descargas
+
+COMUNIDADES/COLECCIONES:
+  - Estructura jerárquica
+  - Contiene: documentos
+
+VERSIONES/ARCHIVOS:
+  - Cada documento tiene múltiples versiones
+  - Cada versión tiene múltiples archivos
+
+METADATOS:
+  - Esquemas configurables
+  - Campos personalizables
+  - Valores múltiples por campo
+
+================================================================================
+

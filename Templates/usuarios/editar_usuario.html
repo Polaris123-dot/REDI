@@ -1,0 +1,171 @@
+{% load static %}
+{% include 'Nucleo/arriba.html' %}
+
+{% include 'Nucleo/centro.html' %}
+
+{% block content %}
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0">Editar Usuario</h1>
+                </div>
+                    <div class="col-sm-6">
+                        <ol class="breadcrumb float-sm-right d-none d-sm-flex">
+                            <li class="breadcrumb-item"><a href="{% url 'usuarios:lista_usuarios' %}">Usuarios</a></li>
+                            <li class="breadcrumb-item active">Editar</li>
+                        </ol>
+                    </div>
+            </div>
+        </div>
+    </div>
+
+    <section class="content">
+        <div class="container-fluid">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <div class="row">
+                <div class="col-12 col-lg-9">
+                    <div class="card card-warning">
+                        <div class="card-header">
+                            <h3 class="card-title">Editar: {{ usuario.username }}</h3>
+                        </div>
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <label>Nombre de Usuario</label>
+                                    <input type="text" class="form-control" value="{{ usuario.username }}" disabled>
+                                    <small class="form-text text-muted">El nombre de usuario no se puede cambiar</small>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="email">Email</label>
+                                    <input type="email" class="form-control" id="email" name="email" value="{{ usuario.email }}">
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-12 col-md-6">
+                                        <div class="form-group">
+                                            <label for="first_name">Nombre</label>
+                                            <input type="text" class="form-control" id="first_name" name="first_name" value="{{ usuario.first_name }}">
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-md-6">
+                                        <div class="form-group">
+                                            <label for="last_name">Apellidos</label>
+                                            <input type="text" class="form-control" id="last_name" name="last_name" value="{{ usuario.last_name }}">
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="password">Nueva Contraseña</label>
+                                    <input type="password" class="form-control" id="password" name="password">
+                                    <small class="form-text text-muted">Dejar en blanco si no desea cambiar la contraseña</small>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="is_active" name="is_active" {% if usuario.is_active %}checked{% endif %}>
+                                        <label class="form-check-label" for="is_active">
+                                            Usuario activo
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="is_staff" name="is_staff" {% if usuario.is_staff %}checked{% endif %}>
+                                        <label class="form-check-label" for="is_staff">
+                                            Es staff (puede acceder al admin)
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="is_superuser" name="is_superuser" {% if usuario.is_superuser %}checked{% endif %}>
+                                        <label class="form-check-label" for="is_superuser">
+                                            Es superusuario
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-footer">
+                                <button type="submit" class="btn btn-warning">
+                                    <i class="fas fa-save"></i> Guardar Cambios
+                                </button>
+                                <a href="{% url 'usuarios:detalle_usuario' usuario.id %}" class="btn btn-secondary">
+                                    <i class="fas fa-times"></i> Cancelar
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- ========================================== -->
+                <!-- PANEL LATERAL DERECHO - ACCIONES RÁPIDAS -->
+                <!-- ========================================== -->
+                <div class="col-12 col-lg-3 mt-3 mt-lg-0">
+                    <div class="card card-primary">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-bolt"></i> Acciones Rápidas
+                            </h3>
+                        </div>
+                        <div class="card-body p-0">
+                            <ul class="nav nav-pills flex-column">
+                                <li class="nav-item">
+                                    <a href="{% url 'usuarios:detalle_usuario' usuario.id %}" class="nav-link">
+                                        <i class="fas fa-eye"></i> Ver Detalle
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{% url 'usuarios:lista_usuarios' %}" class="nav-link">
+                                        <i class="fas fa-list"></i> Lista de Usuarios
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{% url 'usuarios:crear_usuario' %}" class="nav-link">
+                                        <i class="fas fa-user-plus"></i> Nuevo Usuario
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{% url 'usuarios:lista_grupos' %}" class="nav-link">
+                                        <i class="fas fa-users-cog"></i> Gestionar Roles
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="card card-info">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-info-circle"></i> Nota
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-sm text-muted">
+                                Deja la contraseña en blanco si no deseas cambiarla.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}
+
+{% include 'Nucleo/abajo.html' %}
+

@@ -1,0 +1,277 @@
+{% load static %}
+{% include 'Nucleo/arriba.html' %}
+
+{% include 'Nucleo/centro.html' %}
+
+{% block content %}
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0">Detalle de Usuario</h1>
+                </div>
+                    <div class="col-sm-6">
+                        <ol class="breadcrumb float-sm-right d-none d-sm-flex">
+                            <li class="breadcrumb-item"><a href="{% url 'usuarios:lista_usuarios' %}">Usuarios</a></li>
+                            <li class="breadcrumb-item active">{{ usuario.username }}</li>
+                        </ol>
+                    </div>
+            </div>
+        </div>
+    </div>
+
+    <section class="content">
+        <div class="container-fluid">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <div class="row">
+                <div class="col-12 col-lg-9">
+                    <!-- Información del Usuario -->
+                    <div class="card card-primary">
+                        <div class="card-header">
+                            <h3 class="card-title">Información del Usuario</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-12 col-md-6">
+                                    <p><strong>Usuario:</strong> {{ usuario.username }}</p>
+                                    <p><strong>Nombre:</strong> {{ usuario.first_name|default:"-" }}</p>
+                                    <p><strong>Apellidos:</strong> {{ usuario.last_name|default:"-" }}</p>
+                                    <p><strong>Email:</strong> {{ usuario.email|default:"-" }}</p>
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <p><strong>Estado:</strong> 
+                                        {% if usuario.is_active %}
+                                            <span class="badge badge-success">Activo</span>
+                                        {% else %}
+                                            <span class="badge badge-danger">Inactivo</span>
+                                        {% endif %}
+                                    </p>
+                                    <p><strong>Staff:</strong> 
+                                        {% if usuario.is_staff %}
+                                            <span class="badge badge-info">Sí</span>
+                                        {% else %}
+                                            <span class="badge badge-secondary">No</span>
+                                        {% endif %}
+                                    </p>
+                                    <p><strong>Superusuario:</strong> 
+                                        {% if usuario.is_superuser %}
+                                            <span class="badge badge-warning">Sí</span>
+                                        {% else %}
+                                            <span class="badge badge-secondary">No</span>
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Asignar Roles -->
+                    {% if perms.auth.change_user or user.is_superuser %}
+                    <div class="card card-info mt-3">
+                        <div class="card-header">
+                            <h3 class="card-title">Asignar Roles (Grupos)</h3>
+                        </div>
+                        <form method="post" id="form-roles">
+                            {% csrf_token %}
+                            <div class="card-body">
+                                <p class="text-muted">Selecciona los roles que deseas asignar a este usuario:</p>
+                                
+                                {% if grupos_disponibles %}
+                                    <div class="form-group">
+                                        {% for grupo in grupos_disponibles %}
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="grupos" 
+                                                       value="{{ grupo.id }}" id="grupo_{{ grupo.id }}"
+                                                       {% if grupo in grupos_usuario %}checked{% endif %}>
+                                                <label class="form-check-label" for="grupo_{{ grupo.id }}">
+                                                    {{ grupo.name }}
+                                                    <small class="text-muted">({{ grupo.user_set.count }} usuario{{ grupo.user_set.count|pluralize }})</small>
+                                                </label>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <p class="text-muted">No hay grupos disponibles. <a href="{% url 'usuarios:crear_grupo' %}">Crear un grupo</a></p>
+                                {% endif %}
+
+                                {% if grupos_usuario %}
+                                    <hr>
+                                    <h5>Roles Actuales:</h5>
+                                    {% for grupo in grupos_usuario %}
+                                        <span class="badge badge-info mr-1">{{ grupo.name }}</span>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                            <div class="card-footer">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> Guardar Roles
+                                </button>
+                                {% if user.is_superuser %}
+                                <a href="{% url 'usuarios:lista_grupos' %}" class="btn btn-info">
+                                    <i class="fas fa-users"></i> Gestionar Grupos
+                                </a>
+                                {% endif %}
+                            </div>
+                        </form>
+                    </div>
+                    {% else %}
+                    <div class="card card-secondary mt-3">
+                        <div class="card-header">
+                            <h3 class="card-title">Roles del Usuario</h3>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted">Este usuario tiene los siguientes roles asignados:</p>
+                            {% if grupos_usuario %}
+                                {% for grupo in grupos_usuario %}
+                                    <span class="badge badge-info mr-1 mb-1">{{ grupo.name }}</span>
+                                {% endfor %}
+                            {% else %}
+                                <p class="text-muted">Sin roles asignados</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- ========================================== -->
+                <!-- PANEL LATERAL DERECHO - ACCIONES RÁPIDAS -->
+                <!-- ========================================== -->
+                <div class="col-12 col-lg-3 mt-3 mt-lg-0">
+                    <div class="card card-primary">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-bolt"></i> Acciones Rápidas
+                            </h3>
+                        </div>
+                        <div class="card-body p-0">
+                            <ul class="nav nav-pills flex-column">
+                                {% if perms.auth.change_user or user.is_superuser %}
+                                <li class="nav-item">
+                                    <a href="{% url 'usuarios:editar_usuario' usuario.id %}" class="nav-link" 
+                                       {% if not perms.auth.change_user and not user.is_superuser %}onclick="mostrarErrorPermiso(); return false;"{% endif %}>
+                                        <i class="fas fa-edit"></i> Editar Usuario
+                                    </a>
+                                </li>
+                                {% else %}
+                                <li class="nav-item">
+                                    <a href="#" class="nav-link" onclick="mostrarErrorPermiso(); return false;">
+                                        <i class="fas fa-edit"></i> Editar Usuario
+                                    </a>
+                                </li>
+                                {% endif %}
+                                {% if perms.auth.delete_user or user.is_superuser %}
+                                {% if usuario != user %}
+                                <li class="nav-item">
+                                    <a href="{% url 'usuarios:eliminar_usuario' usuario.id %}" class="nav-link text-danger"
+                                       {% if not perms.auth.delete_user and not user.is_superuser %}onclick="mostrarErrorPermiso(); return false;"{% endif %}>
+                                        <i class="fas fa-trash"></i> Eliminar Usuario
+                                    </a>
+                                </li>
+                                {% endif %}
+                                {% else %}
+                                {% if usuario != user %}
+                                <li class="nav-item">
+                                    <a href="#" class="nav-link text-danger" onclick="mostrarErrorPermiso(); return false;">
+                                        <i class="fas fa-trash"></i> Eliminar Usuario
+                                    </a>
+                                </li>
+                                {% endif %}
+                                {% endif %}
+                                {% if perms.auth.add_user or user.is_superuser %}
+                                <li class="nav-item">
+                                    <a href="{% url 'usuarios:crear_usuario' %}" class="nav-link"
+                                       {% if not perms.auth.add_user and not user.is_superuser %}onclick="mostrarErrorPermiso(); return false;"{% endif %}>
+                                        <i class="fas fa-user-plus"></i> Nuevo Usuario
+                                    </a>
+                                </li>
+                                {% else %}
+                                <li class="nav-item">
+                                    <a href="#" class="nav-link" onclick="mostrarErrorPermiso(); return false;">
+                                        <i class="fas fa-user-plus"></i> Nuevo Usuario
+                                    </a>
+                                </li>
+                                {% endif %}
+                                <li class="nav-item">
+                                    <a href="{% url 'usuarios:lista_usuarios' %}" class="nav-link">
+                                        <i class="fas fa-list"></i> Lista de Usuarios
+                                    </a>
+                                </li>
+                                {% if user.is_superuser %}
+                                <li class="nav-item">
+                                    <a href="{% url 'usuarios:lista_grupos' %}" class="nav-link">
+                                        <i class="fas fa-users-cog"></i> Gestionar Roles
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{% url 'usuarios:crear_grupo' %}" class="nav-link">
+                                        <i class="fas fa-plus-circle"></i> Nuevo Rol
+                                    </a>
+                                </li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="card card-info">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-info-circle"></i> Información
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-sm">
+                                <strong>Roles Asignados:</strong><br>
+                                <span class="badge badge-primary">{{ grupos_usuario.count }}</span>
+                            </p>
+                            <p class="text-sm">
+                                <strong>Usuario:</strong><br>
+                                <span class="text-muted">{{ usuario.username }}</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function mostrarErrorPermiso() {
+    Swal.fire({
+        icon: 'warning',
+        title: 'Permisos Insuficientes',
+        text: 'No tienes los permisos necesarios para realizar esta acción. Contacta con un administrador si necesitas acceso.',
+        confirmButtonText: 'Entendido',
+        confirmButtonColor: '#3085d6'
+    });
+}
+
+// Prevenir envío de formulario si no hay permisos
+document.addEventListener('DOMContentLoaded', function() {
+    var formRoles = document.getElementById('form-roles');
+    if (formRoles) {
+        formRoles.addEventListener('submit', function(e) {
+            {% if not perms.auth.change_user and not user.is_superuser %}
+            e.preventDefault();
+            mostrarErrorPermiso();
+            return false;
+            {% endif %}
+        });
+    }
+});
+</script>
+{% endblock %}
+
+{% include 'Nucleo/abajo.html' %}
+

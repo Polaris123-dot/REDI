@@ -1,0 +1,215 @@
+{% load static %}
+{% include 'Nucleo/arriba.html' %}
+
+{% include 'Nucleo/centro.html' %}
+
+{% block content %}
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0">Detalle del Rol: {{ grupo.name }}</h1>
+                </div>
+                    <div class="col-sm-6">
+                        <ol class="breadcrumb float-sm-right d-none d-sm-flex">
+                            <li class="breadcrumb-item"><a href="{% url 'usuarios:lista_grupos' %}">Roles</a></li>
+                            <li class="breadcrumb-item active">{{ grupo.name }}</li>
+                        </ol>
+                    </div>
+            </div>
+        </div>
+    </div>
+
+    <section class="content">
+        <div class="container-fluid">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <div class="row">
+                <div class="col-12 col-lg-9">
+                    <!-- Card de Permisos del Rol -->
+                    <div class="card card-primary mb-3">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-key"></i> Permisos del Rol
+                            </h3>
+                            <div class="card-tools">
+                                <span class="badge badge-primary">{{ grupo.permissions.count }} permiso{{ grupo.permissions.count|pluralize }}</span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            {% if grupo.permissions.all %}
+                                <p class="text-muted">Este rol tiene los siguientes permisos asignados:</p>
+                                <div class="row">
+                                    {% for permiso in grupo.permissions.all|slice:":12" %}
+                                        <div class="col-12 col-md-6 mb-2">
+                                            <div class="alert alert-info alert-dismissible py-2">
+                                                <strong>{{ permiso.content_type.app_label|title }}</strong> | 
+                                                <strong>{{ permiso.content_type.model|title }}</strong><br>
+                                                <small>{{ permiso.name }}</small>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                    {% if grupo.permissions.count > 12 %}
+                                        <div class="col-12">
+                                            <div class="alert alert-warning">
+                                                <small>... y {{ grupo.permissions.count|add:"-12" }} permiso{{ grupo.permissions.count|add:"-12"|pluralize }} más. 
+                                                <a href="{% url 'usuarios:gestionar_permisos_grupo' grupo.id %}">Ver todos</a></small>
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            {% else %}
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-exclamation-triangle"></i> Este rol no tiene permisos asignados.
+                                </div>
+                            {% endif %}
+                            <div class="mt-3">
+                                <a href="{% url 'usuarios:gestionar_permisos_grupo' grupo.id %}" class="btn btn-warning btn-block">
+                                    <i class="fas fa-key"></i> Gestionar Permisos del Rol
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card de Asignar Usuarios -->
+                    <div class="card card-info">
+                        <div class="card-header">
+                            <h3 class="card-title">Asignar Usuarios al Rol</h3>
+                            <div class="card-tools">
+                                <span class="badge badge-info">{{ usuarios_grupo.count }} usuario{{ usuarios_grupo.count|pluralize }}</span>
+                            </div>
+                        </div>
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="card-body">
+                                <p class="text-muted">Selecciona los usuarios que deseas asignar a este rol:</p>
+                                
+                                {% if todos_usuarios %}
+                                    <div class="row">
+                                        {% for usuario in todos_usuarios %}
+                                            <div class="col-12 col-md-6 col-lg-4">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" name="usuarios" 
+                                                           value="{{ usuario.id }}" id="usuario_{{ usuario.id }}"
+                                                           {% if usuario in usuarios_grupo %}checked{% endif %}>
+                                                    <label class="form-check-label" for="usuario_{{ usuario.id }}">
+                                                        {{ usuario.username }}
+                                                        {% if usuario.get_full_name %}
+                                                            <small class="text-muted">({{ usuario.get_full_name }})</small>
+                                                        {% endif %}
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <p class="text-muted">No hay usuarios disponibles.</p>
+                                {% endif %}
+
+                                {% if usuarios_grupo %}
+                                    <hr>
+                                    <h5>Usuarios con este Rol:</h5>
+                                    <div class="row">
+                                        {% for usuario in usuarios_grupo %}
+                                            <div class="col-6 col-md-4 col-lg-3">
+                                                <span class="badge badge-info mr-1 mb-1">{{ usuario.username }}</span>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="card-footer">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> Guardar Usuarios
+                                </button>
+                                <a href="{% url 'usuarios:lista_grupos' %}" class="btn btn-secondary">
+                                    <i class="fas fa-arrow-left"></i> Volver
+                                </a>
+                                <a href="{% url 'usuarios:eliminar_grupo' grupo.id %}" class="btn btn-danger float-right">
+                                    <i class="fas fa-trash"></i> Eliminar Rol
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- ========================================== -->
+                <!-- PANEL LATERAL DERECHO - ACCIONES RÁPIDAS -->
+                <!-- ========================================== -->
+                <div class="col-12 col-lg-3 mt-3 mt-lg-0">
+                    <div class="card card-primary">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-bolt"></i> Acciones Rápidas
+                            </h3>
+                        </div>
+                        <div class="card-body p-0">
+                            <ul class="nav nav-pills flex-column">
+                                <li class="nav-item">
+                                    <a href="{% url 'usuarios:gestionar_permisos_grupo' grupo.id %}" class="nav-link">
+                                        <i class="fas fa-key"></i> Gestionar Permisos
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{% url 'usuarios:lista_grupos' %}" class="nav-link">
+                                        <i class="fas fa-list"></i> Lista de Roles
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{% url 'usuarios:crear_grupo' %}" class="nav-link">
+                                        <i class="fas fa-plus-circle"></i> Nuevo Rol
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{% url 'usuarios:eliminar_grupo' grupo.id %}" class="nav-link text-danger">
+                                        <i class="fas fa-trash"></i> Eliminar Rol
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{% url 'usuarios:lista_usuarios' %}" class="nav-link">
+                                        <i class="fas fa-users"></i> Ver Usuarios
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{% url 'usuarios:crear_usuario' %}" class="nav-link">
+                                        <i class="fas fa-user-plus"></i> Nuevo Usuario
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="card card-info">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-info-circle"></i> Información
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-sm">
+                                <strong>Usuarios con este Rol:</strong><br>
+                                <span class="badge badge-primary">{{ usuarios_grupo.count }}</span>
+                            </p>
+                            <p class="text-sm">
+                                <strong>Rol:</strong><br>
+                                <span class="text-muted">{{ grupo.name }}</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}
+
+{% include 'Nucleo/abajo.html' %}
+

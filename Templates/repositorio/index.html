@@ -1,0 +1,1451 @@
+{% load static %}
+{% include 'Nucleo/arriba.html' %}
+
+{% block extra_css %}
+<!-- DataTables CSS - Local -->
+<link rel="stylesheet" href="{% static 'DataTables/css/dataTables.bootstrap4.min.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/datatables-responsive/css/responsive.bootstrap4.min.css' %}">
+<!-- Select2 CSS -->
+<link rel="stylesheet" href="{% static 'plugins/select2/css/select2.min.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css' %}">
+<!-- SweetAlert2 CSS -->
+<link rel="stylesheet" href="{% static 'sweetalert2/sweetalert2.min.css' %}">
+<style>
+  /* Estilos para tabs */
+  .nav-tabs .nav-link {
+    color: #495057;
+  }
+
+  .nav-tabs .nav-link.active {
+    color: #007bff;
+    font-weight: 600;
+  }
+
+  /* Icono preview */
+  .icono-preview {
+    font-size: 1.2rem;
+    margin-right: 8px;
+  }
+
+  /* Estilos responsivos para botones */
+  .btn-group-sm .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+  }
+
+  /* En pantallas pequeñas, solo mostrar iconos */
+  @media (max-width: 767px) {
+    .btn-group-sm .btn span {
+      display: none !important;
+    }
+
+    .btn-group-sm .btn {
+      padding: 0.25rem 0.4rem;
+    }
+  }
+
+  /* En pantallas medianas y grandes, mostrar texto */
+  @media (min-width: 768px) {
+    .btn-group-sm .btn span {
+      display: inline !important;
+    }
+  }
+
+  /* Loading overlay */
+  .loading-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .loading-overlay.show {
+    display: flex;
+  }
+
+  .spinner-border-custom {
+    width: 3rem;
+    height: 3rem;
+    border-width: 0.3rem;
+  }
+
+  /* JSON input styling */
+  .json-input {
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+  }
+
+  /* Select2 styling for multi-select */
+  .select2-container {
+    width: 100% !important;
+  }
+
+  /* Estilos para badges de categorías y etiquetas en la tabla */
+  .badge-categoria {
+    margin-right: 0.25rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .badge-etiqueta {
+    margin-right: 0.25rem;
+    margin-bottom: 0.25rem;
+  }
+
+  /* Colores adicionales para botones */
+  .btn-purple {
+    background-color: #6f42c1;
+    border-color: #6f42c1;
+    color: #fff;
+  }
+
+  .btn-purple:hover {
+    background-color: #5a32a3;
+    border-color: #5a32a3;
+    color: #fff;
+  }
+
+  .btn-teal {
+    background-color: #20c997;
+    border-color: #20c997;
+    color: #fff;
+  }
+
+  .btn-teal:hover {
+    background-color: #1aa179;
+    border-color: #1aa179;
+    color: #fff;
+  }
+</style>
+{% endblock %}
+
+{% include 'Nucleo/sidebar.html' %}
+
+<!-- Content Wrapper. Contains page content -->
+<div class="content-wrapper">
+  <!-- Content Header -->
+  <div class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1 class="m-0">Repositorio</h1>
+      </div>
+      <div class="col-sm-6">
+        <ol class="breadcrumb float-sm-right d-none d-sm-flex">
+          <li class="breadcrumb-item"><a href="{% url 'usuarios:panel' %}">Inicio</a></li>
+          <li class="breadcrumb-item active">Repositorio</li>
+        </ol>
+      </div>
+    </div>
+    <!-- Accesos Rápidos -->
+    <div class="row">
+      <div class="col-12">
+        <div class="btn-group" role="group">
+          <button type="button" class="btn btn-info btn-sm" onclick="$('#tipos-recurso-tab').tab('show');">
+            <i class="fas fa-file-alt"></i> Tipos de Recurso
+          </button>
+          <button type="button" class="btn btn-primary btn-sm" id="btnAccesoRapidoEstados">
+            <i class="fas fa-info-circle"></i> Estados de Documento
+          </button>
+          <button type="button" class="btn btn-success btn-sm" onclick="$('#comunidades-tab').tab('show');">
+            <i class="fas fa-users"></i> Comunidades
+          </button>
+          <button type="button" class="btn btn-warning btn-sm" onclick="$('#colecciones-tab').tab('show');">
+            <i class="fas fa-folder"></i> Colecciones
+          </button>
+          <button type="button" class="btn btn-info btn-sm" onclick="$('#licencias-tab').tab('show');">
+            <i class="fas fa-file-contract"></i> Licencias
+          </button>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="$('#documentos-tab').tab('show');">
+            <i class="fas fa-file"></i> Documentos
+          </button>
+          <button type="button" class="btn btn-purple btn-sm" onclick="$('#autores-tab').tab('show');">
+            <i class="fas fa-user-edit"></i> Autores
+          </button>
+          <button type="button" class="btn btn-teal btn-sm" onclick="$('#colaboradores-tab').tab('show');">
+            <i class="fas fa-users-cog"></i> Colaboradores
+          </button>
+        </div>
+      </div>
+    </div>
+    </div>
+  </div>
+
+  <!-- Main content -->
+  <section class="content">
+    <div class="container-fluid">
+
+    <!-- Tabs Navigation -->
+    <ul class="nav nav-tabs" id="repositorioTabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <a class="nav-link active" id="tipos-recurso-tab" data-toggle="tab" href="#tipos-recurso" role="tab"
+          aria-controls="tipos-recurso" aria-selected="true">
+          <i class="fas fa-file-alt"></i> Tipos de Recurso
+        </a>
+      </li>
+      <li class="nav-item" role="presentation">
+        <a class="nav-link" id="estados-documento-tab" data-toggle="tab" href="#estados-documento" role="tab"
+          aria-controls="estados-documento" aria-selected="false">
+          <i class="fas fa-info-circle"></i> Estados de Documento
+        </a>
+      </li>
+      <li class="nav-item" role="presentation">
+        <a class="nav-link" id="comunidades-tab" data-toggle="tab" href="#comunidades" role="tab"
+          aria-controls="comunidades" aria-selected="false">
+          <i class="fas fa-users"></i> Comunidades
+        </a>
+      </li>
+      <li class="nav-item" role="presentation">
+        <a class="nav-link" id="colecciones-tab" data-toggle="tab" href="#colecciones" role="tab"
+          aria-controls="colecciones" aria-selected="false">
+          <i class="fas fa-folder"></i> Colecciones
+        </a>
+      </li>
+      <li class="nav-item" role="presentation">
+        <a class="nav-link" id="licencias-tab" data-toggle="tab" href="#licencias" role="tab"
+          aria-controls="licencias" aria-selected="false">
+          <i class="fas fa-file-contract"></i> Licencias
+        </a>
+      </li>
+      <li class="nav-item" role="presentation">
+        <a class="nav-link" id="documentos-tab" data-toggle="tab" href="#documentos" role="tab"
+          aria-controls="documentos" aria-selected="false">
+          <i class="fas fa-file"></i> Documentos
+        </a>
+      </li>
+      <li class="nav-item" role="presentation">
+        <a class="nav-link" id="autores-tab" data-toggle="tab" href="#autores" role="tab"
+          aria-controls="autores" aria-selected="false">
+          <i class="fas fa-user-edit"></i> Autores
+        </a>
+      </li>
+      <li class="nav-item" role="presentation">
+        <a class="nav-link" id="colaboradores-tab" data-toggle="tab" href="#colaboradores" role="tab"
+          aria-controls="colaboradores" aria-selected="false">
+          <i class="fas fa-users-cog"></i> Colaboradores
+        </a>
+      </li>
+    </ul>
+
+    <!-- Tabs Content -->
+    <div class="tab-content" id="repositorioTabsContent">
+
+      <!-- Tab Tipos de Recurso -->
+      <div class="tab-pane fade show active" id="tipos-recurso" role="tabpanel" aria-labelledby="tipos-recurso-tab">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fas fa-file-alt"></i> Gestión de Tipos de Recurso
+            </h3>
+            <div class="card-tools">
+              <button type="button" class="btn btn-primary btn-sm" id="btnCrearTipoRecurso">
+                <i class="fas fa-plus"></i> Nuevo Tipo de Recurso
+              </button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table id="tableTiposRecurso" class="table" style="width:100%">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Descripción</th>
+                    <th>Icono</th>
+                    <th>Categoría</th>
+                    <th class="text-center">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Estados de Documento -->
+      <div class="tab-pane fade" id="estados-documento" role="tabpanel" aria-labelledby="estados-documento-tab">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fas fa-info-circle"></i> Gestión de Estados de Documento
+            </h3>
+            <div class="card-tools">
+              <button type="button" class="btn btn-primary btn-sm" id="btnCrearEstadoDocumento">
+                <i class="fas fa-plus"></i> Nuevo Estado
+              </button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table id="tableEstadosDocumento" class="table" style="width:100%">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Orden</th>
+                    <th>Nombre</th>
+                    <th>Descripción</th>
+                    <th class="text-center">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Comunidades -->
+      <div class="tab-pane fade" id="comunidades" role="tabpanel" aria-labelledby="comunidades-tab">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fas fa-users"></i> Gestión de Comunidades
+            </h3>
+            <div class="card-tools">
+              <button type="button" class="btn btn-primary btn-sm" id="btnCrearComunidad">
+                <i class="fas fa-plus"></i> Nueva Comunidad
+              </button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table id="tableComunidades" class="table" style="width:100%">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Comunidad Padre</th>
+                    <th>Administrador</th>
+                    <th>Estado</th>
+                    <th>Pública</th>
+                    <th class="text-center">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Colecciones -->
+      <div class="tab-pane fade" id="colecciones" role="tabpanel" aria-labelledby="colecciones-tab">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fas fa-folder"></i> Gestión de Colecciones
+            </h3>
+            <div class="card-tools">
+              <button type="button" class="btn btn-primary btn-sm" id="btnCrearColeccion">
+                <i class="fas fa-plus"></i> Nueva Colección
+              </button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table id="tableColecciones" class="table" style="width:100%">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Comunidad</th>
+                    <th>Colección Padre</th>
+                    <th>Administrador</th>
+                    <th>Política</th>
+                    <th class="text-center">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Licencias -->
+      <div class="tab-pane fade" id="licencias" role="tabpanel" aria-labelledby="licencias-tab">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fas fa-file-contract"></i> Gestión de Licencias
+            </h3>
+            <div class="card-tools">
+              <button type="button" class="btn btn-primary btn-sm" id="btnCrearLicencia">
+                <i class="fas fa-plus"></i> Nueva Licencia
+              </button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table id="tableLicencias" class="table" style="width:100%">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Código</th>
+                    <th>Versión</th>
+                    <th>Comercial</th>
+                    <th>Modificación</th>
+                    <th>Atribución</th>
+                    <th class="text-center">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Documentos -->
+      <div class="tab-pane fade" id="documentos" role="tabpanel" aria-labelledby="documentos-tab">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fas fa-file"></i> Gestión de Documentos
+            </h3>
+            <div class="card-tools">
+              <button type="button" class="btn btn-primary btn-sm" id="btnCrearDocumento">
+                <i class="fas fa-plus"></i> Nuevo Documento
+              </button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table id="tableDocumentos" class="table" style="width:100%">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Título</th>
+                    <th>Tipo</th>
+                    <th>Colección</th>
+                    <th>Creador</th>
+                    <th>Estado</th>
+                    <th>Visibilidad</th>
+                    <th>Fecha Creación</th>
+                    <th class="text-center">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Autores -->
+      <div class="tab-pane fade" id="autores" role="tabpanel" aria-labelledby="autores-tab">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fas fa-user-edit"></i> Gestión de Autores
+            </h3>
+            <div class="card-tools">
+              <button type="button" class="btn btn-primary btn-sm" id="btnCrearAutor">
+                <i class="fas fa-plus"></i> Nuevo Autor
+              </button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table id="tableAutores" class="table" style="width:100%">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Nombre Completo</th>
+                    <th>Documento</th>
+                    <th>Usuario</th>
+                    <th>Email</th>
+                    <th>Orden</th>
+                    <th>Principal</th>
+                    <th>Correspondiente</th>
+                    <th class="text-center">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Colaboradores -->
+      <div class="tab-pane fade" id="colaboradores" role="tabpanel" aria-labelledby="colaboradores-tab">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fas fa-users-cog"></i> Gestión de Colaboradores
+            </h3>
+            <div class="card-tools">
+              <button type="button" class="btn btn-primary btn-sm" id="btnCrearColaborador">
+                <i class="fas fa-plus"></i> Nuevo Colaborador
+              </button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table id="tableColaboradores" class="table" style="width:100%">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Usuario</th>
+                    <th>Documento</th>
+                    <th>Rol</th>
+                    <th>Fecha Asignación</th>
+                    <th class="text-center">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    </div>
+  </section>
+</div>
+<!-- /.content-wrapper -->
+
+<!-- Modal para Tipo de Recurso -->
+<div class="modal fade" id="modalTipoRecurso" tabindex="-1" role="dialog" aria-labelledby="modalTipoRecursoLabel"
+  aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalTipoRecursoLabel">Nuevo Tipo de Recurso</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form id="formTipoRecurso">
+        {% csrf_token %}
+        <div class="modal-body">
+          <input type="hidden" id="tipoRecursoId" name="id">
+
+          <div class="form-group">
+            <label for="tipoRecursoNombre">Nombre <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="tipoRecursoNombre" name="nombre" required>
+          </div>
+
+          <div class="form-group">
+            <label for="tipoRecursoDescripcion">Descripción</label>
+            <textarea class="form-control" id="tipoRecursoDescripcion" name="descripcion" rows="3"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="tipoRecursoIcono">Icono</label>
+            <input type="text" class="form-control" id="tipoRecursoIcono" name="icono"
+              placeholder="Ej: fas fa-file-pdf">
+            <small class="form-text text-muted">Clase de icono FontAwesome (ej: fas fa-file-pdf)</small>
+          </div>
+
+          <div class="form-group">
+            <label for="tipoRecursoCategoria">Categoría</label>
+            <input type="text" class="form-control" id="tipoRecursoCategoria" name="categoria">
+          </div>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> Guardar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para Estado de Documento -->
+<div class="modal fade" id="modalEstadoDocumento" tabindex="-1" role="dialog" aria-labelledby="modalEstadoDocumentoLabel"
+  aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalEstadoDocumentoLabel">Nuevo Estado de Documento</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form id="formEstadoDocumento">
+        {% csrf_token %}
+        <div class="modal-body">
+          <input type="hidden" id="estadoDocumentoId" name="id">
+
+          <div class="form-group">
+            <label for="estadoDocumentoNombre">Nombre <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="estadoDocumentoNombre" name="nombre" required>
+          </div>
+
+          <div class="form-group">
+            <label for="estadoDocumentoDescripcion">Descripción</label>
+            <textarea class="form-control" id="estadoDocumentoDescripcion" name="descripcion" rows="3"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="estadoDocumentoOrden">Orden</label>
+            <input type="number" class="form-control" id="estadoDocumentoOrden" name="orden" value="0" min="0">
+            <small class="form-text text-muted">Orden de visualización (menor número primero)</small>
+          </div>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> Guardar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para Comunidad -->
+<div class="modal fade" id="modalComunidad" tabindex="-1" role="dialog" aria-labelledby="modalComunidadLabel"
+  aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalComunidadLabel">Nueva Comunidad</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form id="formComunidad">
+        {% csrf_token %}
+        <div class="modal-body">
+          <input type="hidden" id="comunidadId" name="id">
+
+          <div class="form-group">
+            <label for="comunidadNombre">Nombre <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="comunidadNombre" name="nombre" required>
+          </div>
+
+          <div class="form-group">
+            <label for="comunidadDescripcion">Descripción</label>
+            <textarea class="form-control" id="comunidadDescripcion" name="descripcion" rows="3"></textarea>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="comunidadPadre">Comunidad Padre</label>
+                <select class="form-control" id="comunidadPadre" name="comunidad_padre_id">
+                  <option value="">Ninguna (Comunidad raíz)</option>
+                </select>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="comunidadAdministrador">Administrador <span class="text-danger">*</span></label>
+                <select class="form-control" id="comunidadAdministrador" name="administrador_id" required>
+                  <option value="">Seleccione un usuario</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="comunidadLogo">Logo (URL)</label>
+                <input type="text" class="form-control" id="comunidadLogo" name="logo">
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="comunidadBanner">Banner (URL)</label>
+                <input type="text" class="form-control" id="comunidadBanner" name="banner">
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="comunidadEstado">Estado</label>
+                <select class="form-control" id="comunidadEstado" name="estado">
+                  <option value="activa">Activa</option>
+                  <option value="inactiva">Inactiva</option>
+                  <option value="archivada">Archivada</option>
+                </select>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label>
+                  <input type="checkbox" id="comunidadEsPublica" name="es_publica" checked> Es pública
+                </label>
+              </div>
+            </div>
+          </div>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> Guardar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para Colección -->
+<div class="modal fade" id="modalColeccion" tabindex="-1" role="dialog" aria-labelledby="modalColeccionLabel"
+  aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalColeccionLabel">Nueva Colección</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form id="formColeccion">
+        {% csrf_token %}
+        <div class="modal-body">
+          <input type="hidden" id="coleccionId" name="id">
+
+          <div class="form-group">
+            <label for="coleccionNombre">Nombre <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="coleccionNombre" name="nombre" required>
+          </div>
+
+          <div class="form-group">
+            <label for="coleccionDescripcion">Descripción</label>
+            <textarea class="form-control" id="coleccionDescripcion" name="descripcion" rows="3"></textarea>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="coleccionComunidad">Comunidad <span class="text-danger">*</span></label>
+                <select class="form-control" id="coleccionComunidad" name="comunidad_id" required>
+                  <option value="">Seleccione una comunidad</option>
+                </select>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="coleccionPadre">Colección Padre</label>
+                <select class="form-control" id="coleccionPadre" name="coleccion_padre_id">
+                  <option value="">Ninguna (Colección raíz)</option>
+                </select>
+                <small class="form-text text-muted">Debe pertenecer a la misma comunidad</small>
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="coleccionAdministrador">Administrador <span class="text-danger">*</span></label>
+                <select class="form-control" id="coleccionAdministrador" name="administrador_id" required>
+                  <option value="">Seleccione un usuario</option>
+                </select>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="coleccionPoliticaIngreso">Política de Ingreso</label>
+                <select class="form-control" id="coleccionPoliticaIngreso" name="politica_ingreso">
+                  <option value="abierto">Abierto</option>
+                  <option value="cerrado">Cerrado</option>
+                  <option value="revision">Requiere Revisión</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>
+              <input type="checkbox" id="coleccionEsPublica" name="es_publica" checked> Es pública
+            </label>
+          </div>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> Guardar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para Licencia -->
+<div class="modal fade" id="modalLicencia" tabindex="-1" role="dialog" aria-labelledby="modalLicenciaLabel"
+  aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalLicenciaLabel">Nueva Licencia</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form id="formLicencia">
+        {% csrf_token %}
+        <div class="modal-body">
+          <input type="hidden" id="licenciaId" name="id">
+
+          <div class="row">
+            <div class="col-md-8">
+              <div class="form-group">
+                <label for="licenciaNombre">Nombre <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="licenciaNombre" name="nombre" required>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-group">
+                <label for="licenciaCodigo">Código <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="licenciaCodigo" name="codigo" required>
+                <small class="form-text text-muted">Código único de la licencia (ej: MIT, GPL, CC-BY)</small>
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="licenciaVersion">Versión</label>
+                <input type="text" class="form-control" id="licenciaVersion" name="version">
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="licenciaUrl">URL</label>
+                <input type="url" class="form-control" id="licenciaUrl" name="url">
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="licenciaDescripcion">Descripción</label>
+            <textarea class="form-control" id="licenciaDescripcion" name="descripcion" rows="3"></textarea>
+          </div>
+
+          <div class="row">
+            <div class="col-md-4">
+              <div class="form-group">
+                <label>
+                  <input type="checkbox" id="licenciaPermiteComercial" name="permite_comercial"> Permite uso comercial
+                </label>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-group">
+                <label>
+                  <input type="checkbox" id="licenciaPermiteModificacion" name="permite_modificacion"> Permite modificación
+                </label>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-group">
+                <label>
+                  <input type="checkbox" id="licenciaRequiereAttribucion" name="requiere_attribucion" checked> Requiere atribución
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="licenciaTextoCompleto">Texto Completo</label>
+            <textarea class="form-control" id="licenciaTextoCompleto" name="texto_completo" rows="5"></textarea>
+          </div>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> Guardar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para Documento -->
+<div class="modal fade" id="modalDocumento" tabindex="-1" role="dialog" aria-labelledby="modalDocumentoLabel"
+  aria-hidden="true">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalDocumentoLabel">Nuevo Documento</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form id="formDocumento">
+        {% csrf_token %}
+        <div class="modal-body">
+          <input type="hidden" id="documentoId" name="id">
+
+          <!-- Navegación por pestañas dentro del modal -->
+          <ul class="nav nav-tabs" id="documentoTabs" role="tablist">
+            <li class="nav-item">
+              <a class="nav-link active" id="info-basica-tab" data-toggle="tab" href="#info-basica" role="tab">
+                <i class="fas fa-info-circle"></i> Información Básica
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" id="clasificacion-tab" data-toggle="tab" href="#clasificacion" role="tab">
+                <i class="fas fa-tags"></i> Clasificación
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" id="fechas-tab" data-toggle="tab" href="#fechas" role="tab">
+                <i class="fas fa-calendar"></i> Fechas
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" id="identificadores-tab" data-toggle="tab" href="#identificadores" role="tab">
+                <i class="fas fa-barcode"></i> Identificadores
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" id="metadatos-tab" data-toggle="tab" href="#metadatos" role="tab">
+                <i class="fas fa-database"></i> Metadatos
+              </a>
+            </li>
+          </ul>
+
+          <div class="tab-content mt-3" id="documentoTabsContent">
+            <!-- Pestaña: Información Básica -->
+            <div class="tab-pane fade show active" id="info-basica" role="tabpanel">
+              <div class="form-group">
+                <label for="documentoTitulo">Título <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="documentoTitulo" name="titulo" required>
+              </div>
+
+              <div class="form-group">
+                <label for="documentoResumen">Resumen</label>
+                <textarea class="form-control" id="documentoResumen" name="resumen" rows="4"></textarea>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label for="documentoTipoRecurso">Tipo de Recurso <span class="text-danger">*</span></label>
+                    <select class="form-control" id="documentoTipoRecurso" name="tipo_recurso_id" required>
+                      <option value="">Seleccione un tipo</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label for="documentoColeccion">Colección <span class="text-danger">*</span></label>
+                    <select class="form-control" id="documentoColeccion" name="coleccion_id" required>
+                      <option value="">Seleccione una colección</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label for="documentoEstado">Estado <span class="text-danger">*</span></label>
+                    <select class="form-control" id="documentoEstado" name="estado_id" required>
+                      <option value="">Seleccione un estado</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label for="documentoVisibilidad">Visibilidad</label>
+                    <select class="form-control" id="documentoVisibilidad" name="visibilidad">
+                      <option value="publico">Público</option>
+                      <option value="privado">Privado</option>
+                      <option value="restringido">Restringido</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label for="documentoIdioma">Idioma</label>
+                    <input type="text" class="form-control" id="documentoIdioma" name="idioma" value="es"
+                      placeholder="es">
+                    <small class="form-text text-muted">Código de idioma ISO (ej: es, en, fr)</small>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label for="documentoVersionActual">Versión Actual</label>
+                    <input type="number" class="form-control" id="documentoVersionActual" name="version_actual"
+                      value="1" min="1">
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="documentoPalabrasClave">Palabras Clave</label>
+                <input type="text" class="form-control" id="documentoPalabrasClave" name="palabras_clave"
+                  placeholder="palabra1, palabra2, palabra3">
+                <small class="form-text text-muted">Separadas por comas</small>
+              </div>
+            </div>
+
+            <!-- Pestaña: Clasificación -->
+            <div class="tab-pane fade" id="clasificacion" role="tabpanel">
+              <div class="form-group">
+                <label for="documentoLicencia">Licencia</label>
+                <select class="form-control" id="documentoLicencia" name="licencia_id">
+                  <option value="">Ninguna</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>Categorías</label>
+                <select class="form-control select2" id="documentoCategorias" name="categorias_ids" multiple
+                  style="width: 100%;">
+                </select>
+                <small class="form-text text-muted">Seleccione una o más categorías</small>
+              </div>
+
+              <div class="form-group">
+                <label>Etiquetas</label>
+                <select class="form-control select2" id="documentoEtiquetas" name="etiquetas_ids" multiple
+                  style="width: 100%;">
+                </select>
+                <small class="form-text text-muted">Seleccione una o más etiquetas</small>
+              </div>
+            </div>
+
+            <!-- Pestaña: Fechas -->
+            <div class="tab-pane fade" id="fechas" role="tabpanel">
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label for="documentoFechaPublicacion">Fecha de Publicación</label>
+                    <input type="date" class="form-control" id="documentoFechaPublicacion" name="fecha_publicacion">
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label for="documentoFechaAceptacion">Fecha de Aceptación</label>
+                    <input type="date" class="form-control" id="documentoFechaAceptacion" name="fecha_aceptacion">
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="documentoFechaPublicacionDisponible">Fecha de Publicación Disponible</label>
+                <input type="datetime-local" class="form-control" id="documentoFechaPublicacionDisponible"
+                  name="fecha_publicacion_disponible">
+                <small class="form-text text-muted">Fecha y hora en que el documento estará disponible</small>
+              </div>
+            </div>
+
+            <!-- Pestaña: Identificadores -->
+            <div class="tab-pane fade" id="identificadores" role="tabpanel">
+              <div class="form-group">
+                <label for="documentoHandle">Handle</label>
+                <input type="text" class="form-control" id="documentoHandle" name="handle"
+                  placeholder="hdl:xxxx/xxxx">
+                <small class="form-text text-muted">Identificador único permanente (se genera automáticamente si se
+                  deja vacío)</small>
+              </div>
+
+              <div class="row">
+                <div class="col-md-4">
+                  <div class="form-group">
+                    <label for="documentoDOI">DOI</label>
+                    <input type="text" class="form-control" id="documentoDOI" name="doi"
+                      placeholder="10.xxxx/xxxx">
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="form-group">
+                    <label for="documentoISBN">ISBN</label>
+                    <input type="text" class="form-control" id="documentoISBN" name="isbn"
+                      placeholder="978-xxxx-xxxx">
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="form-group">
+                    <label for="documentoISSN">ISSN</label>
+                    <input type="text" class="form-control" id="documentoISSN" name="issn"
+                      placeholder="xxxx-xxxx">
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="documentoNumeroAcceso">Número de Acceso</label>
+                <input type="text" class="form-control" id="documentoNumeroAcceso" name="numero_acceso">
+              </div>
+            </div>
+
+            <!-- Pestaña: Metadatos -->
+            <div class="tab-pane fade" id="metadatos" role="tabpanel">
+              <div class="form-group">
+                <label for="documentoTemas">Temas (JSON)</label>
+                <textarea class="form-control json-input" id="documentoTemas" name="temas" rows="4"
+                  placeholder='["tema1", "tema2", "tema3"]'></textarea>
+                <small class="form-text text-muted">Array JSON de temas</small>
+              </div>
+
+              <div class="form-group">
+                <label for="documentoCamposPersonalizados">Campos Personalizados (JSON)</label>
+                <textarea class="form-control json-input" id="documentoCamposPersonalizados"
+                  name="campos_personalizados" rows="4"
+                  placeholder='{"campo1": "valor1", "campo2": "valor2"}'></textarea>
+                <small class="form-text text-muted">Objeto JSON con campos personalizados</small>
+              </div>
+
+              <div class="form-group">
+                <label for="documentoMetadataCompleta">Metadatos Completos (JSON)</label>
+                <textarea class="form-control json-input" id="documentoMetadataCompleta" name="metadata_completa"
+                  rows="6" placeholder='{"metadata": "completa"}'></textarea>
+                <small class="form-text text-muted">Objeto JSON con metadatos adicionales</small>
+              </div>
+            </div>
+          </div>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> Guardar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para Autor -->
+<div class="modal fade" id="modalAutor" tabindex="-1" role="dialog" aria-labelledby="modalAutorLabel"
+  aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalAutorLabel">Nuevo Autor</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form id="formAutor">
+        {% csrf_token %}
+        <div class="modal-body">
+          <input type="hidden" id="autorId" name="id">
+
+          <div class="form-group">
+            <label for="autorDocumento">Documento <span class="text-danger">*</span></label>
+            <select class="form-control" id="autorDocumento" name="documento_id" required>
+              <option value="">Seleccione un documento</option>
+            </select>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="autorNombre">Nombre <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="autorNombre" name="nombre" required>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="autorApellidos">Apellidos <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="autorApellidos" name="apellidos" required>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="autorUsuario">Usuario (Opcional)</label>
+            <select class="form-control" id="autorUsuario" name="usuario_id">
+              <option value="">Ninguno (Autor independiente)</option>
+            </select>
+            <small class="form-text text-muted">Si el autor está registrado en el sistema, puede vincularlo a un
+              usuario</small>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="autorEmail">Email</label>
+                <input type="email" class="form-control" id="autorEmail" name="email">
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="autorORCID">ORCID ID</label>
+                <input type="text" class="form-control" id="autorORCID" name="orcid_id" maxlength="19"
+                  placeholder="0000-0000-0000-0000">
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="autorAfiliacion">Afiliación</label>
+            <input type="text" class="form-control" id="autorAfiliacion" name="afiliacion"
+              placeholder="Institución o universidad">
+          </div>
+
+          <div class="row">
+            <div class="col-md-4">
+              <div class="form-group">
+                <label for="autorOrden">Orden de Autor</label>
+                <input type="number" class="form-control" id="autorOrden" name="orden_autor" value="1" min="1">
+                <small class="form-text text-muted">Orden en que aparece el autor (1 = primer autor)</small>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-group">
+                <label>
+                  <input type="checkbox" id="autorPrincipal" name="es_autor_principal"> Autor Principal
+                </label>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-group">
+                <label>
+                  <input type="checkbox" id="autorCorrespondiente" name="es_correspondiente"> Autor Correspondiente
+                </label>
+              </div>
+            </div>
+          </div>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> Guardar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para Colaborador -->
+<div class="modal fade" id="modalColaborador" tabindex="-1" role="dialog" aria-labelledby="modalColaboradorLabel"
+  aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalColaboradorLabel">Nuevo Colaborador</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form id="formColaborador">
+        {% csrf_token %}
+        <div class="modal-body">
+          <input type="hidden" id="colaboradorId" name="id">
+
+          <div class="form-group">
+            <label for="colaboradorDocumento">Documento <span class="text-danger">*</span></label>
+            <select class="form-control" id="colaboradorDocumento" name="documento_id" required>
+              <option value="">Seleccione un documento</option>
+            </select>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="colaboradorUsuario">Usuario <span class="text-danger">*</span></label>
+                <select class="form-control" id="colaboradorUsuario" name="usuario_id" required>
+                  <option value="">Seleccione un usuario</option>
+                </select>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="colaboradorRol">Rol <span class="text-danger">*</span></label>
+                <select class="form-control" id="colaboradorRol" name="rol" required>
+                  <option value="">Seleccione un rol</option>
+                  <option value="editor">Editor</option>
+                  <option value="revisor">Revisor</option>
+                  <option value="colaborador">Colaborador</option>
+                  <option value="supervisor">Supervisor</option>
+                  <option value="patrocinador">Patrocinador</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="colaboradorPermisos">Permisos (JSON)</label>
+            <textarea class="form-control json-input" id="colaboradorPermisos" name="permisos" rows="4"
+              placeholder='{"permiso1": true, "permiso2": false}'></textarea>
+            <small class="form-text text-muted">Objeto JSON con permisos específicos del colaborador</small>
+          </div>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> Guardar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner-border spinner-border-custom text-light" role="status">
+    <span class="sr-only">Cargando...</span>
+  </div>
+</div>
+
+{% include 'Nucleo/abajo.html' %}
+
+{% block extra_js %}
+<!-- DataTables JS - Local -->
+<script src="{% static 'DataTables/js/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'DataTables/js/dataTables.bootstrap4.min.js' %}"></script>
+<script src="{% static 'plugins/datatables-responsive/js/dataTables.responsive.min.js' %}"></script>
+<script src="{% static 'plugins/datatables-responsive/js/responsive.bootstrap4.min.js' %}"></script>
+<!-- Select2 JS -->
+<script src="{% static 'plugins/select2/js/select2.full.min.js' %}"></script>
+<!-- SweetAlert2 -->
+<script src="{% static 'sweetalert2/sweetalert2.all.min.js' %}"></script>
+
+<!-- URL Reverse Helper -->
+<script>
+  // Configuración de URLs usando URL reverse
+  const REPOSITORIO_URLS = {
+    tiposRecursoList: "{% url 'repositorio:tipos_recurso_list' %}",
+    tipoRecursoCreate: "{% url 'repositorio:tipo_recurso_create' %}",
+    tipoRecursoDetail: function (id) {
+      return "{% url 'repositorio:tipo_recurso_detail' 0 %}".replace('0', id);
+    },
+    tipoRecursoUpdate: function (id) {
+      return "{% url 'repositorio:tipo_recurso_update' 0 %}".replace('0', id);
+    },
+    tipoRecursoDelete: function (id) {
+      return "{% url 'repositorio:tipo_recurso_delete' 0 %}".replace('0', id);
+    },
+    estadosDocumentoList: "{% url 'repositorio:estados_documento_list' %}",
+    estadoDocumentoCreate: "{% url 'repositorio:estado_documento_create' %}",
+    estadoDocumentoDetail: function (id) {
+      return "{% url 'repositorio:estado_documento_detail' 0 %}".replace('0', id);
+    },
+    estadoDocumentoUpdate: function (id) {
+      return "{% url 'repositorio:estado_documento_update' 0 %}".replace('0', id);
+    },
+    estadoDocumentoDelete: function (id) {
+      return "{% url 'repositorio:estado_documento_delete' 0 %}".replace('0', id);
+    },
+    comunidadesList: "{% url 'repositorio:comunidades_list' %}",
+    comunidadesForSelect: "{% url 'repositorio:comunidades_for_select' %}",
+    comunidadCreate: "{% url 'repositorio:comunidad_create' %}",
+    comunidadDetail: function (id) {
+      return "{% url 'repositorio:comunidad_detail' 0 %}".replace('0', id);
+    },
+    comunidadUpdate: function (id) {
+      return "{% url 'repositorio:comunidad_update' 0 %}".replace('0', id);
+    },
+    comunidadDelete: function (id) {
+      return "{% url 'repositorio:comunidad_delete' 0 %}".replace('0', id);
+    },
+    coleccionesList: "{% url 'repositorio:colecciones_list' %}",
+    coleccionesPorComunidad: function (id) {
+      return "{% url 'repositorio:colecciones_por_comunidad' 0 %}".replace('0', id);
+    },
+    coleccionCreate: "{% url 'repositorio:coleccion_create' %}",
+    coleccionDetail: function (id) {
+      return "{% url 'repositorio:coleccion_detail' 0 %}".replace('0', id);
+    },
+    coleccionUpdate: function (id) {
+      return "{% url 'repositorio:coleccion_update' 0 %}".replace('0', id);
+    },
+    coleccionDelete: function (id) {
+      return "{% url 'repositorio:coleccion_delete' 0 %}".replace('0', id);
+    },
+    licenciasList: "{% url 'repositorio:licencias_list' %}",
+    licenciaCreate: "{% url 'repositorio:licencia_create' %}",
+    licenciaDetail: function (id) {
+      return "{% url 'repositorio:licencia_detail' 0 %}".replace('0', id);
+    },
+    licenciaUpdate: function (id) {
+      return "{% url 'repositorio:licencia_update' 0 %}".replace('0', id);
+    },
+    licenciaDelete: function (id) {
+      return "{% url 'repositorio:licencia_delete' 0 %}".replace('0', id);
+    },
+    usuariosForSelect: "{% url 'repositorio:usuarios_for_select' %}",
+    documentosList: "{% url 'repositorio:documentos_list' %}",
+    documentoCreate: "{% url 'repositorio:documento_create' %}",
+    documentoDetail: function (id) {
+      return "{% url 'repositorio:documento_detail' 0 %}".replace('0', id);
+    },
+    documentoUpdate: function (id) {
+      return "{% url 'repositorio:documento_update' 0 %}".replace('0', id);
+    },
+    documentoDelete: function (id) {
+      return "{% url 'repositorio:documento_delete' 0 %}".replace('0', id);
+    },
+    categoriasForSelect: "{% url 'repositorio:categorias_for_select' %}",
+    etiquetasForSelect: "{% url 'repositorio:etiquetas_for_select' %}",
+    tiposRecursoForSelect: "{% url 'repositorio:tipos_recurso_for_select' %}",
+    estadosDocumentoForSelect: "{% url 'repositorio:estados_documento_for_select' %}",
+    licenciasForSelect: "{% url 'repositorio:licencias_for_select' %}",
+    autoresList: "{% url 'repositorio:autores_list' %}",
+    autoresPorDocumento: function (id) {
+      return "{% url 'repositorio:autores_por_documento' 0 %}".replace('0', id);
+    },
+    autorCreate: "{% url 'repositorio:autor_create' %}",
+    autorDetail: function (id) {
+      return "{% url 'repositorio:autor_detail' 0 %}".replace('0', id);
+    },
+    autorUpdate: function (id) {
+      return "{% url 'repositorio:autor_update' 0 %}".replace('0', id);
+    },
+    autorDelete: function (id) {
+      return "{% url 'repositorio:autor_delete' 0 %}".replace('0', id);
+    },
+    colaboradoresList: "{% url 'repositorio:colaboradores_list' %}",
+    colaboradoresPorDocumento: function (id) {
+      return "{% url 'repositorio:colaboradores_por_documento' 0 %}".replace('0', id);
+    },
+    colaboradorCreate: "{% url 'repositorio:colaborador_create' %}",
+    colaboradorDetail: function (id) {
+      return "{% url 'repositorio:colaborador_detail' 0 %}".replace('0', id);
+    },
+    colaboradorUpdate: function (id) {
+      return "{% url 'repositorio:colaborador_update' 0 %}".replace('0', id);
+    },
+    colaboradorDelete: function (id) {
+      return "{% url 'repositorio:colaborador_delete' 0 %}".replace('0', id);
+    },
+  };
+
+  // Función para obtener CSRF token
+  function getCSRFToken() {
+    const token = document.querySelector('[name=csrfmiddlewaretoken]');
+    return token ? token.value : '';
+  }
+</script>
+<!-- Repositorio JS -->
+<script src="{% static 'js/repositorio.js' %}"></script>
+{% endblock %}

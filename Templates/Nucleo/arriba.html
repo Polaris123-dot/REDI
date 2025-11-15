@@ -1,0 +1,157 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>REDIMA</title>
+  <link rel="icon" href="{% static 'img/LogoMr.ico' %}" type="image/x-icon">
+
+  <!-- Google Font: Source Sans Pro -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+  <link rel="stylesheet" href="{% static 'lib/adminlte-3.2.0/plugins/fontawesome-free/css/all.min.css'%}" >
+  <link rel="stylesheet" href="{% static 'lib/adminlte-3.2.0/css/adminlte.min.css'%}" >
+  <link rel="stylesheet" href="{% static 'lib/adminlte-3.2.0/plugins/overlayScrollbars/css/OverlayScrollbars.min.css'%}" >
+  <link href="{% static 'DataTables/css/dataTables.bootstrap4.min.css' %}" rel="stylesheet">
+  
+  <link href="{% static 'plugins/sweetalert2/sweetalert2.min.css' %}" rel="stylesheet">
+  {% block extra_css %}
+  
+  {% endblock %}
+
+  <style>
+    /* Estilos para el texto de bienvenida en la navbar */
+    .user-welcome-text {
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: #495057;
+      padding: 0.5rem 0.75rem !important;
+      white-space: nowrap;
+      max-width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      cursor: default;
+    }
+
+    .user-welcome-text .welcome-name {
+      display: inline-block;
+      max-width: 150px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      vertical-align: middle;
+    }
+
+    .user-welcome-text:hover {
+      color: #007bff;
+    }
+
+    /* Modo oscuro */
+    body.dark-mode .user-welcome-text {
+      color: #e0e0e0;
+    }
+
+    body.dark-mode .user-welcome-text:hover {
+      color: #ffffff;
+    }
+
+    /* Responsive: Ocultar en pantallas muy pequeñas */
+    @media (max-width: 767.98px) {
+      .user-welcome-text {
+        display: none !important;
+      }
+    }
+
+    /* Ocultar en pantallas medianas si es necesario */
+    @media (max-width: 991.98px) {
+      .user-welcome-text {
+        max-width: 120px;
+        font-size: 0.85rem;
+      }
+    }
+  </style>
+
+
+
+</head>
+<body class="sidebar-mini sidebar-closed sidebar-collapse" style="height: auto;">
+    <div class="wrapper">
+      <!-- Navbar -->
+      <nav class="main-header navbar navbar-expand bg-primary bg-purple bg-light navbar-light bg-white border-bottom-0">
+        <!-- Left navbar links -->
+        <ul class="navbar-nav">
+          <li class="nav-item">
+              <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
+          </li>
+          <li class="nav-item d-block">
+              <a href="index3.html" class="nav-link"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">inicio</font></font></a>
+          </li>
+          <li class="nav-item d-block">
+              <a href="#" class="nav-link"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">info</font></font></a>
+          </li>
+          <li class="nav-item">
+              <div class="theme-switch-wrapper nav-link">
+                  <label class="theme-switch" for="checkbox">
+                      <input type="checkbox" id="checkbox" style="display: none;">
+                      <span class="slider round"></span>
+                      <span class="theme-icon" id="darkModeIcon"><i class="fas fa-sun"></i></span>
+                  </label>
+              </div>
+          </li>
+          <li class="nav-item d-none d-md-block">
+            <span class="nav-link user-welcome-text">
+              {% if user.is_authenticated %}
+                <i class="fas fa-user-circle mr-1"></i>
+                <span class="welcome-name">
+                  {% if user.get_full_name %}
+                    {{ user.get_full_name }}
+                  {% else %}
+                    {{ user.username }}
+                  {% endif %}
+                </span>
+              {% else %}
+                <i class="fas fa-user mr-1"></i>
+                <span class="welcome-name">Usuario</span>
+              {% endif %}
+            </span>
+          </li>
+
+      </ul>
+    
+        <!-- Right navbar links -->
+        
+      <ul class="navbar-nav ml-auto">
+
+
+          {% comment %} Mensajes - Comentado hasta implementar funcionalidad {% endcomment %}
+          {% comment %}
+          <li class="nav-item dropdown">
+              <a class="nav-link" data-toggle="dropdown" href="#">
+                  <i class="far fa-comments"></i>
+                  <span class="badge badge-danger navbar-badge">0</span>
+              </a>
+              <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
+                  <a href="#" class="dropdown-item dropdown-footer">No tienes mensajes nuevos.</a>
+                  <a href="#" class="dropdown-item dropdown-footer">Ver todos los mensajes</a>
+              </div>
+          </li>
+          {% endcomment %}
+
+          <li class="nav-item">
+              <a class="nav-link" data-widget="fullscreen" href="#" role="button">
+                  <i class="fas fa-expand-arrows-alt"></i>
+              </a>
+          </li>
+          
+
+
+          {% if request.user.is_authenticated %}
+          <li class="nav-item">
+              <a class="nav-link" href="{% url 'usuarios:logout' %}" role="button" title="Cerrar Sesión">
+                  <i class="fas fa-sign-out-alt"></i>
+              </a>
+          </li>
+          {% endif %}
+      </ul>
+        
+      </nav>
+      <!-- /.navbar -->

@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title> Stylish Login Form Design | Smarteyeapps.com</title>
+    <link href="https://fonts.googleapis.com/css?family=Ubuntu&display=swap" rel="stylesheet">
+    <!-- <link rel="shortcut icon" href="assets/images/fav.png">
+    <link rel="stylesheet" href="assets/css/bootstrap.min.css">
+	<link rel="stylesheet" href="assets/css/style.css"> -->
+
+    <link href="{% static 'Personalizados/login/login.css' %}" rel="stylesheet">
+    <link href="{% static 'Personalizados/login/bootstrap.min.css' %}" rel="stylesheet">
+
+
+
+
+</head>
+
+<body>
+    <div class="container-fluid bg-login">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-9 col-md-12 login-card">
+                    <div class="row">
+                        <div class="col-md-5 detail-part">
+                            <h1>Awesome Login Page Design</h1>
+                            <p>Please use your credentials to login.
+                                If you are not a member, please register. </p>
+                        </div>
+                        <div class="col-md-7 logn-part">
+                            <div class="row">
+                                <div class="col-lg-10 col-md-12 mx-auto">
+                                    <div class="logo-cover">
+                                        <img src="assets/images/logo.png" alt="">
+                                    </div>
+                                    <div class="form-cover">
+                                        <h6>Login Here</h6>
+                                        <input placeholder="Enter Username" type="text" class="form-control">
+                                        <input Placeholder="Enter PAssword" type="password" class="form-control">
+                                        <div class="row form-footer">
+                                            <div class="col-md-6 forget-paswd">
+                                                <a href="">Forget Password ?</a>
+                                            </div>
+                                            <div class="col-md-6 button-div">
+                                                <button class="btn btn-primary">Login</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{% static 'lib/adminlte-3.2.0/plugins/jquery/jquery.min.js' %}"></script>
+    <script src="{% static 'Personalizados/login/login.js' %}"></script>
+
+</body>
+<script src="assets/js/jquery-3.2.1.min.js"></script>
+<script src="assets/js/popper.min.js"></script>
+<script src="assets/js/bootstrap.min.js"></script>
+
+</html>
+
+
+
+
+<div class="container">
+    <div class="frame">
+        <div class="nav">
+            <ul class="links">
+                <li class="signin-active"><a class="btn">Ingresar</a></li>
+                <li class="signup-inactive"><a class="btn">Sign up</a></li>
+
+            </ul>
+        </div>
+
+        <div ng-app ng-init="checked = false">
+            <form class="form-signin" id="login-form" action="{% url 'usuarios:login' %}" method="post" name="form">
+                {% csrf_token %}
+
+                <label for="username">Username</label>
+                <input class="form-styling" type="text" name="username" placeholder="Username" required />
+                <div class="error" id="username-error"></div>
+
+                <label for="password">Password</label>
+                <input class="form-styling" type="password" name="password" placeholder="Password" required />
+                <div class="error" id="password-error"></div>
+
+                <input type="checkbox" id="checkbox" />
+                <label for="checkbox"><span class="ui"></span>Keep me signed in</label>
+                <div class="btn-animate">
+                    <a class="btn-signin" onclick="submitForm()">Sign in</a>
+                </div>
+            </form>
+
+
+            <!-- Formulario de Registro si es necesario -->
+            <form class="form-signup" id="registration-form" action="" method="post" name="form">
+                <label for="role">Role</label>
+                <select class="form-styling" id="role" name="role" onchange="toggleFields()">
+                    <option value="invitado">Invitado</option>
+                    <option value="alumno">Alumno</option>
+                    <option value="docente">Docente</option>
+                </select>
+
+                <div id="persona-fields">
+                    <label for="dni">DNI</label>
+                    <input class="form-styling" type="text" name="dni" placeholder="DNI" />
+
+                    <label for="nombre">Nombre</label>
+                    <input class="form-styling" type="text" name="nombre" placeholder="Nombre" />
+
+                    <label for="apellidos">Apellidos</label>
+                    <input class="form-styling" type="text" name="apellidos" placeholder="Apellidos" />
+
+                    <label for="fecha_nacimiento">Fecha de Nacimiento</label>
+                    <input class="form-styling" type="date" name="fecha_nacimiento" />
+
+                    <label for="correo">Correo</label>
+                    <input class="form-styling" type="email" name="correo" placeholder="Correo" />
+
+                    <label for="telefono">Teléfono</label>
+                    <input class="form-styling" type="text" name="telefono" placeholder="Teléfono" />
+
+                    <label for="direccion">Dirección</label>
+                    <input class="form-styling" type="text" name="direccion" placeholder="Dirección" />
+
+                    <label for="grado_academico">Grado Académico</label>
+                    <select class="form-styling" name="grado_academico">
+                        <option value="primaria">Primaria</option>
+                        <option value="secundaria">Secundaria</option>
+                        <option value="bachiller">Bachiller</option>
+                        <option value="licenciado">Licenciado</option>
+                        <option value="maestro">Maestro</option>
+                        <option value="doctor">Doctor</option>
+                    </select>
+
+                    <label for="especialidad">Especialidad</label>
+                    <select class="form-styling" name="especialidad">
+                        <option value="computacion">Computación</option>
+                        <option value="matematicas">Matemáticas</option>
+                        <option value="ciencias">Ciencias</option>
+                        <option value="idiomas">Idiomas</option>
+                        <option value="historia">Historia</option>
+                        <option value="arte">Arte</option>
+                    </select>
+
+                    <label for="estado">Estado</label>
+                    <select class="form-styling" name="estado">
+                        <option value="1">Administrador</option>
+                        <option value="2">Usuario Registrado</option>
+                        <option value="3">Público</option>
+                    </select>
+                </div>
+
+                <div class="btn-animate">
+                    <a class="btn-signup" onclick="submitForm()">Registrar</a>
+                </div>
+            </form>
+
+
+
+        </div>
+
+
+
+
+        <div class="forgot">
+            <a href="#">Forgot your password?</a>
+        </div>
+
+    </div>
+
+
+</div>
+
+
+
+<link href="{% static 'Personalizados/bootstrap.min.css' %}" rel="stylesheet">
+<link href="{% static 'Personalizados/login/login.css' %}" rel="stylesheet">
+
+</head>
+
+<body>
+
+
+    <div class="container-fluid bg-login">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-9 col-md-12 login-card">
+                    <div class="row">
+                        <div class="col-md-5 detail-part">
+                            <h1>Awesome Login Page Design</h1>
+                            <p>Please use your credentials to login.
+                                If you are not a member, please register. </p>
+                        </div>
+                        <div class="col-md-7 logn-part">
+                            <div class="row">
+                                <div class="col-lg-10 col-md-12 mx-auto">
+                                    <div class="logo-cover">
+                                        <img src="{% static 'Personalizados/images/logo.jpg' %}" alt="">
+
+                                    </div>
+                                    <div class="form-cover">
+                                        <h6>Login Here</h6>
+                                        <input placeholder="Enter Username" type="text" class="form-control">
+                                        <input Placeholder="Enter PAssword" type="password" class="form-control">
+                                        <div class="row form-footer">
+                                            <div class="col-md-6 forget-paswd">
+                                                <a href="">Forget Password ?</a>
+                                            </div>
+                                            <div class="col-md-6 button-div">
+                                                <button class="btn btn-primary">Login</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{% static 'Personalizados/jquery-3.2.1.min.js' %}"></script>
+    <script src="{% static 'Personalizados/popper.min.js' %}"></script>
+    <script src="{% static 'Personalizados/bootstrap.min.js' %}"></script>
+
+
+
+    <!-- TODO: Crear vista y URL para 'enviar_mensaje' -->
+    <form method="post" enctype="multipart/form-data" action="#">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Enviar</button>
+    </form>
+
+
+
+
+
+
+
+
+    <div class="modal fade" id="modaProyec" style="display: none;" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Asignar Tarea</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">×</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    {% csrf_token %}
+
+                    <div class="card">
+                        <div class="card-header p-2">
+                            <ul class="nav nav-pills">
+                                <li class="nav-item"><a class="nav-link active" href="#activity" data-toggle="tab">
+                                        <font style="vertical-align: inherit;">
+                                            <font style="vertical-align: inherit;">Nuevo tipo Proyecto</font>
+                                        </font>
+                                    </a></li>
+                                <li class="nav-item"><a class="nav-link" href="#timeline" data-toggle="tab">
+                                        <font style="vertical-align: inherit;">
+                                            <font style="vertical-align: inherit;">Lista de Proyectos</font>
+                                        </font>
+                                    </a></li>
+
+                            </ul>
+                        </div>
+                        <div class="card-body">
+                            <div class="tab-content">
+                                <div class="tab-pane active" id="activity">
+
+                                    <!-- TODO: Crear vista y URL para 'tipo_proyecto_list_create' -->
+                                    <form method="GET" action="#"
+                                        id="tipoProyectoFormulario">
+                                        <div class="form-group">
+                                            <label for="selectTipoProyecto">Selecciona un tipo de proyecto</label>
+                                            <select name="tipo_proyecto_id" id="tipo_proyecto_Guardar"
+                                                class="form-control">
+                                                {% for tipo_proyecto in tipo_proyectos %}
+                                                <option value="{{ tipo_proyecto.id }}" {% if
+                                                    selected_tipo_proyecto==tipo_proyecto.id %}selected{% endif %}>
+                                                    {{ tipo_proyecto.nombre }}
+                                                </option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div id="campos_Creado_dinamicos"></div>
+
+                                        {% if campos %}
+                                        <h4>Campos específicos</h4>
+                                        {% for campo in campos %}
+                                        <div class="form-group">
+                                            <label for="{{ campo.nombre }}">{{ campo.nombre }}</label>
+                                            <input type="text" name="{{ campo.nombre }}" id="{{ campo.nombre }}"
+                                                class="form-control" value="">
+                                        </div>
+                                        {% endfor %}
+                                        {% endif %}
+
+                                        <div class="form-group">
+                                            <label for="titulo">Título</label>
+                                            <input type="text" name="titulo" id="titulo" class="form-control">
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="descripcion">Descripción</label>
+                                            <textarea name="descripcion" id="descripcion"
+                                                class="form-control"></textarea>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="resumen">Resumen</label>
+                                            <textarea name="resumen" id="resumen" class="form-control"></textarea>
+                                        </div>
+
+                                        <button type="submit" class="btn btn-primary">Guardar Proyecto</button>
+                                    </form>
+
+
+                                </div>
+
+                                <div class="tab-pane" id="timeline">
+
+
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                    <button class="btn btn-success" onclick="enviarDatosFormulario()">Guardar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
+
+
+
+    

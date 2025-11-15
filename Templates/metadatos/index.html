@@ -1,0 +1,459 @@
+{% load static %}
+{% include 'Nucleo/arriba.html' %}
+
+{% block extra_css %}
+<!-- DataTables CSS - Local -->
+<link rel="stylesheet" href="{% static 'DataTables/css/dataTables.bootstrap4.min.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/datatables-responsive/css/responsive.bootstrap4.min.css' %}">
+<!-- SweetAlert2 CSS -->
+<link rel="stylesheet" href="{% static 'plugins/sweetalert2/sweetalert2.min.css' %}">
+<!-- Select2 CSS -->
+<link rel="stylesheet" href="{% static 'plugins/select2/css/select2.min.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css' %}">
+<style>
+  /* Estilos para tabs */
+  .nav-tabs .nav-link {
+    color: #495057;
+  }
+
+  .nav-tabs .nav-link.active {
+    color: #007bff;
+    font-weight: 600;
+  }
+
+  /* Estilos responsivos para botones */
+  .btn-group-sm .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+  }
+
+  /* En pantallas pequeñas, solo mostrar iconos */
+  @media (max-width: 767px) {
+    .btn-group-sm .btn span {
+      display: none !important;
+    }
+
+    .btn-group-sm .btn {
+      padding: 0.25rem 0.4rem;
+    }
+  }
+
+  /* En pantallas medianas y grandes, mostrar texto */
+  @media (min-width: 768px) {
+    .btn-group-sm .btn span {
+      display: inline !important;
+    }
+  }
+
+  /* Loading overlay */
+  .loading-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .loading-overlay.show {
+    display: flex;
+  }
+
+  .spinner-border-custom {
+    width: 3rem;
+    height: 3rem;
+    border-width: 0.3rem;
+  }
+
+  /* Badge para tipo de dato */
+  .badge-tipo-dato {
+    font-size: 0.75rem;
+    padding: 0.25em 0.5em;
+  }
+
+  /* Input para JSON */
+  .json-input {
+    font-family: 'Courier New', monospace;
+    font-size: 0.875rem;
+  }
+</style>
+{% endblock %}
+
+{% include 'Nucleo/sidebar.html' %}
+
+<!-- Content Wrapper. Contains page content -->
+<div class="content-wrapper">
+  <!-- Content Header -->
+  <div class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-sm-6">
+          <h1 class="m-0">Metadatos</h1>
+        </div>
+        <div class="col-sm-6">
+          <ol class="breadcrumb float-sm-right d-none d-sm-flex">
+            <li class="breadcrumb-item"><a href="{% url 'usuarios:panel' %}">Inicio</a></li>
+            <li class="breadcrumb-item active">Metadatos</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main content -->
+  <section class="content">
+    <div class="container-fluid">
+      <!-- Tabs -->
+      <ul class="nav nav-tabs" id="metadatosTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+          <a class="nav-link active" id="esquemas-tab" data-toggle="tab" href="#esquemas" role="tab" aria-controls="esquemas" aria-selected="true">
+            <i class="fas fa-layer-group"></i> Esquemas
+          </a>
+        </li>
+        <li class="nav-item" role="presentation">
+          <a class="nav-link" id="campos-tab" data-toggle="tab" href="#campos" role="tab" aria-controls="campos" aria-selected="false">
+            <i class="fas fa-tags"></i> Campos
+          </a>
+        </li>
+        <li class="nav-item" role="presentation">
+          <a class="nav-link" id="metadatos-documentos-tab" data-toggle="tab" href="#metadatos-documentos" role="tab" aria-controls="metadatos-documentos" aria-selected="false">
+            <i class="fas fa-file-alt"></i> Metadatos de Documentos
+          </a>
+        </li>
+      </ul>
+
+      <!-- Tab Content -->
+      <div class="tab-content" id="metadatosTabsContent">
+        <!-- Tab Esquemas -->
+        <div class="tab-pane fade show active" id="esquemas" role="tabpanel" aria-labelledby="esquemas-tab">
+          <div class="card mt-3">
+            <div class="card-header">
+              <h3 class="card-title">Esquemas de Metadatos</h3>
+              <div class="card-tools">
+                <button type="button" class="btn btn-primary btn-sm" id="btnCrearEsquema">
+                  <i class="fas fa-plus"></i> <span>Nuevo Esquema</span>
+                </button>
+              </div>
+            </div>
+            <div class="card-body">
+              <table id="tableEsquemas" class="table table-bordered table-striped table-hover" style="width:100%">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Prefijo</th>
+                    <th>Namespace</th>
+                    <th>Versión</th>
+                    <th>Campos</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab Campos -->
+        <div class="tab-pane fade" id="campos" role="tabpanel" aria-labelledby="campos-tab">
+          <div class="card mt-3">
+            <div class="card-header">
+              <h3 class="card-title">Campos de Metadatos</h3>
+              <div class="card-tools">
+                <button type="button" class="btn btn-primary btn-sm" id="btnCrearCampo">
+                  <i class="fas fa-plus"></i> <span>Nuevo Campo</span>
+                </button>
+              </div>
+            </div>
+            <div class="card-body">
+              <table id="tableCampos" class="table table-bordered table-striped table-hover" style="width:100%">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Esquema</th>
+                    <th>Nombre</th>
+                    <th>Etiqueta</th>
+                    <th>Tipo Dato</th>
+                    <th>Obligatorio</th>
+                    <th>Repetible</th>
+                    <th>Valores</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab Metadatos de Documentos -->
+        <div class="tab-pane fade" id="metadatos-documentos" role="tabpanel" aria-labelledby="metadatos-documentos-tab">
+          <div class="card mt-3">
+            <div class="card-header">
+              <h3 class="card-title">Metadatos de Documentos</h3>
+              <div class="card-tools">
+                <button type="button" class="btn btn-primary btn-sm" id="btnCrearMetadatoDocumento">
+                  <i class="fas fa-plus"></i> <span>Nuevo Metadato</span>
+                </button>
+              </div>
+            </div>
+            <div class="card-body">
+              <table id="tableMetadatosDocumentos" class="table table-bordered table-striped table-hover" style="width:100%">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Documento</th>
+                    <th>Campo</th>
+                    <th>Esquema</th>
+                    <th>Tipo Dato</th>
+                    <th>Valor</th>
+                    <th>Idioma</th>
+                    <th>Orden</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- Modal Esquema -->
+<div class="modal fade" id="modalEsquema" tabindex="-1" role="dialog" aria-labelledby="modalEsquemaLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalEsquemaLabel">Nuevo Esquema de Metadatos</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form id="formEsquema">
+        <div class="modal-body">
+          <input type="hidden" id="esquema_id" name="esquema_id">
+          <div class="form-group">
+            <label for="esquema_nombre">Nombre <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="esquema_nombre" name="nombre" required>
+          </div>
+          <div class="form-group">
+            <label for="esquema_prefijo">Prefijo <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="esquema_prefijo" name="prefijo" required>
+            <small class="form-text text-muted">Ejemplo: dc, marc, dcterms</small>
+          </div>
+          <div class="form-group">
+            <label for="esquema_namespace">Namespace <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="esquema_namespace" name="namespace" required>
+            <small class="form-text text-muted">Ejemplo: http://purl.org/dc/elements/1.1/</small>
+          </div>
+          <div class="form-group">
+            <label for="esquema_version">Versión</label>
+            <input type="text" class="form-control" id="esquema_version" name="version">
+          </div>
+          <div class="form-group">
+            <label for="esquema_descripcion">Descripción</label>
+            <textarea class="form-control" id="esquema_descripcion" name="descripcion" rows="3"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Campo -->
+<div class="modal fade" id="modalCampo" tabindex="-1" role="dialog" aria-labelledby="modalCampoLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalCampoLabel">Nuevo Campo de Metadatos</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form id="formCampo">
+        <div class="modal-body">
+          <input type="hidden" id="campo_id" name="campo_id">
+          <div class="form-group">
+            <label for="campo_esquema_id">Esquema <span class="text-danger">*</span></label>
+            <select class="form-control select2" id="campo_esquema_id" name="esquema_id" style="width: 100%;" required>
+              <option value="">Seleccionar esquema...</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="campo_nombre">Nombre <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="campo_nombre" name="nombre" required>
+            <small class="form-text text-muted">Nombre técnico del campo (ej: title, creator, date)</small>
+          </div>
+          <div class="form-group">
+            <label for="campo_etiqueta">Etiqueta <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="campo_etiqueta" name="etiqueta" required>
+            <small class="form-text text-muted">Nombre legible del campo (ej: Título, Creador, Fecha)</small>
+          </div>
+          <div class="form-group">
+            <label for="campo_tipo_dato">Tipo de Dato <span class="text-danger">*</span></label>
+            <select class="form-control" id="campo_tipo_dato" name="tipo_dato" required>
+              <option value="texto">Texto</option>
+              <option value="numero">Número</option>
+              <option value="fecha">Fecha</option>
+              <option value="booleano">Booleano</option>
+              <option value="lista">Lista</option>
+              <option value="json">JSON</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="campo_es_obligatorio" name="es_obligatorio">
+              <label class="form-check-label" for="campo_es_obligatorio">
+                Es obligatorio
+              </label>
+            </div>
+          </div>
+          <div class="form-group">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="campo_es_repetible" name="es_repetible">
+              <label class="form-check-label" for="campo_es_repetible">
+                Es repetible
+              </label>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="campo_valores_posibles">Valores Posibles (JSON)</label>
+            <textarea class="form-control json-input" id="campo_valores_posibles" name="valores_posibles" rows="3" placeholder='["Opción 1", "Opción 2", "Opción 3"]'></textarea>
+            <small class="form-text text-muted">Para tipo "lista", ingrese un array JSON con las opciones disponibles</small>
+          </div>
+          <div class="form-group">
+            <label for="campo_descripcion">Descripción</label>
+            <textarea class="form-control" id="campo_descripcion" name="descripcion" rows="3"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Metadato Documento -->
+<div class="modal fade" id="modalMetadatoDocumento" tabindex="-1" role="dialog" aria-labelledby="modalMetadatoDocumentoLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalMetadatoDocumentoLabel">Nuevo Metadato de Documento</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form id="formMetadatoDocumento">
+        <div class="modal-body">
+          <input type="hidden" id="metadato_documento_id" name="metadato_documento_id">
+          <div class="form-group">
+            <label for="metadato_documento_documento_id">Documento <span class="text-danger">*</span></label>
+            <select class="form-control select2" id="metadato_documento_documento_id" name="documento_id" style="width: 100%;" required>
+              <option value="">Seleccionar documento...</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="metadato_documento_campo_id">Campo de Metadatos <span class="text-danger">*</span></label>
+            <select class="form-control select2" id="metadato_documento_campo_id" name="campo_metadato_id" style="width: 100%;" required>
+              <option value="">Seleccionar campo...</option>
+            </select>
+          </div>
+          <div class="form-group" id="metadato_documento_valor_container">
+            <label for="metadato_documento_valor">Valor <span class="text-danger" id="metadato_documento_valor_required"></span></label>
+            <input type="text" class="form-control" id="metadato_documento_valor_texto" name="valor" style="display: none;">
+            <input type="number" step="any" class="form-control" id="metadato_documento_valor_numero" name="valor" style="display: none;">
+            <input type="date" class="form-control" id="metadato_documento_valor_fecha" name="valor" style="display: none;">
+            <div id="metadato_documento_valor_booleano_container" style="display: none;">
+              <div class="form-check">
+                <input type="checkbox" class="form-check-input" id="metadato_documento_valor_booleano" name="valor">
+                <label class="form-check-label" for="metadato_documento_valor_booleano">
+                  Sí
+                </label>
+              </div>
+            </div>
+            <textarea class="form-control json-input" id="metadato_documento_valor_json" name="valor" rows="5" style="display: none;" placeholder='{"clave": "valor"}'></textarea>
+            <select class="form-control" id="metadato_documento_valor_lista" name="valor" style="display: none;">
+              <option value="">Seleccionar valor...</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="metadato_documento_idioma">Idioma</label>
+            <input type="text" class="form-control" id="metadato_documento_idioma" name="idioma" placeholder="es, en, fr, etc." maxlength="10">
+            <small class="form-text text-muted">Código ISO 639-1 (ej: es, en, fr)</small>
+          </div>
+          <div class="form-group">
+            <label for="metadato_documento_orden">Orden</label>
+            <input type="number" class="form-control" id="metadato_documento_orden" name="orden" value="0" min="0">
+            <small class="form-text text-muted">Orden de aparición (0 = primero)</small>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% include 'Nucleo/abajo.html' %}
+
+{% block extra_js %}
+<!-- DataTables JS - Local -->
+<script src="{% static 'DataTables/js/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'DataTables/js/dataTables.bootstrap4.min.js' %}"></script>
+<script src="{% static 'plugins/datatables-responsive/js/dataTables.responsive.min.js' %}"></script>
+<script src="{% static 'plugins/datatables-responsive/js/responsive.bootstrap4.min.js' %}"></script>
+<!-- SweetAlert2 JS -->
+<script src="{% static 'plugins/sweetalert2/sweetalert2.min.js' %}"></script>
+<!-- Select2 JS -->
+<script src="{% static 'plugins/select2/js/select2.full.min.js' %}"></script>
+<!-- Metadatos JS -->
+<script src="{% static 'js/metadatos.js' %}"></script>
+
+<script>
+  // URLs para las peticiones AJAX
+  const METADATOS_URLS = {
+    esquemasList: '{% url "metadatos:esquemas_list" %}',
+    esquemaCreate: '{% url "metadatos:esquema_create" %}',
+    esquemaUpdate: function(id) { return '{% url "metadatos:esquema_update" 0 %}'.replace('0', id); },
+    esquemaDelete: function(id) { return '{% url "metadatos:esquema_delete" 0 %}'.replace('0', id); },
+    esquemaDetail: function(id) { return '{% url "metadatos:esquema_detail" 0 %}'.replace('0', id); },
+    camposList: '{% url "metadatos:campos_list" %}',
+    campoCreate: '{% url "metadatos:campo_create" %}',
+    campoUpdate: function(id) { return '{% url "metadatos:campo_update" 0 %}'.replace('0', id); },
+    campoDelete: function(id) { return '{% url "metadatos:campo_delete" 0 %}'.replace('0', id); },
+    campoDetail: function(id) { return '{% url "metadatos:campo_detail" 0 %}'.replace('0', id); },
+    metadatosDocumentosList: '{% url "metadatos:metadatos_documentos_list" %}',
+    metadatoDocumentoCreate: '{% url "metadatos:metadato_documento_create" %}',
+    metadatoDocumentoUpdate: function(id) { return '{% url "metadatos:metadato_documento_update" 0 %}'.replace('0', id); },
+    metadatoDocumentoDelete: function(id) { return '{% url "metadatos:metadato_documento_delete" 0 %}'.replace('0', id); },
+    metadatoDocumentoDetail: function(id) { return '{% url "metadatos:metadato_documento_detail" 0 %}'.replace('0', id); },
+    esquemasForSelect: '{% url "metadatos:esquemas_for_select" %}',
+    camposForSelect: '{% url "metadatos:campos_for_select" %}',
+    documentosForSelect: '{% url "metadatos:documentos_for_select" %}',
+  };
+
+  // Inicializar cuando el DOM esté listo
+  $(document).ready(function() {
+    initMetadatos();
+  });
+</script>
+{% endblock %}
+

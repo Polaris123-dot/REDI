@@ -1,0 +1,437 @@
+{% load static %}
+
+{% include 'Nucleo/arriba.html' %}
+
+{% include 'Nucleo/centro.html' %}
+
+{% block extra_css %}
+<!-- Bootstrap Duallistbox -->
+<link rel="stylesheet" href="{% static 'plugins/bootstrap4-duallistbox/bootstrap-duallistbox.min.css' %}">
+
+<!-- Select2 -->
+<link rel="stylesheet" href="{% static 'plugins/select2/css/select2.min.css' %}">
+
+<!-- Theme style -->
+
+<style>
+  .progress-description a {
+  display: inline-block;
+  margin-top: 5px;
+  font-size: 0.85rem;
+  color: white !important;
+  opacity: 0.9;
+  transition: all 0.2s;
+}
+
+.progress-description a:hover {
+  opacity: 1;
+  text-decoration: none;
+  transform: translateX(3px);
+}
+
+/* Asegurar contraste en modo oscuro */
+.dark-mode .progress-description a {
+  color: rgba(255,255,255,0.9) !important;
+}
+
+.dark-mode .progress-description a:hover {
+  color: white !important;
+}
+
+/* Estilo para tarjeta de permisos */
+.bg-gradient-purple {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+}
+
+.bg-gradient-purple .info-box-icon {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+{% if mensajes_no_leidos_count > 0 %}
+<div class="alert alert-danger" role="alert">
+    Tienes {{ mensajes_no_leidos_count }} tareas no revisadas.
+   
+</div>
+{% endif %}
+
+<div class="card card-outline card-primary">
+  <div class="card-header border-0">
+    <div class="d-flex justify-content-between">
+      <h3 class="card-title">
+        <!-- <i class="fas fa-envelope mr-2"></i> -->
+      </h3>
+      <!-- <a href="javascript:void(0);" class="btn btn-sm btn-outline-primary">
+        Ver Bandeja de entrada <i class="fas fa-inbox ml-1"></i>
+      </a> -->
+    </div>
+  </div>
+  <div class="card-body pt-0">
+    <div class="row">
+      <div class="card-body pt-0">
+        <div class="row">
+          {% if user.is_superuser %}
+            <!-- Tarjeta 1 - Nuevas Tareas -->
+
+
+            <!-- Tarjeta 2 - Docentes -->
+            <div class="col-lg-3 col-6 mb-4">
+              <div class="info-box bg-gradient-orange shadow-sm hover-zoom">
+                <span class="info-box-icon swing"><i class="fas fa-chalkboard-teacher"></i></span>
+                <div class="info-box-content">
+                  <span class="info-box-text">Egresados</span>
+                  <span class="info-box-number">{{ ultimo_egresado_id }}</span>
+                  <span class="info-box-number"> </span>
+                  <div class="progress">
+                    <div class="progress-bar bg-white" style="width: 80%"></div>
+                  </div>
+                  <span class="progress-description">
+                    {% load permisos_tags %}
+                    {% if user|tiene_permiso:'ver_egresados' %}
+                    <!-- TODO: Crear vista y URL para 'egresado_list' -->
+                    <a href="#" class="text-white">
+                      Ver docentes <i class="fas fa-arrow-circle-right ml-1"></i>
+                    </a>
+                    {% endif %}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tarjeta 3 - Proyectos -->
+            <div class="col-lg-3 col-6 mb-4">
+              <div class="info-box bg-gradient-danger shadow-sm hover-zoom">
+                <span class="info-box-icon bounce"><i class="fas fa-project-diagram"></i></span>
+                <div class="info-box-content">
+                  <span class="info-box-text">Proyectos activos</span>
+                  <span class="info-box-number">{{ ultimo_proyecto_id  }}</span>
+                  <div class="progress">
+                    <div class="progress-bar bg-white" style="width: 75%"></div>
+                  </div>
+                  <span class="progress-description">
+                    {% if user|tiene_permiso:'ver_proyectos' %}
+                    <!-- TODO: Crear vista y URL para 'tipo_proyecto_list_create' -->
+                    <a href="#" class="text-white">
+                      Ver diagrama <i class="fas fa-arrow-circle-right ml-1"></i>
+                    </a>
+                    {% endif %}
+                  </span>
+                </div>
+              </div>
+            </div>
+          {% else %}
+            <div class="col-12">
+              <div class="callout callout-warning">
+                <h5><i class="fas fa-exclamation-triangle"></i> Acceso restringido</h5>
+                <p>No tienes permisos para ver estas estadísticas.</p>
+              </div>
+            </div>
+          {% endif %}
+
+          <!-- Tarjeta 4 - Investigación -->
+          <div class="col-lg-3 col-6 mb-4">
+            <div class="info-box bg-gradient-success shadow-sm hover-zoom">
+              <span class="info-box-icon tada"><i class="fas fa-microscope"></i></span>
+              <div class="info-box-content">
+                <span class="info-box-text">Tareas de investigación</span>
+                <span class="info-box-number">{{ ultimo_mensaje_id }}</span>
+                <div class="progress">
+                  <div class="progress-bar bg-white" style="width: 60%"></div>
+                </div>
+                <span class="progress-description">
+                  <!-- TODO: Crear vista y URL para 'Tareas_CRU' -->
+                  <a href="#" class="text-white">
+                    REVISIONES <i class="fas fa-arrow-circle-right ml-1"></i>
+                  </a>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card card-outline card-primary">
+  <div class="card-header border-0">
+    <div class="d-flex justify-content-between">
+      <h3 class="card-title">
+        <!-- <i class="fas fa-envelope mr-2"></i> -->
+      </h3>
+      <!-- <a href="javascript:void(0);" class="btn btn-sm btn-outline-primary">
+        Ver Bandeja de entrada <i class="fas fa-inbox ml-1"></i>
+      </a> -->
+    </div>
+  </div>
+  <div class="card-body pt-0">
+    <div class="row">
+      
+      <!-- Card 1 - Proyectos -->
+      <div class="col-lg-3 col-6 mb-4">
+        <div class="info-box bg-gradient-info shadow-lg hover-shadow">
+          <span class="info-box-icon pulse"><i class="fas fa-project-diagram"></i></span>
+          <div class="info-box-content">
+            <span class="info-box-text">Publicaciones del Proyecto</span>
+            <span class="info-box-number">{{ ultimo_publicacion_id }}</span>
+            <div class="progress">
+              <div class="progress-bar" style="width: 70%"></div>
+            </div>
+            <span class="progress-description">
+              <!-- TODO: Crear vista y URL para 'Principal' -->
+              <a href="#" class="text-white" target="_blank">
+                Ver detalles <i class="fas fa-arrow-circle-right ml-1"></i>
+              </a>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 2 - Porcentaje -->
+      <div class="col-lg-3 col-6 mb-4">
+        <div class="info-box bg-gradient-success shadow-lg hover-shadow">
+          <span class="info-box-icon swing"><i class="fas fa-chart-line"></i></span>
+          <div class="info-box-content">
+            <span class="info-box-text">Porcentaje de rebote</span>
+            <span class="info-box-number">53%</span>
+            <div class="progress">
+              <div class="progress-bar" style="width: 53%"></div>
+            </div>
+            <span class="progress-description">
+              <a href="#" class="text-white" data-toggle="modal" data-target="#modal-lg">
+                Asignar tarea <i class="fas fa-tasks ml-1"></i>
+              </a>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 3 - Usuarios -->
+      <div class="col-lg-3 col-6 mb-4">
+        <div class="info-box bg-gradient-warning shadow-lg hover-shadow">
+          <span class="info-box-icon tada"><i class="fas fa-users"></i></span>
+          <div class="info-box-content">
+            <span class="info-box-text">Registros de usuarios</span>
+            <span class="info-box-number">{{ ultimo_persona_id }}</span>
+            <div class="progress">
+              <div class="progress-bar" style="width: 80%"></div>
+            </div>
+            <span class="progress-description">
+              <!-- TODO: Crear vista y URL para 'NuevoADA' -->
+              <a href="#" class="text-white">
+                Tabla de usuarios <i class="fas fa-info-circle ml-1"></i>
+              </a>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 4 - Visitantes -->
+      <div class="col-lg-3 col-6 mb-4">
+        <div class="info-box bg-gradient-danger shadow-lg hover-shadow">
+          <span class="info-box-icon bounce"><i class="fas fa-chart-pie"></i></span>
+          <div class="info-box-content">
+            <span class="info-box-text">Visitantes únicos</span>
+            <span class="info-box-number">1,245</span>
+            <div class="progress">
+              <div class="progress-bar" style="width: 65%"></div>
+            </div>
+            <span class="progress-description">
+              <a href="#" class="text-white">
+                Ver análisis <i class="fas fa-search-plus ml-1"></i>
+              </a>
+            </span>
+          </div>
+        </div>
+      </div>
+      
+      {% if user.is_superuser or estado == '1' %}
+      <!-- Card 5 - Control de Permisos -->
+      <div class="col-lg-3 col-6 mb-4">
+        <div class="info-box bg-gradient-purple shadow-lg hover-shadow">
+          <span class="info-box-icon pulse"><i class="fas fa-user-shield"></i></span>
+          <div class="info-box-content">
+            <span class="info-box-text">Control de Permisos</span>
+            <span class="info-box-number">Gestión</span>
+            <div class="progress">
+              <div class="progress-bar bg-white" style="width: 90%"></div>
+            </div>
+            <span class="progress-description">
+              <!-- TODO: Crear vista y URL para 'panel_permisos' -->
+              <a href="#" class="text-white">
+                Gestionar permisos <i class="fas fa-arrow-circle-right ml-1"></i>
+              </a>
+            </span>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="modal-lg" style="display: none;" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title">Large Modal</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">×</span>
+        </button>
+      </div>
+      <div class="modal-body">
+       
+        
+        <!-- TODO: Crear vista y URL para 'enviar_mensaje' -->
+        <form id="mensaje-form" method="post" enctype="multipart/form-data" action="#">
+          {% csrf_token %}
+          
+          <div class="form-group">
+            <label>Seleccionar Proyectos</label>
+            {{ form.proyectos }}
+        </div>
+          <div class="form-group">
+            <label>SELECCIONE EL ENVIO</label>
+            {{ form.destinatario_email }}
+          </div>
+
+          <div class="form-group">
+            <label>ASUNTO</label>
+            {{ form.contenido }}
+          </div>
+          
+          <div class="form-group">
+            <label>ESCOJA LAS PREGUNTAS CORRECTAS</label>
+            {{ form.preguntas }} <!-- Aquí renderizamos el campo preguntas -->
+          </div>
+
+          <div class="btn-group w-100">
+            <label class="btn btn-outline-success btn-sm fileinput-button dz-clickable">
+              <i class="fas fa-plus"></i>
+              <span>Agregar archivos</span>
+              {{ form.archivo }}
+            </label>
+          </div>
+          <div class="col-4">
+            <a class="btn btn-primary btn-block" onclick="submitForm()">Guardar</a>
+          </div>
+        </form>
+
+
+
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+
+
+{% endblock %}
+
+
+
+{% block extra_js %}
+<script src="{% static 'plugins/jquery/jquery.min.js' %}"></script>
+<!-- Bootstrap 4 -->
+<!-- Select2 -->
+<script src="{% static 'plugins/select2/js/select2.full.min.js' %}"></script>
+<!-- Bootstrap4 Duallistbox -->
+<script src="{% static 'plugins/bootstrap4-duallistbox/jquery.bootstrap-duallistbox.min.js' %}"></script>
+
+<script>
+  $(document).ready(function() {
+    $('.select2').select2({
+        placeholder: "Selecciona un proyecto",
+        allowClear: true
+    });
+});
+    // Inicializa bootstrapDualListbox para preguntas
+    $('.duallistbox-preguntas').bootstrapDualListbox({
+        infoText: 'asdasd all {0}',
+        infoTextEmpty: 'Empty list',
+        infoTextFiltered: '<span class="label label-warning">Filter</span>',
+        filterPlaceHolder: 'Search',
+        filterTextClear: 'Show all',
+        filterOnValues: true
+    });
+
+    // Inicializa bootstrapDualListbox para proyectos
+
+
+  $('.duallistbox').bootstrapDualListbox()
+
+  function submitForm() {
+    var form = $('#mensaje-form')[0];  // Obtén el formulario nativo
+    var formData = new FormData(form);  // Crea un objeto FormData con los datos del formulario
+
+    // Recolectar los valores del campo de selección de preguntas
+    var preguntasArray = $('#id_preguntas').val();  // Suponiendo que el campo select tiene el id="id_preguntas"
+
+    // Convertir los valores a números
+    var preguntasArrayNumeros = preguntasArray.map(function(id) {
+        return parseInt(id, 10);
+    });
+
+    // Convertir el array de números a JSON
+    var preguntasJson = JSON.stringify(preguntasArrayNumeros);
+
+    // Remover el campo de preguntas de FormData si existe
+    formData.delete('preguntas');
+
+    // Agregar el JSON de preguntas al FormData
+    formData.append('preguntas', preguntasJson);
+
+    $.ajax({
+      type: "POST",
+      url: $('#mensaje-form').attr('action'),  // Obtiene la URL de acción del formulario
+      data: formData,
+      contentType: false,  // Necesario para enviar archivos binarios
+      processData: false,  // Evita que jQuery procese los datos (debemos enviar un objeto FormData)
+      success: function (response) {
+        if (response.success) {
+
+
+          Swal.fire({
+            icon: 'success',
+            title: 'Éxito',
+            text: response.message,
+            showConfirmButton: true,
+            
+          }).then(() => {
+            $('#modal-lg').modal('hide');
+            form.reset();
+          });
+        } else {
+          // Mostrar errores del formulario usando SweetAlert
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: response.message || "Se produjo un error."
+          });
+        }
+      },
+      error: function (response) {
+        // Manejo de errores en la solicitud AJAX usando SweetAlert
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: "Se produjo un error en la solicitud."
+        });
+      }
+    });
+  }
+
+</script>
+
+
+
+{% endblock %}
+
+{% include 'Nucleo/abajo.html' %}

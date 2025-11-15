@@ -1,0 +1,303 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" href="{% static 'img/LogoMr.ico' %}" type="image/x-icon">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Gestión Documental - DocuArchive</title>
+    <link rel="stylesheet" href="{% static 'Personalizados/Paginaciones/styles.css' %}">
+
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <h1>DocuArchive</h1>
+                </div>
+                <nav class="nav">
+                    <a href="{% url 'catalogo_publico:index' %}" class="nav-link active">Inicio</a>
+                    <a href="{% url 'catalogo_publico:buscar' %}" class="nav-link">Búsqueda</a>
+                    <!--<a href="detail.html" class="nav-link active">Proyectos</a>-->
+                    <a href="#" class="nav-link">Acerca de</a>
+                </nav>
+                <div class="header-actions">
+                    <a href="{% url 'usuarios:login' %}" class="header-login">Iniciar sesión</a>
+                    <button class="theme-toggle" id="themeToggle" aria-label="Cambiar tema">
+                        <span class="theme-icon">☀️</span>
+                    </button>
+                </div>
+                <button class="mobile-menu-toggle" id="mobileMenuToggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Added hero banner section -->
+    <section class="detail-hero">
+        <div class="detail-hero-overlay">
+            <div class="container">
+                <div class="detail-hero-content">
+                    <span class="detail-hero-category">
+                        {% if categorias %}
+                            {% for categoria in categorias %}{{ categoria.nombre }}{% if not forloop.last %}, {% endif %}{% endfor %}
+                        {% else %}
+                            Sin categoría
+                        {% endif %}
+                    </span>
+                    <h1 class="detail-hero-title">{{ titulo }}</h1>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <main class="detail-page">
+        <!-- Added two-column layout wrapper -->
+        <div class="detail-wrapper">
+            <div class="container">
+                <!-- Restructured into two-column layout -->
+                <div class="detail-layout">
+                    <!-- Main content column (80%) -->
+                    <article class="detail-main">
+                        <div class="detail-content">
+                            <div class="detail-meta">
+                                {% if autores %}
+                                <span class="meta-item"><strong>Autoría:</strong> {{ autores|join:", " }}</span>
+                                {% else %}
+                                <span class="meta-item"><strong>Autoría:</strong> Información no disponible</span>
+                                {% endif %}
+                                {% if editor %}
+                                <span class="meta-item"><strong>Editor:</strong> {{ editor }}</span>
+                                {% endif %}
+                                {% if fecha_publicacion %}
+                                <span class="meta-item"><strong>Publicado:</strong> {{ fecha_publicacion|date:"d \\d\\e F, Y" }}</span>
+                                {% endif %}
+                                {% if tipo_publicacion %}
+                                <span class="meta-item"><strong>Tipo:</strong> {{ tipo_publicacion }}</span>
+                                {% endif %}
+                                {% if categorias %}
+                                <span class="meta-item"><strong>Categorías:</strong> {% for categoria in categorias %}{{ categoria.nombre }}{% if not forloop.last %}, {% endif %}{% endfor %}</span>
+                                {% endif %}
+                            </div>
+
+                            <div class="detail-body">
+                                <h2>Resumen</h2>
+                                <p>{{ resumen }}</p>
+
+
+                            </div>
+                        </div>
+
+                        <!-- Comments section now within main column -->
+                        <section class="comments-section">
+                            <h2 class="comments-title">Comentarios</h2>
+                            
+                            <form class="comment-form" id="commentForm">
+                                <textarea 
+                                    class="comment-textarea" 
+                                    placeholder="Escriba su comentario aquí..." 
+                                    rows="4"
+                                    id="commentText"
+                                ></textarea>
+                                <div class="comment-form-footer">
+                                    <input 
+                                        type="text" 
+                                        class="comment-author-input" 
+                                        placeholder="Su nombre"
+                                        id="commentAuthor"
+                                    >
+                                    <button type="submit" class="comment-submit">Publicar Comentario</button>
+                                </div>
+                            </form>
+
+                            <div class="comments-list">
+                                <article class="comment">
+                                    <div class="comment-header">
+                                        <span class="comment-author">Dra. María González</span>
+                                        <span class="comment-date">20 de Marzo, 2024</span>
+                                    </div>
+                                    <p class="comment-text">
+                                        Excelente análisis del sistema. Hemos implementado una solución similar en nuestra 
+                                        organización y los resultados han sido muy positivos. ¿Tienen previsto incluir 
+                                        capacidades de inteligencia artificial para la clasificación automática?
+                                    </p>
+                                </article>
+
+                                <article class="comment">
+                                    <div class="comment-header">
+                                        <span class="comment-author">Ing. Carlos Ramírez</span>
+                                        <span class="comment-date">18 de Marzo, 2024</span>
+                                    </div>
+                                    <p class="comment-text">
+                                        Me gustaría conocer más detalles sobre la integración con sistemas legacy. 
+                                        ¿Qué protocolos de comunicación soporta el sistema?
+                                    </p>
+                                </article>
+
+                                <article class="comment">
+                                    <div class="comment-header">
+                                        <span class="comment-author">Prof. Ana Martín</span>
+                                        <span class="comment-date">16 de Marzo, 2024</span>
+                                    </div>
+                                    <p class="comment-text">
+                                        Documentación muy completa. Sería útil incluir casos de estudio específicos que 
+                                        demuestren la aplicación práctica en diferentes sectores industriales.
+                                    </p>
+                                </article>
+                            </div>
+                        </section>
+                    </article>
+
+                    <!-- Added sidebar column (20%) -->
+                    <aside class="detail-sidebar">
+                        <!-- Table of Contents -->
+                        <div class="sidebar-section">
+                            <h3 class="sidebar-title">Etiquetas Asociadas</h3>
+                            <nav class="toc-nav">
+                                {% if etiquetas %}
+                                    {% for etiqueta in etiquetas %}
+                                    <a href="{% url 'catalogo_publico:buscar' %}?q={{ etiqueta.nombre|urlencode }}" class="toc-link">#{{ etiqueta.nombre }}</a>
+                                    {% endfor %}
+                                {% else %}
+                                <p class="text-muted">No hay etiquetas asociadas.</p>
+                                {% endif %}
+                            </nav>
+                        </div>
+
+
+                        <!-- Author Info -->
+                        <div class="sidebar-section">
+                            <h3 class="sidebar-title">Autores</h3>
+                            {% if autores_detalle %}
+                            <div class="author-list">
+                                {% for autor in autores_detalle %}
+                                <div class="author-entry">
+                                    <p class="author-name">
+                                        {% if autor.usuario_id %}
+                                        <a href="{% url 'catalogo_publico:autor_perfil' user_id=autor.usuario_id %}">{{ autor.nombre }}</a>
+                                        {% else %}
+                                        {{ autor.nombre }}
+                                        {% endif %}
+                                    </p>
+                                    {% if autor.afiliacion %}
+                                    <p class="author-meta">{{ autor.afiliacion }}</p>
+                                    {% endif %}
+                                    {% if autor.orcid %}
+                                    <p class="author-meta"><strong>ORCID:</strong> {{ autor.orcid }}</p>
+                                    {% endif %}
+                                    {% if autor.email %}
+                                    <p class="author-meta"><strong>Contacto:</strong> {{ autor.email }}</p>
+                                    {% endif %}
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            <p class="text-muted">No se registran autores para esta publicación.</p>
+                            {% endif %}
+                        </div>
+
+                        <div class="sidebar-section">
+                            <h3 class="sidebar-title">Editor Responsable</h3>
+                            <div class="author-info">
+                                <p class="author-name">
+                                    {% if editor_id %}
+                                    <a href="{% url 'catalogo_publico:autor_perfil' user_id=editor_id %}">{{ editor|default:"Sin editor" }}</a>
+                                    {% else %}
+                                    {{ editor|default:"Sin editor" }}
+                                    {% endif %}
+                                </p>
+                                {% if url_externa %}
+                                <p class="author-meta"><a href="{{ url_externa }}" target="_blank" rel="noopener noreferrer">Ver publicación externa</a></p>
+                                {% endif %}
+                            </div>
+                            {% if doi or issn or isbn %}
+                            <div class="publication-meta">
+                                {% if doi %}
+                                <p><strong>DOI:</strong> {{ doi }}</p>
+                                {% endif %}
+                                {% if issn %}
+                                <p><strong>ISSN:</strong> {{ issn }}</p>
+                                {% endif %}
+                                {% if isbn %}
+                                <p><strong>ISBN:</strong> {{ isbn }}</p>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Related Projects -->
+                        <div class="sidebar-section">
+                            <h3 class="sidebar-title">Archivos</h3>
+                            <div class="related-projects">
+                            {% if archivo_url and documento_id %}
+                                <a href="{% url 'catalogo_publico:descargar_documento' documento_id %}" class="related-project" target="_blank" rel="noopener noreferrer">
+                                    <span class="related-icon">📄</span>
+                                    <span class="related-title">Descargar Archivo</span>
+                                </a>
+                            {% elif url_externa %}
+                                <a href="{{ url_externa }}" class="related-project" target="_blank" rel="noopener noreferrer">
+                                    <span class="related-icon">🔗</span>
+                                    <span class="related-title">Ver publicación externa</span>
+                                </a>
+                            {% else %}
+                                <p class="text-muted">Archivo no disponible</p>
+                            {% endif %}
+                            </div>
+                                
+                            <h3 class="sidebar-title" style="margin-top: 2rem;">Publicaciones Relacionadas</h3>
+
+                            {% if proyectos_relacionados %}
+                                {% for r in proyectos_relacionados %}
+                                    <div class="related-projects">
+                                        <a href="{{ r.url }}" class="related-project">
+                                            <span class="related-icon">📊</span>
+                                            <span class="related-title">{{ r.titulo }}</span>
+                                        </a>
+                                    </div>
+                                {% endfor %}
+                            {% else %}
+                                <p class="text-muted">No se encontraron publicaciones relacionadas.</p>
+                            {% endif %}
+
+                        </div>
+                    </aside>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 DocuArchive. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <script src="{% static 'Personalizados/Paginaciones/script.js' %}"></script>
+    <script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // Obtiene la ruta actual (por ejemplo: /Principal/index/)
+        const currentPath = window.location.pathname;
+
+        console.log("Current Path:", currentPath);
+        // Selecciona todos los enlaces del menú
+        const navLinks = document.querySelectorAll(".nav-link");
+
+        navLinks.forEach(link => {
+            // Quita cualquier clase 'active'
+            link.classList.remove("active");
+
+            // Si la ruta del enlace coincide parcialmente con la actual, la marca como activa
+            if (currentPath.includes(link.getAttribute("href").replace(/\/$/, ""))) {
+                link.classList.add("active");
+            }
+        });
+    });
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,297 @@
+{% load static %}
+
+{% include 'Nucleo/arriba.html' %}
+{% include 'Nucleo/centro.html' %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'plugins/select2/css/select2.min.css' %}">
+<style>
+  .permission-section {
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid #007bff;
+  }
+  
+  .action-category {
+    margin-bottom: 1.5rem;
+  }
+  
+  .action-item {
+    padding: 0.75rem;
+    margin: 0.5rem 0;
+    background: white;
+    border-radius: 6px;
+    border: 1px solid #dee2e6;
+    transition: all 0.2s;
+  }
+  
+  .action-item:hover {
+    border-color: #007bff;
+    box-shadow: 0 2px 4px rgba(0,123,255,0.1);
+  }
+  
+  .action-item input[type="checkbox"] {
+    margin-right: 0.5rem;
+  }
+  
+  .badge-category {
+    font-size: 0.85rem;
+    padding: 0.35rem 0.65rem;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1 class="m-0">
+          <i class="fas fa-user-cog mr-2"></i>
+          Gestionar Permisos: {{ usuario.get_nombre_completo }}
+        </h1>
+      </div>
+      <div class="col-sm-6">
+        <ol class="breadcrumb float-sm-right">
+          <!-- TODO: Crear vista y URL para 'panel' y 'panel_permisos' -->
+          <li class="breadcrumb-item"><a href="#">Panel</a></li>
+          <li class="breadcrumb-item"><a href="#">Permisos</a></li>
+          <li class="breadcrumb-item active">Gestionar</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+<section class="content">
+  <div class="container-fluid">
+    <form method="post" id="permisos-form">
+      {% csrf_token %}
+      
+      <!-- Información del usuario -->
+      <div class="card card-outline card-primary">
+        <div class="card-header">
+          <h3 class="card-title">
+            <i class="fas fa-user mr-2"></i>
+            Información del Usuario
+          </h3>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-6">
+              <p><strong>Usuario:</strong> {{ usuario.user.username }}</p>
+              <p><strong>Nombre:</strong> {{ usuario.get_nombre_completo }}</p>
+              <p><strong>Email:</strong> {{ usuario.get_email }}</p>
+            </div>
+            <div class="col-md-6">
+              <p><strong>Estado:</strong> 
+                {% if usuario.activo %}
+                  <span class="badge badge-success">Activo</span>
+                {% else %}
+                  <span class="badge badge-danger">Inactivo</span>
+                {% endif %}
+              </p>
+              <p><strong>Tipo Usuario:</strong> {{ usuario.tipo_usuario.nombre }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Asignar Rol -->
+      <div class="card card-outline card-info">
+        <div class="card-header">
+          <h3 class="card-title">
+            <i class="fas fa-user-tag mr-2"></i>
+            Asignar Rol
+          </h3>
+        </div>
+        <div class="card-body">
+          <div class="form-group">
+            <label>Seleccionar Rol</label>
+            <select name="rol_id" id="rol_id" class="form-control select2" style="width: 100%;">
+              <option value="">-- Sin rol --</option>
+              {% for rol in roles %}
+                <option value="{{ rol.id }}" {% if permiso_usuario.rol.id == rol.id %}selected{% endif %}>
+                  {{ rol.nombre }}
+                  {% if rol.es_super_admin %}
+                    <span class="badge badge-danger">Super Admin</span>
+                  {% endif %}
+                </option>
+              {% endfor %}
+            </select>
+            <small class="form-text text-muted">
+              Un rol agrupa múltiples acciones. Si seleccionas un rol, el usuario tendrá todas las acciones de ese rol.
+            </small>
+          </div>
+          
+          {% if permiso_usuario.rol %}
+            <div class="alert alert-info">
+              <strong>Rol actual:</strong> {{ permiso_usuario.rol.nombre }}
+              {% if permiso_usuario.rol.descripcion %}
+                <br><small>{{ permiso_usuario.rol.descripcion }}</small>
+              {% endif %}
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Acciones Adicionales -->
+      <div class="card card-outline card-success">
+        <div class="card-header">
+          <h3 class="card-title">
+            <i class="fas fa-plus-circle mr-2"></i>
+            Acciones Adicionales
+          </h3>
+        </div>
+        <div class="card-body">
+          <p class="text-muted">
+            Selecciona acciones específicas adicionales para este usuario. Estas se suman a las acciones del rol.
+          </p>
+          
+          {% for categoria, acciones_list in acciones_por_categoria.items %}
+            <div class="action-category">
+              <h5>
+                <span class="badge badge-category badge-primary">{{ categoria|title }}</span>
+              </h5>
+              <div class="row">
+                {% for accion in acciones_list %}
+                  <div class="col-md-6 col-lg-4">
+                    <div class="action-item">
+                      <label style="cursor: pointer; margin: 0; width: 100%;">
+                        <input type="checkbox" 
+                               name="acciones_adicionales" 
+                               value="{{ accion.id }}"
+                               {% if accion.id in acciones_adicionales %}checked{% endif %}>
+                        <strong>{{ accion.nombre }}</strong>
+                        <br>
+                        <small class="text-muted">{{ accion.codigo }}</small>
+                        {% if accion.descripcion %}
+                          <br><small class="text-muted">{{ accion.descripcion|truncatewords:10 }}</small>
+                        {% endif %}
+                      </label>
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Acciones Denegadas -->
+      <div class="card card-outline card-danger">
+        <div class="card-header">
+          <h3 class="card-title">
+            <i class="fas fa-ban mr-2"></i>
+            Acciones Denegadas
+          </h3>
+        </div>
+        <div class="card-body">
+          <p class="text-muted">
+            Selecciona acciones que quieres denegar explícitamente para este usuario. Estas sobrescriben el rol.
+          </p>
+          
+          {% for categoria, acciones_list in acciones_por_categoria.items %}
+            <div class="action-category">
+              <h5>
+                <span class="badge badge-category badge-danger">{{ categoria|title }}</span>
+              </h5>
+              <div class="row">
+                {% for accion in acciones_list %}
+                  <div class="col-md-6 col-lg-4">
+                    <div class="action-item">
+                      <label style="cursor: pointer; margin: 0; width: 100%;">
+                        <input type="checkbox" 
+                               name="acciones_denegadas" 
+                               value="{{ accion.id }}"
+                               {% if accion.id in acciones_denegadas %}checked{% endif %}>
+                        <strong>{{ accion.nombre }}</strong>
+                        <br>
+                        <small class="text-muted">{{ accion.codigo }}</small>
+                      </label>
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Botones de acción -->
+      <div class="card">
+        <div class="card-footer">
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save mr-1"></i>
+            Guardar Permisos
+          </button>
+          <!-- TODO: Crear vista y URL para 'panel_permisos' -->
+          <a href="#" class="btn btn-secondary">
+            <i class="fas fa-times mr-1"></i>
+            Cancelar
+          </a>
+        </div>
+      </div>
+    </form>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'plugins/select2/js/select2.full.min.js' %}"></script>
+<script>
+  $(document).ready(function() {
+    // Inicializar Select2
+    $('.select2').select2({
+      placeholder: "Selecciona un rol",
+      allowClear: true
+    });
+    
+    // Enviar formulario con AJAX
+    $('#permisos-form').on('submit', function(e) {
+      e.preventDefault();
+      
+      var formData = new FormData(this);
+      
+      $.ajax({
+        url: $(this).attr('action') || window.location.href,
+        type: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function(response) {
+          if (response.success) {
+            Swal.fire({
+              icon: 'success',
+              title: 'Éxito',
+              text: response.message || 'Permisos guardados correctamente.',
+              showConfirmButton: true
+            }).then(() => {
+              // TODO: Crear vista y URL para 'panel_permisos'
+              window.location.href = "#";
+            });
+          } else {
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: response.message || 'Error al guardar permisos.'
+            });
+          }
+        },
+        error: function() {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Error al procesar la solicitud.'
+          });
+        }
+      });
+    });
+  });
+</script>
+{% endblock %}
+
+{% include 'Nucleo/abajo.html' %}
+

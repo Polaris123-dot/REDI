@@ -1,0 +1,9 @@
+{% if mostrar %}
+<a href="{{ url }}" class="btn {{ clase_css }}">
+    {% if icono %}
+        <i class="{{ icono }} mr-1"></i>
+    {% endif %}
+    {{ texto_boton }}
+</a>
+{% endif %}
+

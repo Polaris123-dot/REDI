@@ -1,0 +1,169 @@
+
+
+
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SISRD | v1</title>
+
+  <!-- Google Font: Source Sans Pro -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+  <link rel="stylesheet" href="{% static 'lib/adminlte-3.2.0/plugins/fontawesome-free/css/all.min.css'%}" >
+  <link rel="stylesheet" href="{% static 'lib/adminlte-3.2.0/css/adminlte.min.css'%}" >
+  <link rel="stylesheet" href="{% static 'lib/adminlte-3.2.0/plugins/overlayScrollbars/css/OverlayScrollbars.min.css'%}" >
+  <link href="{% static 'DataTables/css/dataTables.bootstrap4.min.css' %}" rel="stylesheet">
+  <link href="{% static 'DataTables/datatables.min.css' %}" rel="stylesheet">
+  <link href="{% static 'DataTables/css/jquery.dataTables.css' %}" rel="stylesheet">
+  <link href="{% static 'Personalizados/bootstrap.min.css' %}" rel="stylesheet">
+<link href="{% static 'Personalizados/login/login.css' %}" rel="stylesheet">
+
+</head>
+
+<body class="login-page bg-login" style="min-height: 466px;">
+    <div class="login-box col-md-8" >
+        <div class="card card-outline card-primary ">
+            <div class="card-header text-center">
+                <a href="../../index2.html" class="h1">
+                    <b>
+                        <font style="vertical-align: inherit;">
+                            <font style="vertical-align: inherit;">Administrador</font>
+                        </font>
+                    </b>
+                    <font style="vertical-align: inherit;">
+                        <font style="vertical-align: inherit;"> LTE</font>
+                    </font>
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 text-center">
+                        <!-- Imagen en el lado izquierdo -->
+                        <img src="ruta/a/tu/imagen.jpg" class="img-fluid" alt="Imagen">
+                    </div>
+                    <div class="col-md-6">
+                        <!-- Espacio para logo y formulario -->
+                        <div class="text-center mb-3">
+                            <img src="ruta/a/tu/logo.png" class="img-fluid" alt="Logo">
+                        </div>
+
+
+
+                        <form class="form-signin" id="login-form" action="{% url 'usuarios:login' %}" method="post" name="form">
+                            {% csrf_token %}
+                            <div class="input-group mb-3">
+                                <input type="text" class="form-control" placeholder="Usuario" name="username" required>
+                                <div class="input-group-append">
+                                    <div class="input-group-text">
+                                        <span class="fas fa-user"></span>
+                                    </div>
+                                </div>
+
+                            </div>
+                            <div class="error" id="username-error"></div>
+
+                            <div class="input-group mb-3">
+                                <input type="password" class="form-control" placeholder="Contraseña" name="password" required>
+                                <div class="input-group-append">
+                                    <div class="input-group-text">
+                                        <span class="fas fa-lock"></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div  class="error" id="password-error"></div>
+
+                            <div class="row">
+                                <div class="col-8">
+                                    <div class="icheck-primary">
+                                        <input type="checkbox" id="remember">
+                                        <label for="remember">Recuérdame</label>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <a  class="btn btn-primary btn-block"  onclick="submitForm()">Iniciar sesión</a>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="social-auth-links text-center mt-2 mb-3">
+                    <a href="#" class="btn btn-block btn-primary">
+                        <i class="fab fa-facebook mr-2"></i>
+                        <font style="vertical-align: inherit;">
+                            <font style="vertical-align: inherit;">Iniciar sesión con Facebook</font>
+                        </font>
+                    </a>
+                    <a href="#" class="btn btn-block btn-danger">
+                        <i class="fab fa-google-plus mr-2"></i>
+                        <font style="vertical-align: inherit;">
+                            <font style="vertical-align: inherit;">Iniciar sesión con Google+</font>
+                        </font>
+                    </a>
+                </div>
+
+                <p class="mb-1">
+                    <a href="forgot-password.html">
+                        <font style="vertical-align: inherit;">
+                            <font style="vertical-align: inherit;">Olvidé mi contraseña</font>
+                        </font>
+                    </a>
+                </p>
+                <p class="mb-0">
+                    <a href="register.html" class="text-center">
+                        <font style="vertical-align: inherit;">
+                            <font style="vertical-align: inherit;">Registrar una nueva membresía</font>
+                        </font>
+                    </a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script src=" {% static 'lib/adminlte-3.2.0/plugins/jquery/jquery.min.js'%}"></script>
+    <script src=" {% static 'lib/adminlte-3.2.0/plugins/bootstrap/js/bootstrap.bundle.min.js'%}"></script>
+    <script src=" {% static 'lib/adminlte-3.2.0/plugins/overlayScrollbars/js/jquery.overlayScrollbars.min.js'%}"></script>
+    <script src=" {% static 'lib/adminlte-3.2.0/js/adminlte.min.js'%}"></script>
+    <!-- <script src=" {% static 'lib/adminlte-3.2.0/js/demo.js'%}"></script> -->
+    <script src=" {% static 'lib/adminlte-3.2.0/plugins/chart.js/Chart.min.js'%}"></script>
+    <script src="{% static 'DataTables/js/jquery.dataTables.js' %}"></script>
+    <script src="{% static 'DataTables/js/dataTables.bootstrap5.min.js' %}"></script>
+    <script src="{% static 'DataTables/js/jquery.dataTables.js' %}"></script>
+    <script src="{% static 'DataTables/datatables.min.js' %}"></script>
+    <script src="{% static 'sweetalert2/sweetalert2.all.min.js' %}"></script>
+
+
+
+
+    <script>
+        function submitForm() {
+            var form = $('#login-form');
+            var url = form.attr('action');
+
+            $.ajax({
+                type: "POST",
+                url: url,
+                data: form.serialize(),
+                success: function (response) {
+                    if (response.success) {
+                        window.location.href = '/panel';  // Redirige a la página de inicio o dashboard
+                    } else {
+                        // Muestra los mensajes de error
+                        if (response.message) {
+                            $('#username-error').text(response.message);
+                            $('#password-error').text('');
+                        }
+                    }
+                },
+                error: function (response) {
+                    $('#username-error').text("An error occurred.");
+                    $('#password-error').text('');
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>

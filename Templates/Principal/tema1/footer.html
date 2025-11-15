@@ -1,0 +1,82 @@
+{% load static %}
+    <!-- Botón que despliega el panel solo en pantallas pequeñas -->
+    <button class="btn btn-primary panel-toggle-btn" style="position: fixed; bottom: 20px; right: 20px;" type="button" id="togglePanelBtn">
+        Mostrar Panel
+    </button>
+
+
+
+
+
+
+<script src="{% static 'plugins/jquery/jquery.min.js' %}"></script>
+
+    <script>
+        $(document).ready(function () {
+    
+            console.log("Se inicia la pagina web")
+            $('#filterForm').on('submit', function (e) {
+                e.preventDefault(); // Evitar el comportamiento normal de envío
+                console.log("entra")
+                // Obtener los valores de los filtros
+                let query = $('#search-input').val();
+                let fecha_inicio = $('#fecha-inicio').val();
+                let fecha_fin = $('#fecha-fin').val();
+                let autor = $('#autor-select').val();
+                let asesor = $('#asesor-select').val();
+                let tema = $('#tema-select').val();
+                let sede = $('#sede-select').val();
+                let archivo = $('input[name="archivo"]:checked').val();
+        
+                // Construir la URL con los parámetros
+                let searchParams = new URLSearchParams();
+                if (query) searchParams.append('query', query);
+                if (fecha_inicio) searchParams.append('fecha_inicio', fecha_inicio);
+                if (fecha_fin) searchParams.append('fecha_fin', fecha_fin);
+                if (autor) searchParams.append('autor', autor);
+                if (asesor) searchParams.append('asesor', asesor);
+                if (tema) searchParams.append('tema', tema);
+                if (sede) searchParams.append('sede', sede);
+                if (archivo) searchParams.append('archivo', archivo);
+        
+                // Redirigir a la página de resultados con los parámetros de búsqueda
+                // Si la URL de resultados es '/search/', puedes usar:
+               
+        
+                // O si tienes la vista en Django con un nombre de URL, puedes hacer esto:
+                window.location.href = '{% url "catalogo_publico:index" %}?' + searchParams.toString();
+            });
+        });
+        </script>
+        
+    <script>
+        // Funcionalidad para desplegar/ocultar el panel en pantallas pequeñas
+        document.getElementById('togglePanelBtn').addEventListener('click', function () {
+            var panel = document.getElementById('panelInfo');
+            panel.classList.toggle('show'); // Alterna la clase 'show' para mostrar/ocultar el panel
+        });
+
+        // Cerrar el panel cuando se hace clic en la "X"
+        document.getElementById('closePanelBtn').addEventListener('click', function () {
+            var panel = document.getElementById('panelInfo');
+            panel.classList.remove('show'); // Remueve la clase 'show' para ocultar el panel
+        });
+    </script>
+    <script>
+        const docIcon = document.querySelector('.document-icon');
+
+    docIcon.addEventListener('mouseenter', () => {
+    docIcon.style.transform = 'scale(1.1)';
+    });
+
+    docIcon.addEventListener('mouseleave', () => {
+    docIcon.style.transform = 'scale(1)';
+    });
+
+    </script>
+
+    
+    
+
+</body>
+</html>

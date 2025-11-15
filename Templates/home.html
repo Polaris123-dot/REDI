@@ -1,0 +1,282 @@
+{% load static %}
+{% include 'Nucleo/arriba.html' %}
+
+<!-- ========================================== -->
+<!-- ESTILOS CSS -->
+<!-- ========================================== -->
+<style>
+    /* ========================================== */
+    /* HERO BANNER */
+    /* ========================================== */
+    .hero-banner-wrapper {
+        margin-bottom: 2rem;
+    }
+
+    .hero-banner {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 3rem;
+        border-radius: 10px;
+        color: white;
+        text-align: center;
+    }
+
+    .hero-title {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin-bottom: 1rem;
+    }
+
+    .hero-divider {
+        width: 80px;
+        height: 4px;
+        background: white;
+        margin: 1rem auto;
+        border-radius: 2px;
+    }
+
+    .hero-description {
+        font-size: 1.1rem;
+        margin-bottom: 2rem;
+        opacity: 0.9;
+    }
+
+    .hero-search-form {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .search-container {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .search-container input {
+        flex: 1;
+        padding: 0.75rem;
+        border: none;
+        border-radius: 5px;
+        font-size: 1rem;
+    }
+
+    .search-container button {
+        padding: 0.75rem 1.5rem;
+        background: white;
+        color: #667eea;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: bold;
+    }
+
+    /* ========================================== */
+    /* DOCUMENTO ICONO */
+    /* ========================================== */
+    .document-icon {
+        width: 80px;
+        height: 100px;
+        margin: 0 auto 1rem;
+        position: relative;
+        transition: transform 0.3s ease;
+    }
+
+    .document-icon:hover {
+        transform: scale(1.1);
+    }
+
+    .document-body {
+        width: 100%;
+        height: 100%;
+        background: #f0f0f0;
+        border: 2px solid #ccc;
+        border-radius: 5px;
+        position: relative;
+    }
+
+    .document-lines {
+        position: absolute;
+        top: 20%;
+        left: 10%;
+        right: 10%;
+    }
+
+    .document-lines .line {
+        height: 3px;
+        background: #999;
+        margin-bottom: 8px;
+        border-radius: 2px;
+    }
+
+    .document-lines .line:nth-child(1) {
+        width: 100%;
+    }
+
+    .document-lines .line:nth-child(2) {
+        width: 80%;
+    }
+
+    .document-lines .line:nth-child(3) {
+        width: 90%;
+    }
+
+    /* ========================================== */
+    /* TÍTULOS Y TEXTO */
+    /* ========================================== */
+    .h1-custom {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 1rem;
+    }
+
+    .custom-block-font {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    /* ========================================== */
+    /* BOTONES */
+    /* ========================================== */
+    .download-btn {
+        transition: transform 0.2s ease;
+    }
+
+    .download-btn:hover {
+        transform: translateY(-2px);
+    }
+</style>
+
+{% block content %}
+<main class="container mt-5">
+    <!-- ========================================== -->
+    <!-- HERO BANNER -->
+    <!-- ========================================== -->
+    <div class="hero-banner-wrapper">
+        <div class="hero-banner">
+            <h1 class="hero-title">Bienvenido al Repositorio Digital Mareliano</h1>
+            <div class="hero-divider"></div>
+            <p class="hero-description">
+                Una plataforma digital diseñada para almacenar, preservar y difundir la producción académica...
+            </p>
+            
+            <form class="hero-search-form">
+                <div class="search-container">
+                    <input type="search" id="search" placeholder="Buscar artículos, publicaciones, recursos..." aria-label="Buscar">
+                    <button type="submit">
+                        <span class="search-icon">⌕</span>
+                        <span class="search-text">Buscar</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- CONTENIDO PRINCIPAL -->
+    <!-- ========================================== -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="mb-3">
+                <div class="card-body">
+                    <h1 class="h1-custom">{{ titulo }}</h1>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="container">
+                <div class="row custom-block-font" id="mainRow">
+                    <!-- ========================================== -->
+                    <!-- BLOQUE DE IMAGEN Y METADATOS -->
+                    <!-- ========================================== -->
+                    <div class="col-md-3" id="imageBlock">
+                        <div class="document-icon">
+                            <div class="document-body"></div>
+                            <div class="document-lines">
+                                <div class="line"></div>
+                                <div class="line"></div>
+                                <div class="line"></div>
+                            </div>
+                        </div>
+                          
+                        <div class="text-center mb-3">
+                            <a href="{{ archivo.url }}" class="btn btn-primary download-btn" target="_blank">
+                                <i class="fas fa-download"></i> Descargar
+                            </a>
+                        </div>
+
+                        <!-- Fecha -->
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="card mb-3">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Fecha</h5>
+                                        <h6 class="card-text">{{ fecha }}</h6>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Autores -->
+                            <div class="col-md-12">
+                                <div class="card mb-3">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Autor(es)</h5>
+                                        <h6 class="card-text">
+                                            <!-- TODO: Crear vista y URL para 'Perfiles_de_egresados' -->
+                                            <a href="#" class="text-decoration-none text-dark">
+                                                {{ autores|join:", " }}
+                                            </a>
+                                        </h6>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Metadatos -->
+                            <div class="col-md-12">
+                                <div class="card mb-3">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Metadatos</h5>
+                                        <h6 class="card-text">Mostrar el registro completo del ítem</h6>
+                                        <p>
+                                            Etiquetas: 
+                                            {% for etiqueta in metadatos.etiquetas %}
+                                                {{ etiqueta.nombre }}{% if not forloop.last %}, {% endif %}
+                                            {% endfor %}
+                                        </p>
+                                        <p>
+                                            Variables: 
+                                            {% for variable in metadatos.variables %}
+                                                {{ variable.nombre }}{% if not forloop.last %}, {% endif %}
+                                            {% endfor %}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ========================================== -->
+                    <!-- BLOQUE DE RESUMEN -->
+                    <!-- ========================================== -->
+                    <div class="col-md-9" id="summaryBlock">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">RESUMEN</h5>
+                                <p class="card-text">{{ resumen }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <br>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- PANEL LATERAL -->
+        <!-- ========================================== -->
+        <div class="col-md-4">
+            <!-- Aquí puedes agregar el panel de información si lo necesitas -->
+        </div>
+    </div>
+</main>
+{% endblock %}
+
+{% include 'Nucleo/abajo.html' %}

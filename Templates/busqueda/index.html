@@ -1,0 +1,305 @@
+{% load static %}
+{% include 'Nucleo/arriba.html' %}
+
+{% block extra_css %}
+<!-- DataTables CSS - Local -->
+<link rel="stylesheet" href="{% static 'DataTables/css/dataTables.bootstrap4.min.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/datatables-responsive/css/responsive.bootstrap4.min.css' %}">
+<!-- SweetAlert2 CSS -->
+<link rel="stylesheet" href="{% static 'plugins/sweetalert2/sweetalert2.min.css' %}">
+<!-- Select2 CSS -->
+<link rel="stylesheet" href="{% static 'plugins/select2/css/select2.min.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css' %}">
+<style>
+  /* Estilos para tabs */
+  .nav-tabs .nav-link {
+    color: #495057;
+  }
+
+  .nav-tabs .nav-link.active {
+    color: #007bff;
+    font-weight: 600;
+  }
+
+  /* Estilos responsivos para botones */
+  .btn-group-sm .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+  }
+
+  /* En pantallas pequeñas, solo mostrar iconos */
+  @media (max-width: 767px) {
+    .btn-group-sm .btn span {
+      display: none !important;
+    }
+
+    .btn-group-sm .btn {
+      padding: 0.25rem 0.4rem;
+    }
+  }
+
+  /* En pantallas medianas y grandes, mostrar texto */
+  @media (min-width: 768px) {
+    .btn-group-sm .btn span {
+      display: inline !important;
+    }
+  }
+
+  /* Input para JSON */
+  .json-input {
+    font-family: 'Courier New', monospace;
+    font-size: 0.875rem;
+  }
+
+  /* Preview de contenido indexado */
+  .contenido-preview {
+    max-height: 100px;
+    overflow-y: auto;
+    background-color: #f8f9fa;
+    padding: 10px;
+    border-radius: 4px;
+    font-size: 0.875rem;
+  }
+</style>
+{% endblock %}
+
+{% include 'Nucleo/sidebar.html' %}
+
+<!-- Content Wrapper. Contains page content -->
+<div class="content-wrapper">
+  <!-- Content Header -->
+  <div class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-sm-6">
+          <h1 class="m-0">Búsqueda</h1>
+        </div>
+        <div class="col-sm-6">
+          <ol class="breadcrumb float-sm-right d-none d-sm-flex">
+            <li class="breadcrumb-item"><a href="{% url 'usuarios:panel' %}">Inicio</a></li>
+            <li class="breadcrumb-item active">Búsqueda</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main content -->
+  <section class="content">
+    <div class="container-fluid">
+      <!-- Tabs -->
+      <ul class="nav nav-tabs" id="busquedaTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+          <a class="nav-link active" id="indices-tab" data-toggle="tab" href="#indices" role="tab" aria-controls="indices" aria-selected="true">
+            <i class="fas fa-database"></i> Índices
+          </a>
+        </li>
+        <li class="nav-item" role="presentation">
+          <a class="nav-link" id="busquedas-tab" data-toggle="tab" href="#busquedas" role="tab" aria-controls="busquedas" aria-selected="false">
+            <i class="fas fa-search"></i> Búsquedas
+          </a>
+        </li>
+      </ul>
+
+      <!-- Tab Content -->
+      <div class="tab-content" id="busquedaTabsContent">
+        <!-- Tab Índices -->
+        <div class="tab-pane fade show active" id="indices" role="tabpanel" aria-labelledby="indices-tab">
+          <div class="card mt-3">
+            <div class="card-header">
+              <h3 class="card-title">Índices de Búsqueda</h3>
+              <div class="card-tools">
+                <button type="button" class="btn btn-primary btn-sm" id="btnCrearIndice">
+                  <i class="fas fa-plus"></i> <span>Nuevo Índice</span>
+                </button>
+              </div>
+            </div>
+            <div class="card-body">
+              <table id="tableIndices" class="table table-bordered table-striped table-hover" style="width:100%">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Documento</th>
+                    <th>Contenido Indexado</th>
+                    <th>Palabras Clave</th>
+                    <th>Fecha Indexación</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab Búsquedas -->
+        <div class="tab-pane fade" id="busquedas" role="tabpanel" aria-labelledby="busquedas-tab">
+          <div class="card mt-3">
+            <div class="card-header">
+              <h3 class="card-title">Búsquedas Realizadas</h3>
+              <div class="card-tools">
+                <button type="button" class="btn btn-primary btn-sm" id="btnCrearBusqueda">
+                  <i class="fas fa-plus"></i> <span>Nueva Búsqueda</span>
+                </button>
+              </div>
+            </div>
+            <div class="card-body">
+              <table id="tableBusquedas" class="table table-bordered table-striped table-hover" style="width:100%">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Término de Búsqueda</th>
+                    <th>Usuario</th>
+                    <th>Resultados</th>
+                    <th>Filtros</th>
+                    <th>IP</th>
+                    <th>Fecha</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- Modal Índice -->
+<div class="modal fade" id="modalIndice" tabindex="-1" role="dialog" aria-labelledby="modalIndiceLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalIndiceLabel">Nuevo Índice de Búsqueda</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form id="formIndice">
+        <div class="modal-body">
+          <input type="hidden" id="indice_id" name="indice_id">
+          <div class="form-group">
+            <label for="indice_documento_id">Documento <span class="text-danger">*</span></label>
+            <select class="form-control select2" id="indice_documento_id" name="documento_id" style="width: 100%;" required>
+              <option value="">Seleccionar documento...</option>
+            </select>
+            <small class="form-text text-muted">Solo se muestran documentos que no tienen índice</small>
+          </div>
+          <div class="form-group">
+            <label for="indice_contenido_indexado">Contenido Indexado <span class="text-danger">*</span></label>
+            <textarea class="form-control" id="indice_contenido_indexado" name="contenido_indexado" rows="8" required placeholder="Texto completo del documento para indexación..."></textarea>
+            <small class="form-text text-muted">Texto completo que se utilizará para la búsqueda full-text</small>
+          </div>
+          <div class="form-group">
+            <label for="indice_palabras_clave_indexadas">Palabras Clave Indexadas</label>
+            <textarea class="form-control" id="indice_palabras_clave_indexadas" name="palabras_clave_indexadas" rows="3" placeholder="palabra1, palabra2, palabra3..."></textarea>
+            <small class="form-text text-muted">Palabras clave separadas por comas o espacios</small>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Búsqueda -->
+<div class="modal fade" id="modalBusqueda" tabindex="-1" role="dialog" aria-labelledby="modalBusquedaLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalBusquedaLabel">Nueva Búsqueda</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form id="formBusqueda">
+        <div class="modal-body">
+          <input type="hidden" id="busqueda_id" name="busqueda_id">
+          <div class="form-group">
+            <label for="busqueda_termino_busqueda">Término de Búsqueda <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="busqueda_termino_busqueda" name="termino_busqueda" required placeholder="Ingrese el término de búsqueda...">
+          </div>
+          <div class="form-group">
+            <label for="busqueda_usuario_id">Usuario</label>
+            <select class="form-control select2" id="busqueda_usuario_id" name="usuario_id" style="width: 100%;">
+              <option value="">Seleccionar usuario...</option>
+            </select>
+            <small class="form-text text-muted">Dejar vacío para búsquedas anónimas</small>
+          </div>
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="busqueda_resultados_encontrados">Resultados Encontrados</label>
+                <input type="number" class="form-control" id="busqueda_resultados_encontrados" name="resultados_encontrados" value="0" min="0">
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="busqueda_ip_address">IP Address</label>
+                <input type="text" class="form-control" id="busqueda_ip_address" name="ip_address" placeholder="192.168.1.1">
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="busqueda_filtros_aplicados">Filtros Aplicados (JSON)</label>
+            <textarea class="form-control json-input" id="busqueda_filtros_aplicados" name="filtros_aplicados" rows="4" placeholder='{"tipo": "documento", "fecha_desde": "2024-01-01", "fecha_hasta": "2024-12-31"}'></textarea>
+            <small class="form-text text-muted">Filtros aplicados en formato JSON (opcional)</small>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% include 'Nucleo/abajo.html' %}
+
+{% block extra_js %}
+<!-- DataTables JS - Local -->
+<script src="{% static 'DataTables/js/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'DataTables/js/dataTables.bootstrap4.min.js' %}"></script>
+<script src="{% static 'plugins/datatables-responsive/js/dataTables.responsive.min.js' %}"></script>
+<script src="{% static 'plugins/datatables-responsive/js/responsive.bootstrap4.min.js' %}"></script>
+<!-- SweetAlert2 JS -->
+<script src="{% static 'plugins/sweetalert2/sweetalert2.min.js' %}"></script>
+<!-- Select2 JS -->
+<script src="{% static 'plugins/select2/js/select2.full.min.js' %}"></script>
+<!-- Búsqueda JS -->
+<script src="{% static 'js/busqueda.js' %}"></script>
+
+<script>
+  // URLs para las peticiones AJAX
+  const BUSQUEDA_URLS = {
+    indicesList: '{% url "busqueda:indices_list" %}',
+    indiceCreate: '{% url "busqueda:indice_create" %}',
+    indiceUpdate: function(id) { return '{% url "busqueda:indice_update" 0 %}'.replace('0', id); },
+    indiceDelete: function(id) { return '{% url "busqueda:indice_delete" 0 %}'.replace('0', id); },
+    indiceDetail: function(id) { return '{% url "busqueda:indice_detail" 0 %}'.replace('0', id); },
+    busquedasList: '{% url "busqueda:busquedas_list" %}',
+    busquedaCreate: '{% url "busqueda:busqueda_create" %}',
+    busquedaUpdate: function(id) { return '{% url "busqueda:busqueda_update" 0 %}'.replace('0', id); },
+    busquedaDelete: function(id) { return '{% url "busqueda:busqueda_delete" 0 %}'.replace('0', id); },
+    busquedaDetail: function(id) { return '{% url "busqueda:busqueda_detail" 0 %}'.replace('0', id); },
+    documentosForSelect: '{% url "busqueda:documentos_for_select" %}',
+    usuariosForSelect: '{% url "busqueda:usuarios_for_select" %}',
+  };
+
+  // Inicializar cuando el DOM esté listo
+  $(document).ready(function() {
+    initBusqueda();
+  });
+</script>
+{% endblock %}
+
+
+

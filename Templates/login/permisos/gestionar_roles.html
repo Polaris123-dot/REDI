@@ -1,0 +1,223 @@
+{% load static %}
+
+{% include 'Nucleo/arriba.html' %}
+{% include 'Nucleo/centro.html' %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'plugins/select2/css/select2.min.css' %}">
+<style>
+  .role-card {
+    margin-bottom: 1rem;
+    border-left: 4px solid #007bff;
+  }
+  
+  .role-card.super-admin {
+    border-left-color: #dc3545;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1 class="m-0">
+          <i class="fas fa-user-tag mr-2"></i>
+          Gestionar Roles
+        </h1>
+      </div>
+      <div class="col-sm-6">
+        <ol class="breadcrumb float-sm-right">
+          <!-- TODO: Crear vista y URL para 'panel' y 'panel_permisos' -->
+          <li class="breadcrumb-item"><a href="#">Panel</a></li>
+          <li class="breadcrumb-item"><a href="#">Permisos</a></li>
+          <li class="breadcrumb-item active">Roles</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+<section class="content">
+  <div class="container-fluid">
+    <div class="row">
+      <!-- Formulario para crear nuevo rol -->
+      <div class="col-md-4">
+        <div class="card card-outline card-primary">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fas fa-plus mr-2"></i>
+              Crear Nuevo Rol
+            </h3>
+          </div>
+          <form method="post" id="rol-form">
+            {% csrf_token %}
+            <div class="card-body">
+              <div class="form-group">
+                <label>Nombre del Rol</label>
+                <input type="text" name="nombre" class="form-control" required placeholder="Ej: Editor, Revisor">
+              </div>
+              
+              <div class="form-group">
+                <label>Descripción</label>
+                <textarea name="descripcion" class="form-control" rows="3" placeholder="Descripción del rol..."></textarea>
+              </div>
+              
+              <div class="form-group">
+                <div class="custom-control custom-checkbox">
+                  <input type="checkbox" class="custom-control-input" id="es_super_admin" name="es_super_admin">
+                  <label class="custom-control-label" for="es_super_admin">
+                    Super Administrador (todos los permisos)
+                  </label>
+                </div>
+              </div>
+              
+              <div class="form-group" id="acciones-group">
+                <label>Acciones del Rol</label>
+                <select name="acciones" id="acciones" class="form-control select2" multiple style="width: 100%;">
+                  {% for accion in acciones %}
+                    <option value="{{ accion.id }}">{{ accion.nombre }} ({{ accion.codigo }})</option>
+                  {% endfor %}
+                </select>
+                <small class="form-text text-muted">
+                  Selecciona las acciones que tendrá este rol.
+                </small>
+              </div>
+            </div>
+            <div class="card-footer">
+              <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save mr-1"></i>
+                Crear Rol
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+      
+      <!-- Lista de roles existentes -->
+      <div class="col-md-8">
+        <div class="card card-outline card-info">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fas fa-list mr-2"></i>
+              Roles Existentes
+            </h3>
+          </div>
+          <div class="card-body">
+            {% for rol in roles %}
+              <div class="card role-card {% if rol.es_super_admin %}super-admin{% endif %}" style="margin-bottom: 1rem;">
+                <div class="card-body">
+                  <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                      <h5>
+                        {{ rol.nombre }}
+                        {% if rol.es_super_admin %}
+                          <span class="badge badge-danger">Super Admin</span>
+                        {% endif %}
+                        {% if not rol.activo %}
+                          <span class="badge badge-secondary">Inactivo</span>
+                        {% endif %}
+                      </h5>
+                      {% if rol.descripcion %}
+                        <p class="text-muted mb-2">{{ rol.descripcion }}</p>
+                      {% endif %}
+                      <div>
+                        <strong>Acciones:</strong>
+                        {% if rol.es_super_admin %}
+                          <span class="badge badge-success">Todas las acciones</span>
+                        {% else %}
+                          {% for accion in rol.acciones.all %}
+                            <span class="badge badge-info">{{ accion.nombre }}</span>
+                          {% empty %}
+                            <span class="text-muted">Sin acciones asignadas</span>
+                          {% endfor %}
+                        {% endif %}
+                      </div>
+                    </div>
+                    <div>
+                      <span class="badge badge-light">
+                        {{ rol.permisos_asignados.count }} usuario(s)
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            {% empty %}
+              <div class="alert alert-info">
+                <i class="fas fa-info-circle mr-2"></i>
+                No hay roles creados. Crea el primer rol usando el formulario.
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'plugins/select2/js/select2.full.min.js' %}"></script>
+<script>
+  $(document).ready(function() {
+    // Inicializar Select2
+    $('#acciones').select2({
+      placeholder: "Selecciona las acciones",
+      allowClear: true
+    });
+    
+    // Ocultar acciones si es super admin
+    $('#es_super_admin').on('change', function() {
+      if ($(this).is(':checked')) {
+        $('#acciones-group').slideUp();
+      } else {
+        $('#acciones-group').slideDown();
+      }
+    });
+    
+    // Enviar formulario con AJAX
+    $('#rol-form').on('submit', function(e) {
+      e.preventDefault();
+      
+      var formData = new FormData(this);
+      
+      $.ajax({
+        url: window.location.href,
+        type: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function(response) {
+          if (response.success) {
+            Swal.fire({
+              icon: 'success',
+              title: 'Éxito',
+              text: response.message || 'Rol creado correctamente.',
+              showConfirmButton: true
+            }).then(() => {
+              location.reload();
+            });
+          } else {
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: response.message || 'Error al crear el rol.'
+            });
+          }
+        },
+        error: function() {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Error al procesar la solicitud.'
+          });
+        }
+      });
+    });
+  });
+</script>
+{% endblock %}
+
+{% include 'Nucleo/abajo.html' %}
+

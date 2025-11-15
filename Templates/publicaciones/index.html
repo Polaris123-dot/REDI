@@ -1,0 +1,363 @@
+{% load static %}
+{% include 'Nucleo/arriba.html' %}
+
+{% block extra_css %}
+<!-- DataTables CSS - Local -->
+<link rel="stylesheet" href="{% static 'DataTables/css/dataTables.bootstrap4.min.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/datatables-responsive/css/responsive.bootstrap4.min.css' %}">
+<!-- Select2 CSS -->
+<link rel="stylesheet" href="{% static 'plugins/select2/css/select2.min.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css' %}">
+<!-- SweetAlert2 CSS -->
+<link rel="stylesheet" href="{% static 'plugins/sweetalert2/sweetalert2.min.css' %}">
+<style>
+  /* Estilos para tabs */
+  .nav-tabs .nav-link {
+    color: #495057;
+  }
+
+  .nav-tabs .nav-link.active {
+    color: #007bff;
+    font-weight: 600;
+  }
+
+  /* Estilos responsivos para botones */
+  .btn-group-sm .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+  }
+
+  /* En pantallas pequeñas, solo mostrar iconos */
+  @media (max-width: 767px) {
+    .btn-group-sm .btn span {
+      display: none !important;
+    }
+
+    .btn-group-sm .btn {
+      padding: 0.25rem 0.4rem;
+    }
+  }
+
+  /* En pantallas medianas y grandes, mostrar texto */
+  @media (min-width: 768px) {
+    .btn-group-sm .btn span {
+      display: inline !important;
+    }
+  }
+
+  /* Loading overlay */
+  .loading-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .loading-overlay.show {
+    display: flex;
+  }
+
+  .spinner-border-custom {
+    width: 3rem;
+    height: 3rem;
+    border-width: 0.3rem;
+  }
+
+  /* Select2 styling for multi-select */
+  .select2-container {
+    width: 100% !important;
+  }
+
+  /* Estilos para badges de estado */
+  .badge-estado {
+    font-size: 0.85rem;
+    padding: 0.35em 0.65em;
+  }
+</style>
+{% endblock %}
+
+{% include 'Nucleo/sidebar.html' %}
+
+<!-- Content Wrapper. Contains page content -->
+<div class="content-wrapper">
+  <!-- Content Header -->
+  <div class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-sm-6">
+          <h1 class="m-0"><i class="fas fa-book"></i> Publicaciones</h1>
+        </div>
+        <div class="col-sm-6">
+          <ol class="breadcrumb float-sm-right d-none d-sm-flex">
+            <li class="breadcrumb-item"><a href="{% url 'usuarios:panel' %}">Inicio</a></li>
+            <li class="breadcrumb-item active">Publicaciones</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main content -->
+  <section class="content">
+    <div class="container-fluid">
+      <!-- Mensajes -->
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+        {% endfor %}
+      {% endif %}
+
+      <!-- Card principal -->
+      <div class="card card-primary">
+        <div class="card-header">
+          <h3 class="card-title"><i class="fas fa-list"></i> Lista de Publicaciones</h3>
+          <div class="card-tools">
+            {% if perms.publicaciones.add_publicacion or user.is_superuser %}
+            <button type="button" class="btn btn-primary btn-sm" id="btnCrearPublicacion">
+              <i class="fas fa-plus"></i> Nueva Publicación
+            </button>
+            {% endif %}
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table id="tablePublicaciones" class="table table-bordered table-striped" style="width:100%">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Título</th>
+                  <th>Tipo</th>
+                  <th>Editor</th>
+                  <th>Estado</th>
+                  <th>Proyectos</th>
+                  <th>Fecha Creación</th>
+                  <th class="text-center">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Los datos se cargarán mediante DataTables -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- Modal para Publicación -->
+<div class="modal fade" id="modalPublicacion" tabindex="-1" role="dialog" aria-labelledby="modalPublicacionLabel"
+  aria-hidden="true">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalPublicacionLabel">Nueva Publicación</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form id="formPublicacion">
+        {% csrf_token %}
+        <div class="modal-body">
+          <input type="hidden" id="publicacionId" name="id">
+
+          <!-- Navegación por pestañas dentro del modal -->
+          <ul class="nav nav-tabs" id="publicacionTabs" role="tablist">
+            <li class="nav-item">
+              <a class="nav-link active" id="info-basica-tab" data-toggle="tab" href="#info-basica" role="tab">
+                <i class="fas fa-info-circle"></i> Información Básica
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" id="proyectos-tab" data-toggle="tab" href="#proyectos" role="tab">
+                <i class="fas fa-project-diagram"></i> Proyectos
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" id="clasificacion-tab" data-toggle="tab" href="#clasificacion" role="tab">
+                <i class="fas fa-tags"></i> Clasificación
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" id="identificadores-tab" data-toggle="tab" href="#identificadores" role="tab">
+                <i class="fas fa-barcode"></i> Identificadores
+              </a>
+            </li>
+          </ul>
+
+          <div class="tab-content mt-3" id="publicacionTabsContent">
+            <!-- Pestaña: Información Básica -->
+            <div class="tab-pane fade show active" id="info-basica" role="tabpanel">
+
+
+
+
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label for="publicacionTipo">Tipo de Publicación <span class="text-danger">*</span></label>
+                    <select class="form-control" id="publicacionTipo" name="tipo_publicacion" required>
+                      <option value="repositorio">Repositorio</option>
+                      <option value="revista">Revista</option>
+                      <option value="libro">Libro</option>
+                      <option value="congreso">Congreso</option>
+                      <option value="otro">Otro</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label for="publicacionEditor">Editor <span class="text-danger">*</span></label>
+                    <select class="form-control" id="publicacionEditor" name="editor_id" required>
+                      <option value="">Seleccione un editor</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label for="publicacionEstado">Estado <span class="text-danger">*</span></label>
+                    <select class="form-control" id="publicacionEstado" name="estado" required>
+                      <option value="borrador">Borrador</option>
+                      <option value="en_proceso">En Proceso</option>
+                      <option value="publicada">Publicada</option>
+                      <option value="archivada">Archivada</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label for="publicacionFechaPublicacion">Fecha de Publicación</label>
+                    <input type="datetime-local" class="form-control" id="publicacionFechaPublicacion" name="fecha_publicacion">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Pestaña: Proyectos -->
+            <div class="tab-pane fade" id="proyectos" role="tabpanel">
+              <div class="form-group">
+                <label>Proyectos</label>
+                <select class="form-control select2" id="publicacionProyectos" name="proyectos_ids" multiple style="width: 100%;">
+                </select>
+                <small class="form-text text-muted">Seleccione uno o más proyectos para incluir en la publicación</small>
+              </div>
+            </div>
+
+            <!-- Pestaña: Clasificación -->
+            <div class="tab-pane fade" id="clasificacion" role="tabpanel">
+              <div class="form-group">
+                <label>Categorías</label>
+                <select class="form-control select2" id="publicacionCategorias" name="categorias_ids" multiple style="width: 100%;">
+                </select>
+                <small class="form-text text-muted">Seleccione una o más categorías</small>
+              </div>
+
+              <div class="form-group">
+                <label>Etiquetas</label>
+                <select class="form-control select2" id="publicacionEtiquetas" name="etiquetas_ids" multiple style="width: 100%;">
+                </select>
+                <small class="form-text text-muted">Seleccione una o más etiquetas</small>
+              </div>
+            </div>
+
+            <!-- Pestaña: Identificadores -->
+            <div class="tab-pane fade" id="identificadores" role="tabpanel">
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label for="publicacionISSN">ISSN</label>
+                    <input type="text" class="form-control" id="publicacionISSN" name="issn" placeholder="1234-5678">
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label for="publicacionISBN">ISBN</label>
+                    <input type="text" class="form-control" id="publicacionISBN" name="isbn" placeholder="978-0-123456-78-9">
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="publicacionDOI">DOI</label>
+                <input type="text" class="form-control" id="publicacionDOI" name="doi" placeholder="10.xxxx/xxxx">
+              </div>
+
+              <div class="form-group">
+                <label for="publicacionUrlExterna">URL Externa</label>
+                <div class="input-group">
+                  <input type="url" class="form-control" id="publicacionUrlExterna" name="url_externa" placeholder="https://ejemplo.com/publicacion">
+                  <div class="input-group-append">
+                    <button class="btn btn-outline-secondary" type="button" id="btnGenerarUrlExterna">Generar URL</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner-border spinner-border-custom text-light" role="status">
+    <span class="sr-only">Cargando...</span>
+  </div>
+</div>
+
+{% include 'Nucleo/abajo.html' %}
+
+<!-- DataTables JS -->
+<script src="{% static 'DataTables/js/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'DataTables/js/dataTables.bootstrap4.min.js' %}"></script>
+<script src="{% static 'plugins/datatables-responsive/js/dataTables.responsive.min.js' %}"></script>
+<script src="{% static 'plugins/datatables-responsive/js/responsive.bootstrap4.min.js' %}"></script>
+<!-- Select2 JS -->
+<script src="{% static 'plugins/select2/js/select2.full.min.js' %}"></script>
+<!-- SweetAlert2 JS -->
+<script src="{% static 'plugins/sweetalert2/sweetalert2.all.min.js' %}"></script>
+
+<script>
+  // URLs usando Django URL reverse
+  const PUBLICACIONES_URLS = {
+    publicacionesList: "{% url 'publicaciones:publicaciones_list' %}",
+    publicacionCreate: "{% url 'publicaciones:publicacion_create' %}",
+    publicacionDetail: function (id) {
+      return "{% url 'publicaciones:publicacion_detail' 0 %}".replace('0', id.toString());
+    },
+    publicacionUpdate: function (id) {
+      return "{% url 'publicaciones:publicacion_update' 0 %}".replace('0', id.toString());
+    },
+    publicacionDelete: function (id) {
+      return "{% url 'publicaciones:publicacion_delete' 0 %}".replace('0', id.toString());
+    },
+    generarSlugPreview: "{% url 'publicaciones:generar_slug_preview' %}",
+    proyectosForSelect: "{% url 'publicaciones:proyectos_for_select' %}",
+    categoriasForSelect: "{% url 'publicaciones:categorias_for_select' %}",
+    etiquetasForSelect: "{% url 'publicaciones:etiquetas_for_select' %}",
+    usuariosForSelect: "{% url 'publicaciones:usuarios_for_select' %}",
+    catalogoPublicoBuscar: "{% url 'catalogo_publico:buscar' %}",
+  };
+</script>
+
+<!-- Script de publicaciones -->
+<script src="{% static 'js/publicaciones.js' %}"></script>

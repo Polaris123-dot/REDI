@@ -1,0 +1,671 @@
+{% load static %}
+{% include 'Nucleo/arriba.html' %}
+
+{% block extra_css %}
+<!-- DataTables CSS - Local -->
+<link rel="stylesheet" href="{% static 'DataTables/css/dataTables.bootstrap4.min.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/datatables-responsive/css/responsive.bootstrap4.min.css' %}">
+<!-- Select2 CSS -->
+<link rel="stylesheet" href="{% static 'plugins/select2/css/select2.min.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css' %}">
+<!-- SweetAlert2 CSS -->
+<link rel="stylesheet" href="{% static 'plugins/sweetalert2/sweetalert2.min.css' %}">
+<style>
+  /* Estilos para tabs */
+  .nav-tabs .nav-link {
+    color: #495057;
+  }
+
+  .nav-tabs .nav-link.active {
+    color: #007bff;
+    font-weight: 600;
+  }
+
+  /* Estilos responsivos para botones */
+  .btn-group-sm .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+  }
+
+  /* En pantallas pequeñas, solo mostrar iconos */
+  @media (max-width: 767px) {
+    .btn-group-sm .btn span {
+      display: none !important;
+    }
+
+    .btn-group-sm .btn {
+      padding: 0.25rem 0.4rem;
+    }
+  }
+
+  /* En pantallas medianas y grandes, mostrar texto */
+  @media (min-width: 768px) {
+    .btn-group-sm .btn span {
+      display: inline !important;
+    }
+  }
+
+  /* Loading overlay */
+  .loading-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .loading-overlay.show {
+    display: flex;
+  }
+
+  .spinner-border-custom {
+    width: 3rem;
+    height: 3rem;
+    border-width: 0.3rem;
+  }
+
+  /* Select2 styling */
+  .select2-container {
+    width: 100% !important;
+  }
+
+  /* Estilos para estrellas de calificación */
+  .rating-stars {
+    color: #ffc107;
+    font-size: 1.2rem;
+  }
+</style>
+{% endblock %}
+
+{% include 'Nucleo/centro.html' %}
+
+<!-- Content Header -->
+<div class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1 class="m-0">Interacción</h1>
+      </div>
+      <div class="col-sm-6">
+        <ol class="breadcrumb float-sm-right d-none d-sm-flex">
+          <li class="breadcrumb-item"><a href="{% url 'usuarios:panel' %}">Inicio</a></li>
+          <li class="breadcrumb-item active">Interacción</li>
+        </ol>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-12">
+        <div class="btn-group" role="group">
+          <button type="button" class="btn btn-primary btn-sm" onclick="$('#comentarios-tab').tab('show');">
+            <i class="fas fa-comments"></i> Comentarios
+          </button>
+          <button type="button" class="btn btn-warning btn-sm" onclick="$('#valoraciones-tab').tab('show');">
+            <i class="fas fa-star"></i> Valoraciones
+          </button>
+          <button type="button" class="btn btn-info btn-sm" onclick="$('#citas-tab').tab('show');">
+            <i class="fas fa-quote-right"></i> Citas
+          </button>
+          <button type="button" class="btn btn-success btn-sm" onclick="$('#referencias-tab').tab('show');">
+            <i class="fas fa-book"></i> Referencias
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Main content -->
+<section class="content">
+  <div class="container-fluid">
+
+    <!-- Tabs Navigation -->
+    <ul class="nav nav-tabs" id="interaccionTabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <a class="nav-link active" id="comentarios-tab" data-toggle="tab" href="#comentarios" role="tab"
+          aria-controls="comentarios" aria-selected="true">
+          <i class="fas fa-comments"></i> Comentarios
+        </a>
+      </li>
+      <li class="nav-item" role="presentation">
+        <a class="nav-link" id="valoraciones-tab" data-toggle="tab" href="#valoraciones" role="tab"
+          aria-controls="valoraciones" aria-selected="false">
+          <i class="fas fa-star"></i> Valoraciones
+        </a>
+      </li>
+      <li class="nav-item" role="presentation">
+        <a class="nav-link" id="citas-tab" data-toggle="tab" href="#citas" role="tab"
+          aria-controls="citas" aria-selected="false">
+          <i class="fas fa-quote-right"></i> Citas
+        </a>
+      </li>
+      <li class="nav-item" role="presentation">
+        <a class="nav-link" id="referencias-tab" data-toggle="tab" href="#referencias" role="tab"
+          aria-controls="referencias" aria-selected="false">
+          <i class="fas fa-book"></i> Referencias Bibliográficas
+        </a>
+      </li>
+    </ul>
+
+    <!-- Tabs Content -->
+    <div class="tab-content" id="interaccionTabsContent">
+
+      <!-- Tab Comentarios -->
+      <div class="tab-pane fade show active" id="comentarios" role="tabpanel" aria-labelledby="comentarios-tab">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fas fa-comments"></i> Gestión de Comentarios
+            </h3>
+            <div class="card-tools">
+              <button type="button" class="btn btn-primary btn-sm" id="btnCrearComentario">
+                <i class="fas fa-plus"></i> Nuevo Comentario
+              </button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table id="tableComentarios" class="table table-bordered table-striped" style="width:100%">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Documento</th>
+                    <th>Usuario</th>
+                    <th>Contenido</th>
+                    <th>Es Público</th>
+                    <th>Es Moderado</th>
+                    <th>Respuestas</th>
+                    <th>Fecha</th>
+                    <th class="text-center">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Valoraciones -->
+      <div class="tab-pane fade" id="valoraciones" role="tabpanel" aria-labelledby="valoraciones-tab">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fas fa-star"></i> Gestión de Valoraciones
+            </h3>
+            <div class="card-tools">
+              <button type="button" class="btn btn-primary btn-sm" id="btnCrearValoracion">
+                <i class="fas fa-plus"></i> Nueva Valoración
+              </button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table id="tableValoraciones" class="table table-bordered table-striped" style="width:100%">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Documento</th>
+                    <th>Usuario</th>
+                    <th>Calificación</th>
+                    <th>Comentario</th>
+                    <th>Fecha</th>
+                    <th class="text-center">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Citas -->
+      <div class="tab-pane fade" id="citas" role="tabpanel" aria-labelledby="citas-tab">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fas fa-quote-right"></i> Gestión de Citas
+            </h3>
+            <div class="card-tools">
+              <button type="button" class="btn btn-primary btn-sm" id="btnCrearCita">
+                <i class="fas fa-plus"></i> Nueva Cita
+              </button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table id="tableCitas" class="table table-bordered table-striped" style="width:100%">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Documento Citado</th>
+                    <th>Documento que Cita</th>
+                    <th>Contexto</th>
+                    <th>Fecha</th>
+                    <th class="text-center">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Referencias Bibliográficas -->
+      <div class="tab-pane fade" id="referencias" role="tabpanel" aria-labelledby="referencias-tab">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fas fa-book"></i> Gestión de Referencias Bibliográficas
+            </h3>
+            <div class="card-tools">
+              <button type="button" class="btn btn-primary btn-sm" id="btnCrearReferencia">
+                <i class="fas fa-plus"></i> Nueva Referencia
+              </button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table id="tableReferencias" class="table table-bordered table-striped" style="width:100%">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Documento</th>
+                    <th>Tipo</th>
+                    <th>Título</th>
+                    <th>Autores</th>
+                    <th>Año</th>
+                    <th>DOI</th>
+                    <th>Orden</th>
+                    <th class="text-center">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- Modal Comentario -->
+<div class="modal fade" id="modalComentario" tabindex="-1" role="dialog" aria-labelledby="modalComentarioLabel"
+  aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalComentarioLabel">Nuevo Comentario</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form id="formComentario">
+        {% csrf_token %}
+        <div class="modal-body">
+          <input type="hidden" id="comentarioId" name="id">
+
+          <div class="form-group">
+            <label for="comentarioDocumento">Documento <span class="text-danger">*</span></label>
+            <select class="form-control" id="comentarioDocumento" name="documento_id" required>
+              <option value="">Seleccione un documento...</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="comentarioUsuario">Usuario <span class="text-danger">*</span></label>
+            <select class="form-control" id="comentarioUsuario" name="usuario_id" required>
+              <option value="">Seleccione un usuario...</option>
+            </select>
+            <small class="form-text text-muted">Por defecto se usará tu usuario</small>
+          </div>
+
+          <div class="form-group">
+            <label for="comentarioPadre">Comentario Padre (opcional)</label>
+            <select class="form-control" id="comentarioPadre" name="comentario_padre_id">
+              <option value="">Ninguno (comentario principal)</option>
+            </select>
+            <small class="form-text text-muted">Seleccione si es una respuesta a otro comentario</small>
+          </div>
+
+          <div class="form-group">
+            <label for="comentarioContenido">Contenido <span class="text-danger">*</span></label>
+            <textarea class="form-control" id="comentarioContenido" name="contenido" rows="5" required></textarea>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-check">
+                <input type="checkbox" class="form-check-input" id="comentarioEsModerado" name="es_moderado">
+                <label class="form-check-label" for="comentarioEsModerado">Es Moderado</label>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-check">
+                <input type="checkbox" class="form-check-input" id="comentarioEsPublico" name="es_publico" checked>
+                <label class="form-check-label" for="comentarioEsPublico">Es Público</label>
+              </div>
+            </div>
+          </div>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> Guardar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Valoracion -->
+<div class="modal fade" id="modalValoracion" tabindex="-1" role="dialog" aria-labelledby="modalValoracionLabel"
+  aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalValoracionLabel">Nueva Valoración</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form id="formValoracion">
+        {% csrf_token %}
+        <div class="modal-body">
+          <input type="hidden" id="valoracionId" name="id">
+
+          <div class="form-group">
+            <label for="valoracionDocumento">Documento <span class="text-danger">*</span></label>
+            <select class="form-control" id="valoracionDocumento" name="documento_id" required>
+              <option value="">Seleccione un documento...</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="valoracionUsuario">Usuario <span class="text-danger">*</span></label>
+            <select class="form-control" id="valoracionUsuario" name="usuario_id" required>
+              <option value="">Seleccione un usuario...</option>
+            </select>
+            <small class="form-text text-muted">Por defecto se usará tu usuario</small>
+          </div>
+
+          <div class="form-group">
+            <label for="valoracionCalificacion">Calificación <span class="text-danger">*</span></label>
+            <select class="form-control" id="valoracionCalificacion" name="calificacion" required>
+              <option value="">Seleccione...</option>
+              <option value="1">1 - Muy Malo</option>
+              <option value="2">2 - Malo</option>
+              <option value="3">3 - Regular</option>
+              <option value="4">4 - Bueno</option>
+              <option value="5">5 - Excelente</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="valoracionComentario">Comentario (opcional)</label>
+            <textarea class="form-control" id="valoracionComentario" name="comentario" rows="3"></textarea>
+          </div>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> Guardar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Cita -->
+<div class="modal fade" id="modalCita" tabindex="-1" role="dialog" aria-labelledby="modalCitaLabel"
+  aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalCitaLabel">Nueva Cita</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form id="formCita">
+        {% csrf_token %}
+        <div class="modal-body">
+          <input type="hidden" id="citaId" name="id">
+
+          <div class="form-group">
+            <label for="citaDocumentoCitado">Documento Citado <span class="text-danger">*</span></label>
+            <select class="form-control" id="citaDocumentoCitado" name="documento_citado_id" required>
+              <option value="">Seleccione un documento...</option>
+            </select>
+            <small class="form-text text-muted">Documento que es citado</small>
+          </div>
+
+          <div class="form-group">
+            <label for="citaDocumentoQueCita">Documento que Cita <span class="text-danger">*</span></label>
+            <select class="form-control" id="citaDocumentoQueCita" name="documento_que_cita_id" required>
+              <option value="">Seleccione un documento...</option>
+            </select>
+            <small class="form-text text-muted">Documento que realiza la cita</small>
+          </div>
+
+          <div class="form-group">
+            <label for="citaContexto">Contexto (opcional)</label>
+            <textarea class="form-control" id="citaContexto" name="contexto" rows="3"
+              placeholder="Contexto o fragmento donde se realiza la cita"></textarea>
+          </div>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> Guardar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Referencia Bibliográfica -->
+<div class="modal fade" id="modalReferencia" tabindex="-1" role="dialog" aria-labelledby="modalReferenciaLabel"
+  aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalReferenciaLabel">Nueva Referencia Bibliográfica</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form id="formReferencia">
+        {% csrf_token %}
+        <div class="modal-body">
+          <input type="hidden" id="referenciaId" name="id">
+
+          <div class="form-group">
+            <label for="referenciaDocumento">Documento <span class="text-danger">*</span></label>
+            <select class="form-control" id="referenciaDocumento" name="documento_id" required>
+              <option value="">Seleccione un documento...</option>
+            </select>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="referenciaTipo">Tipo <span class="text-danger">*</span></label>
+                <select class="form-control" id="referenciaTipo" name="tipo" required>
+                  <option value="articulo">Artículo</option>
+                  <option value="libro">Libro</option>
+                  <option value="capitulo">Capítulo</option>
+                  <option value="tesis">Tesis</option>
+                  <option value="congreso">Congreso</option>
+                  <option value="patente">Patente</option>
+                  <option value="web">Web</option>
+                  <option value="otros" selected>Otros</option>
+                </select>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="referenciaOrden">Orden</label>
+                <input type="number" class="form-control" id="referenciaOrden" name="orden" value="0" min="0">
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="referenciaTitulo">Título <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="referenciaTitulo" name="titulo" required>
+          </div>
+
+          <div class="form-group">
+            <label for="referenciaAutores">Autores</label>
+            <textarea class="form-control" id="referenciaAutores" name="autores" rows="2"
+              placeholder="Lista de autores separados por comas"></textarea>
+          </div>
+
+          <div class="row">
+            <div class="col-md-4">
+              <div class="form-group">
+                <label for="referenciaAno">Año</label>
+                <input type="number" class="form-control" id="referenciaAno" name="año" min="1000" max="9999">
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-group">
+                <label for="referenciaDOI">DOI</label>
+                <input type="text" class="form-control" id="referenciaDOI" name="doi">
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-group">
+                <label for="referenciaURL">URL</label>
+                <input type="url" class="form-control" id="referenciaURL" name="url">
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="referenciaCitaCompleta">Cita Completa (opcional)</label>
+            <textarea class="form-control" id="referenciaCitaCompleta" name="cita_completa" rows="3"
+              placeholder="Cita bibliográfica completa en formato estándar"></textarea>
+          </div>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> Guardar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner-border spinner-border-custom text-light" role="status">
+    <span class="sr-only">Cargando...</span>
+  </div>
+</div>
+
+{% include 'Nucleo/abajo.html' %}
+
+{% block extra_js %}
+<!-- Verificar que jQuery esté cargado antes de continuar -->
+<script>
+  if (typeof jQuery === 'undefined') {
+    console.error('jQuery no está cargado. Asegúrate de que jQuery se cargue antes de este bloque.');
+  }
+</script>
+<!-- DataTables JS - Local -->
+<script src="{% static 'DataTables/js/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'DataTables/js/dataTables.bootstrap4.min.js' %}"></script>
+<script src="{% static 'plugins/datatables-responsive/js/dataTables.responsive.min.js' %}"></script>
+<script src="{% static 'plugins/datatables-responsive/js/responsive.bootstrap4.min.js' %}"></script>
+<!-- Select2 JS -->
+<script src="{% static 'plugins/select2/js/select2.full.min.js' %}"></script>
+<!-- SweetAlert2 JS -->
+<script src="{% static 'plugins/sweetalert2/sweetalert2.all.min.js' %}"></script>
+
+<script>
+  // URLs usando Django URL reverse
+  const INTERACCION_URLS = {
+    comentariosList: "{% url 'interaccion:comentarios_list' %}",
+    comentarioCreate: "{% url 'interaccion:comentario_create' %}",
+    comentarioDetail: function (id) {
+      return "{% url 'interaccion:comentario_detail' 0 %}".replace('0', id.toString());
+    },
+    comentarioUpdate: function (id) {
+      return "{% url 'interaccion:comentario_update' 0 %}".replace('0', id.toString());
+    },
+    comentarioDelete: function (id) {
+      return "{% url 'interaccion:comentario_delete' 0 %}".replace('0', id.toString());
+    },
+    valoracionesList: "{% url 'interaccion:valoraciones_list' %}",
+    valoracionCreate: "{% url 'interaccion:valoracion_create' %}",
+    valoracionDetail: function (id) {
+      return "{% url 'interaccion:valoracion_detail' 0 %}".replace('0', id.toString());
+    },
+    valoracionUpdate: function (id) {
+      return "{% url 'interaccion:valoracion_update' 0 %}".replace('0', id.toString());
+    },
+    valoracionDelete: function (id) {
+      return "{% url 'interaccion:valoracion_delete' 0 %}".replace('0', id.toString());
+    },
+    citasList: "{% url 'interaccion:citas_list' %}",
+    citaCreate: "{% url 'interaccion:cita_create' %}",
+    citaDetail: function (id) {
+      return "{% url 'interaccion:cita_detail' 0 %}".replace('0', id.toString());
+    },
+    citaUpdate: function (id) {
+      return "{% url 'interaccion:cita_update' 0 %}".replace('0', id.toString());
+    },
+    citaDelete: function (id) {
+      return "{% url 'interaccion:cita_delete' 0 %}".replace('0', id.toString());
+    },
+    referenciasList: "{% url 'interaccion:referencias_list' %}",
+    referenciaCreate: "{% url 'interaccion:referencia_create' %}",
+    referenciaDetail: function (id) {
+      return "{% url 'interaccion:referencia_detail' 0 %}".replace('0', id.toString());
+    },
+    referenciaUpdate: function (id) {
+      return "{% url 'interaccion:referencia_update' 0 %}".replace('0', id.toString());
+    },
+    referenciaDelete: function (id) {
+      return "{% url 'interaccion:referencia_delete' 0 %}".replace('0', id.toString());
+    },
+    documentosForSelect: "{% url 'interaccion:documentos_for_select' %}",
+    usuariosForSelect: "{% url 'interaccion:usuarios_for_select' %}"
+  };
+
+  // Función para obtener CSRF token
+  function getCSRFToken() {
+    const token = document.querySelector('[name=csrfmiddlewaretoken]');
+    return token ? token.value : '';
+  }
+  
+  // Hacer disponible globalmente
+  window.getCSRFToken = getCSRFToken;
+</script>
+
+<!-- Script principal de interacción -->
+<script src="{% static 'js/interaccion.js' %}"></script>
+{% endblock %}

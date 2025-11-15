@@ -1,0 +1,592 @@
+{% load static %}
+{% include 'Nucleo/arriba.html' %}
+
+{% block extra_css %}
+<!-- DataTables CSS -->
+<link rel="stylesheet" href="{% static 'DataTables/css/dataTables.bootstrap4.min.css' %}">
+<!-- DataTables Responsive CSS -->
+<link rel="stylesheet" href="{% static 'plugins/datatables-responsive/css/responsive.bootstrap4.min.css' %}">
+<style>
+  .progress-description a {
+    display: inline-block;
+    margin-top: 5px;
+    font-size: 0.85rem;
+    color: white !important;
+    opacity: 0.9;
+    transition: all 0.2s;
+  }
+
+  .progress-description a:hover {
+    opacity: 1;
+    text-decoration: none;
+    transform: translateX(3px);
+  }
+
+  /* Asegurar contraste en modo oscuro */
+  .dark-mode .progress-description a {
+    color: rgba(255,255,255,0.9) !important;
+  }
+
+  .dark-mode .progress-description a:hover {
+    color: white !important;
+  }
+
+  /* Efectos hover para las cards */
+  .hover-shadow {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .hover-shadow:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2) !important;
+  }
+
+  /* Animaciones para iconos */
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+  }
+
+  @keyframes swing {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(5deg); }
+    75% { transform: rotate(-5deg); }
+  }
+
+  @keyframes tada {
+    0% { transform: scale(1) rotate(0deg); }
+    10%, 20% { transform: scale(0.9) rotate(-3deg); }
+    30%, 50%, 70%, 90% { transform: scale(1.1) rotate(3deg); }
+    40%, 60%, 80% { transform: scale(1.1) rotate(-3deg); }
+    100% { transform: scale(1) rotate(0deg); }
+  }
+
+  @keyframes bounce {
+    0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+    40% { transform: translateY(-10px); }
+    60% { transform: translateY(-5px); }
+  }
+
+  .info-box-icon.pulse {
+    animation: pulse 2s infinite;
+  }
+
+  .info-box-icon.swing {
+    animation: swing 2s infinite;
+  }
+
+  .info-box-icon.tada {
+    animation: tada 2s infinite;
+  }
+
+  .info-box-icon.bounce {
+    animation: bounce 2s infinite;
+  }
+
+  /* Estilos para botones responsivos */
+  .btn-actions-cell {
+    white-space: nowrap;
+  }
+
+  /* Botones con texto en móvil */
+  .btn-responsive {
+    width: 100%;
+    margin-bottom: 2px;
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+  }
+
+  /* Botones con solo iconos en pantallas grandes */
+  .btn-icon-only {
+    min-width: 32px;
+    padding: 0.25rem 0.5rem;
+  }
+
+  .btn-icon-only i {
+    font-size: 0.875rem;
+  }
+
+  /* En pantallas pequeñas, mostrar solo botones con texto */
+  @media (max-width: 767.98px) {
+    .btn-group.d-none.d-md-inline-flex {
+      display: none !important;
+    }
+    
+    .btn-group-vertical.d-md-none {
+      display: flex !important;
+      width: 100%;
+    }
+  }
+
+  /* En pantallas medianas y grandes, mostrar solo botones con iconos */
+  @media (min-width: 768px) {
+    .btn-group-vertical.d-md-none {
+      display: none !important;
+    }
+    
+    .btn-group.d-none.d-md-inline-flex {
+      display: inline-flex !important;
+    }
+  }
+
+  /* Estilos para DataTables responsivo */
+  table.dataTable {
+    width: 100% !important;
+    margin: 0 auto;
+    clear: both;
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+
+  /* Mejorar el contraste en modo oscuro para DataTables */
+  body.dark-mode .dataTables_wrapper .dataTables_filter input,
+  body.dark-mode .dataTables_wrapper .dataTables_length select {
+    background-color: #1e1e2e;
+    color: #e0e0e0;
+    border-color: #2d2d44;
+  }
+
+  body.dark-mode .dataTables_wrapper .dataTables_paginate .paginate_button {
+    color: #e0e0e0 !important;
+  }
+
+  body.dark-mode .dataTables_wrapper .dataTables_info {
+    color: #e0e0e0;
+  }
+</style>
+{% endblock %}
+
+{% include 'Nucleo/centro.html' %}
+
+{% block content %}
+            <!-- Mensajes -->
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <!-- ========================================== -->
+            <!-- CARDS DE ESTADÍSTICAS -->
+            <!-- ========================================== -->
+            <div class="row mb-4">
+                <!-- Card 1 - Total Usuarios -->
+                <div class="col-lg-3 col-6 mb-4">
+                    <div class="info-box bg-gradient-info shadow-lg hover-shadow">
+                        <span class="info-box-icon pulse"><i class="fas fa-users"></i></span>
+                        <div class="info-box-content">
+                            <span class="info-box-text">Total de Usuarios</span>
+                            <span class="info-box-number">{{ total_usuarios }}</span>
+                            <div class="progress">
+                                <div class="progress-bar bg-white" style="width: 100%"></div>
+                            </div>
+                            <span class="progress-description">
+                                <a href="{% url 'usuarios:lista_usuarios' %}" class="text-white">
+                                    Ver todos <i class="fas fa-arrow-circle-right ml-1"></i>
+                                </a>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 2 - Usuarios Activos -->
+                <div class="col-lg-3 col-6 mb-4">
+                    <div class="info-box bg-gradient-success shadow-lg hover-shadow">
+                        <span class="info-box-icon swing"><i class="fas fa-user-check"></i></span>
+                        <div class="info-box-content">
+                            <span class="info-box-text">Usuarios Activos</span>
+                            <span class="info-box-number">{{ usuarios_activos }}</span>
+                            <div class="progress">
+                                <div class="progress-bar bg-white" style="width: {% widthratio usuarios_activos total_usuarios 100 %}%"></div>
+                            </div>
+                            <span class="progress-description">
+                                <a href="{% url 'usuarios:lista_usuarios' %}?estado=activo" class="text-white">
+                                    Ver activos <i class="fas fa-arrow-circle-right ml-1"></i>
+                                </a>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 3 - Roles -->
+                <div class="col-lg-3 col-6 mb-4">
+                    <div class="info-box bg-gradient-warning shadow-lg hover-shadow">
+                        <span class="info-box-icon tada"><i class="fas fa-users-cog"></i></span>
+                        <div class="info-box-content">
+                            <span class="info-box-text">Roles (Grupos)</span>
+                            <span class="info-box-number">{{ total_grupos }}</span>
+                            <div class="progress">
+                                <div class="progress-bar bg-white" style="width: 80%"></div>
+                            </div>
+                            <span class="progress-description">
+                                <a href="{% url 'usuarios:lista_grupos' %}" class="text-white">
+                                    Gestionar roles <i class="fas fa-arrow-circle-right ml-1"></i>
+                                </a>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 4 - Superusuarios -->
+                <div class="col-lg-3 col-6 mb-4">
+                    <div class="info-box bg-gradient-danger shadow-lg hover-shadow">
+                        <span class="info-box-icon bounce"><i class="fas fa-user-shield"></i></span>
+                        <div class="info-box-content">
+                            <span class="info-box-text">Superusuarios</span>
+                            <span class="info-box-number">{{ superusuarios }}</span>
+                            <div class="progress">
+                                <div class="progress-bar bg-white" style="width: 60%"></div>
+                            </div>
+                            <span class="progress-description">
+                                <a href="{% url 'usuarios:lista_usuarios' %}?tipo=superuser" class="text-white">
+                                    Ver detalles <i class="fas fa-arrow-circle-right ml-1"></i>
+                                </a>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-12 col-lg-9">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Lista de Usuarios</h3>
+                            <div class="card-tools">
+                                {% if perms.auth.add_user or user.is_superuser %}
+                                <a href="{% url 'usuarios:crear_usuario' %}" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-plus"></i> Nuevo Usuario
+                                </a>
+                                {% else %}
+                                <button type="button" class="btn btn-primary btn-sm" onclick="mostrarErrorPermiso()">
+                                    <i class="fas fa-plus"></i> Nuevo Usuario
+                                </button>
+                                {% endif %}
+                                {% if user.is_superuser %}
+                                <a href="{% url 'usuarios:lista_grupos' %}" class="btn btn-info btn-sm">
+                                    <i class="fas fa-users"></i> Gestionar Roles
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <!-- Tabla de usuarios -->
+                            <div class="table-responsive">
+                                <table id="tabla-usuarios" class="table table-bordered table-striped table-hover" style="width:100%">
+                                    <thead>
+                                        <tr>
+                                            <th>Usuario</th>
+                                            <th>Nombre Completo</th>
+                                            <th>Email</th>
+                                            <th>Roles</th>
+                                            <th>Estado</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for usuario in usuarios %}
+                                            <tr>
+                                                <td>{{ usuario.username }}</td>
+                                                <td>{{ usuario.get_full_name|default:"-" }}</td>
+                                                <td>{{ usuario.email|default:"-" }}</td>
+                                                <td>
+                                                    {% for grupo in usuario.groups.all %}
+                                                        <span class="badge badge-info">{{ grupo.name }}</span>
+                                                    {% empty %}
+                                                        <span class="text-muted">Sin roles</span>
+                                                    {% endfor %}
+                                                </td>
+                                                <td>
+                                                    {% if usuario.is_active %}
+                                                        <span class="badge badge-success">Activo</span>
+                                                    {% else %}
+                                                        <span class="badge badge-danger">Inactivo</span>
+                                                    {% endif %}
+                                                    {% if usuario.is_superuser %}
+                                                        <span class="badge badge-warning">Superuser</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td class="btn-actions-cell">
+                                                    <div class="btn-group-vertical btn-group-sm d-md-none" role="group">
+                                                        {% if perms.auth.view_user or user.is_superuser %}
+                                                        <a href="{% url 'usuarios:detalle_usuario' usuario.id %}" class="btn btn-info btn-responsive" title="Ver detalles">
+                                                            Ver
+                                                        </a>
+                                                        {% endif %}
+                                                        {% if perms.auth.change_user or user.is_superuser %}
+                                                        <a href="{% url 'usuarios:editar_usuario' usuario.id %}" class="btn btn-warning btn-responsive btn-editar" title="Editar"
+                                                           data-usuario="{{ usuario.username }}">
+                                                            Editar
+                                                        </a>
+                                                        {% else %}
+                                                        <button type="button" class="btn btn-warning btn-responsive btn-editar" title="Editar" 
+                                                                onclick="mostrarErrorPermiso()" data-usuario="{{ usuario.username }}">
+                                                            Editar
+                                                        </button>
+                                                        {% endif %}
+                                                        {% if perms.auth.delete_user or user.is_superuser %}
+                                                        {% if usuario != user %}
+                                                        <a href="{% url 'usuarios:eliminar_usuario' usuario.id %}" class="btn btn-danger btn-responsive btn-eliminar" title="Eliminar"
+                                                           data-usuario="{{ usuario.username }}">
+                                                            Eliminar
+                                                        </a>
+                                                        {% endif %}
+                                                        {% else %}
+                                                        {% if usuario != user %}
+                                                        <button type="button" class="btn btn-danger btn-responsive btn-eliminar" title="Eliminar"
+                                                                onclick="mostrarErrorPermiso()" data-usuario="{{ usuario.username }}">
+                                                            Eliminar
+                                                        </button>
+                                                        {% endif %}
+                                                        {% endif %}
+                                                    </div>
+                                                    <div class="btn-group btn-group-sm d-none d-md-inline-flex" role="group">
+                                                        {% if perms.auth.view_user or user.is_superuser %}
+                                                        <a href="{% url 'usuarios:detalle_usuario' usuario.id %}" class="btn btn-info btn-icon-only" title="Ver detalles">
+                                                            <i class="fas fa-eye"></i>
+                                                        </a>
+                                                        {% endif %}
+                                                        {% if perms.auth.change_user or user.is_superuser %}
+                                                        <a href="{% url 'usuarios:editar_usuario' usuario.id %}" class="btn btn-warning btn-icon-only btn-editar" title="Editar"
+                                                           data-usuario="{{ usuario.username }}">
+                                                            <i class="fas fa-edit"></i>
+                                                        </a>
+                                                        {% else %}
+                                                        <button type="button" class="btn btn-warning btn-icon-only btn-editar" title="Editar" 
+                                                                onclick="mostrarErrorPermiso()" data-usuario="{{ usuario.username }}">
+                                                            <i class="fas fa-edit"></i>
+                                                        </button>
+                                                        {% endif %}
+                                                        {% if perms.auth.delete_user or user.is_superuser %}
+                                                        {% if usuario != user %}
+                                                        <a href="{% url 'usuarios:eliminar_usuario' usuario.id %}" class="btn btn-danger btn-icon-only btn-eliminar" title="Eliminar"
+                                                           data-usuario="{{ usuario.username }}">
+                                                            <i class="fas fa-trash"></i>
+                                                        </a>
+                                                        {% endif %}
+                                                        {% else %}
+                                                        {% if usuario != user %}
+                                                        <button type="button" class="btn btn-danger btn-icon-only btn-eliminar" title="Eliminar"
+                                                                onclick="mostrarErrorPermiso()" data-usuario="{{ usuario.username }}">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                        {% endif %}
+                                                        {% endif %}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        {% empty %}
+                                            <tr>
+                                                <td colspan="6" class="text-center">No se encontraron usuarios</td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- La paginación será manejada por DataTables -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ========================================== -->
+                <!-- PANEL LATERAL DERECHO - ACCIONES RÁPIDAS -->
+                <!-- ========================================== -->
+                <div class="col-12 col-lg-3 mt-3 mt-lg-0">
+                    <div class="card card-primary">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-bolt"></i> Acciones Rápidas
+                            </h3>
+                        </div>
+                        <div class="card-body p-0">
+                            <ul class="nav nav-pills flex-column">
+                                {% if perms.auth.add_user or user.is_superuser %}
+                                <li class="nav-item">
+                                    <a href="{% url 'usuarios:crear_usuario' %}" class="nav-link">
+                                        <i class="fas fa-user-plus"></i> Nuevo Usuario
+                                    </a>
+                                </li>
+                                {% endif %}
+                                {% if user.is_superuser %}
+                                <li class="nav-item">
+                                    <a href="{% url 'usuarios:lista_grupos' %}" class="nav-link">
+                                        <i class="fas fa-users-cog"></i> Gestionar Roles
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{% url 'usuarios:crear_grupo' %}" class="nav-link">
+                                        <i class="fas fa-plus-circle"></i> Nuevo Rol
+                                    </a>
+                                </li>
+                                {% endif %}
+                                {% if user.is_staff %}
+                                <li class="nav-item">
+                                    <a href="{% url 'admin:index' %}" class="nav-link">
+                                        <i class="fas fa-cog"></i> Panel Admin Django
+                                    </a>
+                                </li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="card card-info">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-info-circle"></i> Información
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-sm">
+                                <strong>Total de Usuarios:</strong><br>
+                                <span class="badge badge-primary">{{ usuarios.paginator.count }}</span>
+                            </p>
+                            <p class="text-sm">
+                                <strong>Usuario Actual:</strong><br>
+                                <span class="text-muted">{{ request.user.username }}</span>
+                            </p>
+                            {% if request.user.is_superuser %}
+                                <span class="badge badge-warning">Superusuario</span>
+                            {% endif %}
+                            <hr>
+                            <p class="text-sm mb-1"><strong>Tus Permisos:</strong></p>
+                            <div class="mb-1">
+                                {% if perms.auth.view_user or user.is_superuser %}
+                                    <span class="badge badge-success"><i class="fas fa-check"></i> Ver</span>
+                                {% else %}
+                                    <span class="badge badge-secondary"><i class="fas fa-times"></i> Ver</span>
+                                {% endif %}
+                                {% if perms.auth.add_user or user.is_superuser %}
+                                    <span class="badge badge-success"><i class="fas fa-check"></i> Crear</span>
+                                {% else %}
+                                    <span class="badge badge-secondary"><i class="fas fa-times"></i> Crear</span>
+                                {% endif %}
+                                {% if perms.auth.change_user or user.is_superuser %}
+                                    <span class="badge badge-success"><i class="fas fa-check"></i> Editar</span>
+                                {% else %}
+                                    <span class="badge badge-secondary"><i class="fas fa-times"></i> Editar</span>
+                                {% endif %}
+                                {% if perms.auth.delete_user or user.is_superuser %}
+                                    <span class="badge badge-success"><i class="fas fa-check"></i> Eliminar</span>
+                                {% else %}
+                                    <span class="badge badge-secondary"><i class="fas fa-times"></i> Eliminar</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card card-success">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-book"></i> Ayuda
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-sm text-muted">
+                                Usa los botones para gestionar usuarios y roles del sistema.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- DataTables JS -->
+<script src="{% static 'DataTables/js/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'DataTables/js/dataTables.bootstrap4.min.js' %}"></script>
+<!-- DataTables Responsive (si está disponible) -->
+<script src="{% static 'plugins/datatables-responsive/js/responsive.bootstrap4.min.js' %}"></script>
+<script>
+function mostrarErrorPermiso() {
+    Swal.fire({
+        icon: 'warning',
+        title: 'Permisos Insuficientes',
+        text: 'No tienes los permisos necesarios para realizar esta acción. Contacta con un administrador si necesitas acceso.',
+        confirmButtonText: 'Entendido',
+        confirmButtonColor: '#3085d6'
+    });
+}
+
+// Inicializar DataTables con modo responsivo
+$(document).ready(function() {
+    $('#tabla-usuarios').DataTable({
+        responsive: true,
+        language: {
+            url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json',
+            search: "Buscar:",
+            lengthMenu: "Mostrar _MENU_ registros por página",
+            info: "Mostrando _START_ a _END_ de _TOTAL_ registros",
+            infoEmpty: "Mostrando 0 a 0 de 0 registros",
+            infoFiltered: "(filtrado de _MAX_ registros totales)",
+            paginate: {
+                first: "Primero",
+                last: "Último",
+                next: "Siguiente",
+                previous: "Anterior"
+            },
+            zeroRecords: "No se encontraron registros",
+            emptyTable: "No hay datos disponibles en la tabla"
+        },
+        pageLength: 10,
+        lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "Todos"]],
+        order: [[0, 'asc']],
+        columnDefs: [
+            {
+                targets: -1, // Última columna (Acciones)
+                orderable: false,
+                searchable: false
+            }
+        ],
+        dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>rt<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+        drawCallback: function() {
+            // Re-inicializar eventos después de que DataTables redibuje la tabla
+            $('.btn-editar').off('click').on('click', function(e) {
+                if (!$(this).attr('href') || $(this).attr('type') === 'button') {
+                    e.preventDefault();
+                    mostrarErrorPermiso();
+                }
+            });
+            
+            $('.btn-eliminar').off('click').on('click', function(e) {
+                if (!$(this).attr('href') || $(this).attr('type') === 'button') {
+                    e.preventDefault();
+                    mostrarErrorPermiso();
+                }
+            });
+        }
+    });
+});
+
+// Prevenir clics en botones sin permisos
+document.addEventListener('DOMContentLoaded', function() {
+    // Manejar botones de editar sin permisos
+    document.querySelectorAll('.btn-editar').forEach(function(btn) {
+        if (!btn.href || btn.type === 'button') {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                mostrarErrorPermiso();
+            });
+        }
+    });
+    
+    // Manejar botones de eliminar sin permisos
+    document.querySelectorAll('.btn-eliminar').forEach(function(btn) {
+        if (!btn.href || btn.type === 'button') {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                mostrarErrorPermiso();
+            });
+        }
+    });
+});
+</script>
+{% endblock %}
+
+{% include 'Nucleo/abajo.html' %}

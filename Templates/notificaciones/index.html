@@ -1,0 +1,438 @@
+{% load static %}
+{% include 'Nucleo/arriba.html' %}
+
+{% block extra_css %}
+<!-- DataTables CSS - Local -->
+<link rel="stylesheet" href="{% static 'DataTables/css/dataTables.bootstrap4.min.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/datatables-responsive/css/responsive.bootstrap4.min.css' %}">
+<!-- Select2 CSS -->
+<link rel="stylesheet" href="{% static 'plugins/select2/css/select2.min.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css' %}">
+<!-- SweetAlert2 CSS -->
+<link rel="stylesheet" href="{% static 'plugins/sweetalert2/sweetalert2.min.css' %}">
+<style>
+  /* Estilos para tabs */
+  .nav-tabs .nav-link {
+    color: #495057;
+  }
+
+  .nav-tabs .nav-link.active {
+    color: #007bff;
+    font-weight: 600;
+  }
+
+  /* Estilos responsivos para botones */
+  .btn-group-sm .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+  }
+
+  /* En pantallas pequeñas, solo mostrar iconos */
+  @media (max-width: 767px) {
+    .btn-group-sm .btn span {
+      display: none !important;
+    }
+
+    .btn-group-sm .btn {
+      padding: 0.25rem 0.4rem;
+    }
+  }
+
+  /* En pantallas medianas y grandes, mostrar texto */
+  @media (min-width: 768px) {
+    .btn-group-sm .btn span {
+      display: inline !important;
+    }
+  }
+
+  /* Loading overlay */
+  .loading-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .loading-overlay.show {
+    display: flex;
+  }
+
+  .spinner-border-custom {
+    width: 3rem;
+    height: 3rem;
+    border-width: 0.3rem;
+  }
+
+  /* Select2 styling */
+  .select2-container {
+    width: 100% !important;
+  }
+
+  /* Estilos para notificaciones no leídas */
+  .badge-no-leida {
+    animation: pulse 2s infinite;
+  }
+
+  /* Estilos para notificaciones leídas */
+  .notificacion-leida {
+    opacity: 0.7;
+  }
+</style>
+{% endblock %}
+
+{% include 'Nucleo/centro.html' %}
+
+<!-- Content Header -->
+<div class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1 class="m-0">Notificaciones</h1>
+      </div>
+      <div class="col-sm-6">
+        <ol class="breadcrumb float-sm-right d-none d-sm-flex">
+          <li class="breadcrumb-item"><a href="{% url 'usuarios:panel' %}">Inicio</a></li>
+          <li class="breadcrumb-item active">Notificaciones</li>
+        </ol>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-12">
+        <div class="btn-group" role="group">
+          <button type="button" class="btn btn-info btn-sm" onclick="$('#tipos-tab').tab('show');">
+            <i class="fas fa-cog"></i> Tipos de Notificación
+          </button>
+          <button type="button" class="btn btn-primary btn-sm" onclick="$('#notificaciones-tab').tab('show');">
+            <i class="fas fa-bell"></i> Notificaciones
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Main content -->
+<section class="content">
+  <div class="container-fluid">
+
+    <!-- Tabs Navigation -->
+    <ul class="nav nav-tabs" id="notificacionesTabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <a class="nav-link active" id="tipos-tab" data-toggle="tab" href="#tipos" role="tab"
+          aria-controls="tipos" aria-selected="true">
+          <i class="fas fa-cog"></i> Tipos de Notificación
+        </a>
+      </li>
+      <li class="nav-item" role="presentation">
+        <a class="nav-link" id="notificaciones-tab" data-toggle="tab" href="#notificaciones" role="tab"
+          aria-controls="notificaciones" aria-selected="false">
+          <i class="fas fa-bell"></i> Notificaciones
+          <span class="badge badge-warning ml-2" id="badgeNotificacionesNoLeidas">0</span>
+        </a>
+      </li>
+    </ul>
+
+    <!-- Tabs Content -->
+    <div class="tab-content" id="notificacionesTabsContent">
+
+      <!-- Tab Tipos de Notificación -->
+      <div class="tab-pane fade show active" id="tipos" role="tabpanel" aria-labelledby="tipos-tab">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fas fa-cog"></i> Gestión de Tipos de Notificación
+            </h3>
+            <div class="card-tools">
+              <button type="button" class="btn btn-primary btn-sm" id="btnCrearTipo">
+                <i class="fas fa-plus"></i> Nuevo Tipo
+              </button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table id="tableTipos" class="table table-bordered table-striped" style="width:100%">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Código</th>
+                    <th>Nombre</th>
+                    <th>Descripción</th>
+                    <th>Plantilla</th>
+                    <th>Notificaciones</th>
+                    <th class="text-center">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Notificaciones -->
+      <div class="tab-pane fade" id="notificaciones" role="tabpanel" aria-labelledby="notificaciones-tab">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fas fa-bell"></i> Gestión de Notificaciones
+            </h3>
+            <div class="card-tools">
+              <button type="button" class="btn btn-primary btn-sm" id="btnCrearNotificacion">
+                <i class="fas fa-plus"></i> Nueva Notificación
+              </button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table id="tableNotificaciones" class="table table-bordered table-striped" style="width:100%">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Usuario</th>
+                    <th>Tipo</th>
+                    <th>Título</th>
+                    <th>Mensaje</th>
+                    <th>Documento</th>
+                    <th>Estado</th>
+                    <th>Fecha</th>
+                    <th class="text-center">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- Modal Tipo de Notificación -->
+<div class="modal fade" id="modalTipo" tabindex="-1" role="dialog" aria-labelledby="modalTipoLabel"
+  aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalTipoLabel">Nuevo Tipo de Notificación</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form id="formTipo">
+        {% csrf_token %}
+        <div class="modal-body">
+          <input type="hidden" id="tipoId" name="id">
+
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="tipoCodigo">Código <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="tipoCodigo" name="codigo" required
+                  placeholder="Ej: documento_publicado, revision_completada">
+                <small class="form-text text-muted">Código único para identificar el tipo de notificación</small>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="tipoNombre">Nombre <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="tipoNombre" name="nombre" required
+                  placeholder="Ej: Documento Publicado">
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="tipoDescripcion">Descripción</label>
+            <textarea class="form-control" id="tipoDescripcion" name="descripcion" rows="2"
+              placeholder="Descripción del tipo de notificación"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="tipoPlantilla">Plantilla</label>
+            <textarea class="form-control" id="tipoPlantilla" name="plantilla" rows="4"
+              placeholder="Plantilla de mensaje (puede usar variables como {{titulo}}, {{usuario}}, etc.)"></textarea>
+            <small class="form-text text-muted">Plantilla opcional para generar mensajes automáticamente</small>
+          </div>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> Guardar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Notificación -->
+<div class="modal fade" id="modalNotificacion" tabindex="-1" role="dialog" aria-labelledby="modalNotificacionLabel"
+  aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalNotificacionLabel">Nueva Notificación</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form id="formNotificacion">
+        {% csrf_token %}
+        <div class="modal-body">
+          <input type="hidden" id="notificacionId" name="id">
+
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="notificacionUsuario">Usuario <span class="text-danger">*</span></label>
+                <select class="form-control" id="notificacionUsuario" name="usuario_id" required>
+                  <option value="">Seleccione un usuario...</option>
+                </select>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="notificacionTipo">Tipo de Notificación <span class="text-danger">*</span></label>
+                <select class="form-control" id="notificacionTipo" name="tipo_notificacion_id" required>
+                  <option value="">Seleccione un tipo...</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="notificacionTitulo">Título <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="notificacionTitulo" name="titulo" required>
+          </div>
+
+          <div class="form-group">
+            <label for="notificacionMensaje">Mensaje <span class="text-danger">*</span></label>
+            <textarea class="form-control" id="notificacionMensaje" name="mensaje" rows="4" required></textarea>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="notificacionDocumento">Documento (opcional)</label>
+                <select class="form-control" id="notificacionDocumento" name="documento_id">
+                  <option value="">Ninguno</option>
+                </select>
+                <small class="form-text text-muted">Documento relacionado con la notificación</small>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="notificacionURL">URL Relacionada (opcional)</label>
+                <input type="text" class="form-control" id="notificacionURL" name="url_relacionada"
+                  placeholder="Ej: /documentos/123">
+                <small class="form-text text-muted">URL de destino al hacer clic en la notificación</small>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-check">
+            <input type="checkbox" class="form-check-input" id="notificacionEsLeida" name="es_leida">
+            <label class="form-check-label" for="notificacionEsLeida">Marcar como leída</label>
+          </div>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> Guardar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner-border spinner-border-custom text-light" role="status">
+    <span class="sr-only">Cargando...</span>
+  </div>
+</div>
+
+{% include 'Nucleo/abajo.html' %}
+
+{% block extra_js %}
+<!-- Verificar que jQuery esté cargado antes de continuar -->
+<script>
+  if (typeof jQuery === 'undefined') {
+    console.error('jQuery no está cargado. Asegúrate de que jQuery se cargue antes de este bloque.');
+  }
+</script>
+<!-- DataTables JS - Local -->
+<script src="{% static 'DataTables/js/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'DataTables/js/dataTables.bootstrap4.min.js' %}"></script>
+<script src="{% static 'plugins/datatables-responsive/js/dataTables.responsive.min.js' %}"></script>
+<script src="{% static 'plugins/datatables-responsive/js/responsive.bootstrap4.min.js' %}"></script>
+<!-- Select2 JS -->
+<script src="{% static 'plugins/select2/js/select2.full.min.js' %}"></script>
+<!-- SweetAlert2 JS -->
+<script src="{% static 'plugins/sweetalert2/sweetalert2.all.min.js' %}"></script>
+
+<script>
+  // URLs usando Django URL reverse
+  const NOTIFICACIONES_URLS = {
+    tiposList: "{% url 'notificaciones:tipos_list' %}",
+    tipoCreate: "{% url 'notificaciones:tipo_create' %}",
+    tipoDetail: function (id) {
+      return "{% url 'notificaciones:tipo_detail' 0 %}".replace('0', id.toString());
+    },
+    tipoUpdate: function (id) {
+      return "{% url 'notificaciones:tipo_update' 0 %}".replace('0', id.toString());
+    },
+    tipoDelete: function (id) {
+      return "{% url 'notificaciones:tipo_delete' 0 %}".replace('0', id.toString());
+    },
+    notificacionesList: "{% url 'notificaciones:notificaciones_list' %}",
+    notificacionCreate: "{% url 'notificaciones:notificacion_create' %}",
+    notificacionDetail: function (id) {
+      return "{% url 'notificaciones:notificacion_detail' 0 %}".replace('0', id.toString());
+    },
+    notificacionUpdate: function (id) {
+      return "{% url 'notificaciones:notificacion_update' 0 %}".replace('0', id.toString());
+    },
+    notificacionDelete: function (id) {
+      return "{% url 'notificaciones:notificacion_delete' 0 %}".replace('0', id.toString());
+    },
+    notificacionMarcarLeida: function (id) {
+      return "{% url 'notificaciones:notificacion_marcar_leida' 0 %}".replace('0', id.toString());
+    },
+    notificacionMarcarNoLeida: function (id) {
+      return "{% url 'notificaciones:notificacion_marcar_no_leida' 0 %}".replace('0', id.toString());
+    },
+    usuariosForSelect: "{% url 'notificaciones:usuarios_for_select' %}",
+    documentosForSelect: "{% url 'notificaciones:documentos_for_select' %}",
+    tiposForSelect: "{% url 'notificaciones:tipos_for_select' %}"
+  };
+
+  // Función para obtener CSRF token
+  function getCSRFToken() {
+    const token = document.querySelector('[name=csrfmiddlewaretoken]');
+    return token ? token.value : '';
+  }
+  
+  // Hacer disponible globalmente
+  window.getCSRFToken = getCSRFToken;
+</script>
+
+<!-- Script principal de notificaciones -->
+<script src="{% static 'js/notificaciones.js' %}"></script>
+{% endblock %}
+
+
+

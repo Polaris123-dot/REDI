@@ -1,0 +1,771 @@
+{% load static %}
+{% include 'Nucleo/arriba.html' %}
+
+{% block extra_css %}
+<!-- DataTables CSS - Local -->
+<link rel="stylesheet" href="{% static 'DataTables/css/dataTables.bootstrap4.min.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/datatables-responsive/css/responsive.bootstrap4.min.css' %}">
+<!-- Color Picker CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/themes/nano.min.css">
+<!-- SweetAlert2 CSS -->
+<link rel="stylesheet" href="{% static 'plugins/sweetalert2/sweetalert2.min.css' %}">
+<style>
+  /* Estilos para tabs */
+  .nav-tabs .nav-link {
+    color: #495057;
+  }
+
+  .nav-tabs .nav-link.active {
+    color: #007bff;
+    font-weight: 600;
+  }
+
+  /* Color preview para tipos de proyecto */
+  .color-preview {
+    width: 30px;
+    height: 30px;
+    border-radius: 4px;
+    display: inline-block;
+    border: 1px solid #ddd;
+    vertical-align: middle;
+    margin-right: 8px;
+  }
+
+  /* Icono preview */
+  .icono-preview {
+    font-size: 1.2rem;
+    margin-right: 8px;
+  }
+
+  /* Estilos responsivos para botones */
+  .btn-group-sm .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+  }
+
+  /* En pantallas pequeñas, solo mostrar iconos */
+  @media (max-width: 767px) {
+    .btn-group-sm .btn span {
+      display: none !important;
+    }
+
+    .btn-group-sm .btn {
+      padding: 0.25rem 0.4rem;
+    }
+  }
+
+  /* En pantallas medianas y grandes, mostrar texto */
+  @media (min-width: 768px) {
+    .btn-group-sm .btn span {
+      display: inline !important;
+    }
+  }
+
+  /* Loading overlay */
+  .loading-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .loading-overlay.show {
+    display: flex;
+  }
+
+  .spinner-border-custom {
+    width: 3rem;
+    height: 3rem;
+    border-width: 0.3rem;
+  }
+
+  /* JSON input styling */
+  .json-input {
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+  }
+
+  /* Estilos para campos dinámicos */
+  .campo-dinamico-group {
+    margin-bottom: 1rem;
+    padding: 1rem;
+    border: 1px solid #dee2e6;
+    border-radius: 0.25rem;
+    background-color: #f8f9fa;
+  }
+
+  .campo-dinamico-categoria {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #495057;
+    border-bottom: 2px solid #007bff;
+    padding-bottom: 0.25rem;
+  }
+
+  .campo-dinamico-item {
+    margin-bottom: 0.75rem;
+  }
+
+  .campo-dinamico-item label {
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+    color: #495057;
+  }
+
+  .campo-repetible-container {
+    margin-top: 0.5rem;
+  }
+
+  .campo-repetible-item {
+    margin-bottom: 0.5rem;
+    padding: 0.75rem;
+    background-color: #ffffff;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+  }
+
+  /* Estilos para dark mode en campos dinámicos */
+  body.dark-mode .campo-dinamico-group {
+    background-color: #2d3238 !important;
+    border-color: #495057 !important;
+  }
+
+  body.dark-mode .campo-dinamico-categoria {
+    color: #e9ecef !important;
+    border-bottom-color: #007bff !important;
+  }
+
+  body.dark-mode .campo-dinamico-item label {
+    color: #e9ecef !important;
+  }
+
+  body.dark-mode .campo-repetible-item {
+    background-color: #343a40 !important;
+    border-color: #495057 !important;
+  }
+
+  body.dark-mode .campo-repetible-item input,
+  body.dark-mode .campo-repetible-item textarea,
+  body.dark-mode .campo-repetible-item select {
+    background-color: #495057 !important;
+    color: #e9ecef !important;
+    border-color: #6c757d !important;
+  }
+
+  body.dark-mode .campo-dinamico-item input,
+  body.dark-mode .campo-dinamico-item textarea,
+  body.dark-mode .campo-dinamico-item select {
+    background-color: #495057 !important;
+    color: #e9ecef !important;
+    border-color: #6c757d !important;
+  }
+
+  body.dark-mode .campo-dinamico-item input[type="checkbox"] {
+    background-color: #495057 !important;
+  }
+
+  body.dark-mode .campo-dinamico-item .form-control {
+    background-color: #495057 !important;
+    color: #e9ecef !important;
+    border-color: #6c757d !important;
+  }
+</style>
+{% endblock %}
+
+{% include 'Nucleo/sidebar.html' %}
+
+<!-- Content Wrapper. Contains page content -->
+<div class="content-wrapper">
+  <!-- Content Header -->
+  <div class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-sm-6">
+          <h1 class="m-0">Proyectos</h1>
+        </div>
+        <div class="col-sm-6">
+          <ol class="breadcrumb float-sm-right d-none d-sm-flex">
+            <li class="breadcrumb-item"><a href="{% url 'usuarios:panel' %}">Inicio</a></li>
+            <li class="breadcrumb-item active">Proyectos</li>
+          </ol>
+        </div>
+      </div>
+      <!-- Accesos Rápidos -->
+      <div class="row">
+        <div class="col-12">
+          <div class="btn-group" role="group">
+            <button type="button" class="btn btn-primary btn-sm" onclick="$('#proyectos-tab').tab('show');">
+              <i class="fas fa-project-diagram"></i> Proyectos
+            </button>
+            <button type="button" class="btn btn-info btn-sm" onclick="$('#tipos-proyecto-tab').tab('show');">
+              <i class="fas fa-tags"></i> Tipos de Proyecto
+            </button>
+            <button type="button" class="btn btn-success btn-sm" onclick="$('#campos-tipo-proyecto-tab').tab('show');">
+              <i class="fas fa-list"></i> Campos de Tipo de Proyecto
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main content -->
+  <section class="content">
+    <div class="container-fluid">
+
+      <!-- Tabs Navigation -->
+      <ul class="nav nav-tabs" id="proyectosTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+          <a class="nav-link active" id="proyectos-tab" data-toggle="tab" href="#proyectos" role="tab"
+            aria-controls="proyectos" aria-selected="true">
+            <i class="fas fa-project-diagram"></i> Proyectos
+          </a>
+        </li>
+        <li class="nav-item" role="presentation">
+          <a class="nav-link" id="tipos-proyecto-tab" data-toggle="tab" href="#tipos-proyecto" role="tab"
+            aria-controls="tipos-proyecto" aria-selected="false">
+            <i class="fas fa-tags"></i> Tipos de Proyecto
+          </a>
+        </li>
+        <li class="nav-item" role="presentation">
+          <a class="nav-link" id="campos-tipo-proyecto-tab" data-toggle="tab" href="#campos-tipo-proyecto" role="tab"
+            aria-controls="campos-tipo-proyecto" aria-selected="false">
+            <i class="fas fa-list"></i> Campos de Tipo de Proyecto
+          </a>
+        </li>
+      </ul>
+
+      <!-- Tabs Content -->
+      <div class="tab-content" id="proyectosTabsContent">
+
+        <!-- Tab Proyectos -->
+        <div class="tab-pane fade show active" id="proyectos" role="tabpanel" aria-labelledby="proyectos-tab">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="fas fa-project-diagram"></i> Gestión de Proyectos
+              </h3>
+              <div class="card-tools">
+                <button type="button" class="btn btn-primary btn-sm" id="btnCrearProyecto">
+                  <i class="fas fa-plus"></i> Nuevo Proyecto
+                </button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table id="tableProyectos" class="table table-bordered table-striped" style="width:100%">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Título</th>
+                      <th>Tipo de Proyecto</th>
+                      <th>Autores</th>
+                      <th>Estado</th>
+                      <th>Visibilidad</th>
+                      <th>Fecha Creación</th>
+                      <th class="text-center">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab Tipos de Proyecto -->
+        <div class="tab-pane fade" id="tipos-proyecto" role="tabpanel" aria-labelledby="tipos-proyecto-tab">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="fas fa-tags"></i> Gestión de Tipos de Proyecto
+              </h3>
+              <div class="card-tools">
+                <button type="button" class="btn btn-primary btn-sm" id="btnCrearTipoProyecto">
+                  <i class="fas fa-plus"></i> Nuevo Tipo de Proyecto
+                </button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table id="tableTiposProyecto" class="table table-bordered table-striped" style="width:100%">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Nombre</th>
+                      <th>Icono</th>
+                      <th>Color</th>
+                      <th>Orden</th>
+                      <th>Activo</th>
+                      <th class="text-center">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab Campos de Tipo de Proyecto -->
+        <div class="tab-pane fade" id="campos-tipo-proyecto" role="tabpanel" aria-labelledby="campos-tipo-proyecto-tab">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="fas fa-list"></i> Gestión de Campos de Tipo de Proyecto
+              </h3>
+              <div class="card-tools">
+                <button type="button" class="btn btn-primary btn-sm" id="btnCrearCampoTipoProyecto">
+                  <i class="fas fa-plus"></i> Nuevo Campo
+                </button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table id="tableCamposTipoProyecto" class="table table-bordered table-striped" style="width:100%">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Nombre</th>
+                      <th>Tipo de Proyecto</th>
+                      <th>Tipo de Dato</th>
+                      <th>Obligatorio</th>
+                      <th>Repetible</th>
+                      <th>Categoría</th>
+                      <th>Orden</th>
+                      <th class="text-center">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+</div>
+<!-- /.content-wrapper -->
+
+<!-- Modal para Tipo de Proyecto -->
+<div class="modal fade" id="modalTipoProyecto" tabindex="-1" role="dialog" aria-labelledby="modalTipoProyectoLabel"
+  aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalTipoProyectoLabel">Nuevo Tipo de Proyecto</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form id="formTipoProyecto">
+        {% csrf_token %}
+        <div class="modal-body">
+          <input type="hidden" id="tipoProyectoId" name="id">
+
+          <div class="form-group">
+            <label for="tipoProyectoNombre">Nombre <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="tipoProyectoNombre" name="nombre" required>
+          </div>
+
+          <div class="form-group">
+            <label for="tipoProyectoDescripcion">Descripción</label>
+            <textarea class="form-control" id="tipoProyectoDescripcion" name="descripcion" rows="3"></textarea>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="tipoProyectoIcono">Icono (FontAwesome)</label>
+                <input type="text" class="form-control" id="tipoProyectoIcono" name="icono"
+                  placeholder="fas fa-tag">
+                <small class="form-text text-muted">Ejemplo: fas fa-tag, fas fa-file</small>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="tipoProyectoColor">Color (Hex)</label>
+                <input type="text" class="form-control" id="tipoProyectoColor" name="color" maxlength="7"
+                  placeholder="#007bff">
+                <small class="form-text text-muted">Formato hexadecimal (ej: #007bff)</small>
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="tipoProyectoOrden">Orden</label>
+                <input type="number" class="form-control" id="tipoProyectoOrden" name="orden" value="0" min="0">
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label>
+                  <input type="checkbox" id="tipoProyectoActivo" name="es_activo" checked> Activo
+                </label>
+              </div>
+            </div>
+          </div>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> Guardar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para Campo de Tipo de Proyecto -->
+<div class="modal fade" id="modalCampoTipoProyecto" tabindex="-1" role="dialog"
+  aria-labelledby="modalCampoTipoProyectoLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalCampoTipoProyectoLabel">Nuevo Campo de Tipo de Proyecto</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form id="formCampoTipoProyecto">
+        {% csrf_token %}
+        <div class="modal-body">
+          <input type="hidden" id="campoTipoProyectoId" name="id">
+
+          <div class="form-group">
+            <label for="campoTipoProyectoTipoProyecto">Tipo de Proyecto <span class="text-danger">*</span></label>
+            <select class="form-control" id="campoTipoProyectoTipoProyecto" name="tipo_proyecto_id" required>
+              <option value="">Seleccione un tipo de proyecto</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="campoTipoProyectoNombre">Nombre <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="campoTipoProyectoNombre" name="nombre" required>
+            <small class="form-text text-muted">Nombre interno del campo (sin espacios, en minúsculas)</small>
+          </div>
+
+          <div class="form-group">
+            <label for="campoTipoProyectoEtiqueta">Etiqueta <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="campoTipoProyectoEtiqueta" name="etiqueta" required>
+            <small class="form-text text-muted">Etiqueta visible para el usuario</small>
+          </div>
+
+          <div class="form-group">
+            <label for="campoTipoProyectoDescripcion">Descripción</label>
+            <textarea class="form-control" id="campoTipoProyectoDescripcion" name="descripcion" rows="2"></textarea>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="campoTipoProyectoTipoDato">Tipo de Dato <span class="text-danger">*</span></label>
+                <select class="form-control" id="campoTipoProyectoTipoDato" name="tipo_dato" required>
+                  <option value="texto">Texto</option>
+                  <option value="textarea">Área de Texto</option>
+                  <option value="numero">Número</option>
+                  <option value="fecha">Fecha</option>
+                  <option value="booleano">Booleano</option>
+                  <option value="select">Selección Única</option>
+                  <option value="multiselect">Selección Múltiple</option>
+                  <option value="archivo">Archivo</option>
+                  <option value="url">URL</option>
+                  <option value="email">Email</option>
+                  <option value="json">JSON</option>
+                </select>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="campoTipoProyectoCategoria">Categoría</label>
+                <input type="text" class="form-control" id="campoTipoProyectoCategoria" name="categoria"
+                  placeholder="Ej: Información General">
+                <small class="form-text text-muted">Agrupa campos en secciones</small>
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-4">
+              <div class="form-group">
+                <label>
+                  <input type="checkbox" id="campoTipoProyectoObligatorio" name="es_obligatorio"> Obligatorio
+                </label>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-group">
+                <label>
+                  <input type="checkbox" id="campoTipoProyectoRepetible" name="es_repetible"> Repetible
+                </label>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-group">
+                <label>
+                  <input type="checkbox" id="campoTipoProyectoBuscable" name="es_buscable" checked> Buscable
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group" id="valoresPosiblesGroup" style="display: none;">
+            <label for="campoTipoProyectoValoresPosibles">Valores Posibles (JSON)</label>
+            <textarea class="form-control json-input" id="campoTipoProyectoValoresPosibles" name="valores_posibles"
+              rows="4" placeholder='["Opción 1", "Opción 2", "Opción 3"]'></textarea>
+            <small class="form-text text-muted">Array JSON para campos de tipo select/multiselect</small>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="campoTipoProyectoValidador">Validador</label>
+                <input type="text" class="form-control" id="campoTipoProyectoValidador" name="validador"
+                  placeholder="Regex o validación">
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="campoTipoProyectoAyuda">Ayuda</label>
+                <textarea class="form-control" id="campoTipoProyectoAyuda" name="ayuda" rows="2"
+                  placeholder="Texto de ayuda para el usuario"></textarea>
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="campoTipoProyectoOrden">Orden</label>
+                <input type="number" class="form-control" id="campoTipoProyectoOrden" name="orden" value="0"
+                  min="0">
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="campoTipoProyectoValorPorDefecto">Valor por Defecto</label>
+                <input type="text" class="form-control" id="campoTipoProyectoValorPorDefecto" name="valor_por_defecto">
+              </div>
+            </div>
+          </div>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> Guardar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para Proyecto -->
+<div class="modal fade" id="modalProyecto" tabindex="-1" role="dialog" aria-labelledby="modalProyectoLabel"
+  aria-hidden="true">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalProyectoLabel">Nuevo Proyecto</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form id="formProyecto">
+        {% csrf_token %}
+        <div class="modal-body">
+          <input type="hidden" id="proyectoId" name="id">
+
+          <!-- Campos Básicos -->
+          <div class="row">
+            <div class="col-md-8">
+              <div class="form-group">
+                <label for="proyectoTitulo">Título <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="proyectoTitulo" name="titulo" required>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-group">
+                <label for="proyectoTipoProyecto">Tipo de Proyecto <span class="text-danger">*</span></label>
+                <select class="form-control" id="proyectoTipoProyecto" name="tipo_proyecto_id" required>
+                  <option value="">Seleccione un tipo</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="proyectoResumen">Resumen</label>
+            <textarea class="form-control" id="proyectoResumen" name="resumen" rows="2"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="proyectoDescripcion">Descripción</label>
+            <textarea class="form-control" id="proyectoDescripcion" name="descripcion" rows="4"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="proyectoArchivo">Archivo PDF del Proyecto</label>
+            <input type="file" class="form-control" id="proyectoArchivo" name="archivo" accept=".pdf">
+          </div>
+
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="proyectoEstado">Estado</label>
+                <select class="form-control" id="proyectoEstado" name="estado">
+                  <option value="borrador">Borrador</option>
+                  <option value="en_revision">En Revisión</option>
+                  <option value="aprobado">Aprobado</option>
+                  <option value="archivado">Archivado</option>
+                </select>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="proyectoVisibilidad">Visibilidad</label>
+                <select class="form-control" id="proyectoVisibilidad" name="visibilidad">
+                  <option value="publico">Público</option>
+                  <option value="privado">Privado</option>
+                  <option value="restringido">Restringido</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sección de Autores -->
+          <div class="form-group">
+            <label>Autores del Proyecto</label>
+            <div id="autoresContainer">
+              <!-- Los autores se agregarán dinámicamente aquí -->
+            </div>
+            <button type="button" class="btn btn-sm btn-secondary mt-2" id="btnAgregarAutor">
+              <i class="fas fa-plus"></i> Agregar Autor
+            </button>
+          </div>
+
+          <!-- Contenedor para Campos Dinámicos -->
+          <div id="camposDinamicosContainer"></div>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> Guardar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner-border spinner-border-custom text-light" role="status">
+    <span class="sr-only">Cargando...</span>
+  </div>
+</div>
+
+{% include 'Nucleo/abajo.html' %}
+
+{% block extra_js %}
+<!-- Verificar que jQuery esté cargado antes de continuar -->
+<script>
+  if (typeof jQuery === 'undefined') {
+    console.error('jQuery no está cargado. Asegúrate de que jQuery se cargue antes de este bloque.');
+  }
+</script>
+<!-- DataTables JS - Local -->
+<script src="{% static 'DataTables/js/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'DataTables/js/dataTables.bootstrap4.min.js' %}"></script>
+<script src="{% static 'plugins/datatables-responsive/js/dataTables.responsive.min.js' %}"></script>
+<script src="{% static 'plugins/datatables-responsive/js/responsive.bootstrap4.min.js' %}"></script>
+<!-- SweetAlert2 JS -->
+<script src="{% static 'plugins/sweetalert2/sweetalert2.all.min.js' %}"></script>
+<!-- Color Picker JS -->
+<script src="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/pickr.min.js"></script>
+
+<script>
+  // URLs usando Django URL reverse
+  const PROYECTOS_URLS = {
+    tiposProyectoList: "{% url 'proyectos:tipos_proyecto_list' %}",
+    tipoProyectoCreate: "{% url 'proyectos:tipo_proyecto_create' %}",
+    tipoProyectoDetail: function (id) {
+      return "{% url 'proyectos:tipo_proyecto_detail' 0 %}".replace('0', id.toString());
+    },
+    tipoProyectoUpdate: function (id) {
+      return "{% url 'proyectos:tipo_proyecto_update' 0 %}".replace('0', id.toString());
+    },
+    tipoProyectoDelete: function (id) {
+      return "{% url 'proyectos:tipo_proyecto_delete' 0 %}".replace('0', id.toString());
+    },
+    tiposProyectoForSelect: "{% url 'proyectos:tipos_proyecto_for_select' %}",
+    camposTipoProyectoList: "{% url 'proyectos:campos_tipo_proyecto_list' %}",
+    campoTipoProyectoCreate: "{% url 'proyectos:campo_tipo_proyecto_create' %}",
+    campoTipoProyectoDetail: function (id) {
+      return "{% url 'proyectos:campo_tipo_proyecto_detail' 0 %}".replace('0', id.toString());
+    },
+    campoTipoProyectoUpdate: function (id) {
+      return "{% url 'proyectos:campo_tipo_proyecto_update' 0 %}".replace('0', id.toString());
+    },
+    campoTipoProyectoDelete: function (id) {
+      return "{% url 'proyectos:campo_tipo_proyecto_delete' 0 %}".replace('0', id.toString());
+    },
+    proyectosList: "{% url 'proyectos:proyectos_list' %}",
+    proyectosPorTipo: function (id) {
+      return "{% url 'proyectos:proyectos_por_tipo' 0 %}".replace('0', id.toString());
+    },
+    proyectoDetail: function (id) {
+      return "{% url 'proyectos:proyecto_detail' 0 %}".replace('0', id.toString());
+    },
+    proyectoCreate: "{% url 'proyectos:proyecto_create' %}",
+    proyectoUpdate: function (id) {
+      return "{% url 'proyectos:proyecto_update' 0 %}".replace('0', id.toString());
+    },
+    proyectoDelete: function (id) {
+      return "{% url 'proyectos:proyecto_delete' 0 %}".replace('0', id.toString());
+    },
+    proyectoPublicDetail: function (publicacionSlug) {
+      if (!publicacionSlug) return null;
+      return "{% url 'catalogo_publico:publicacion_detalle' 'slug-placeholder' %}".replace('slug-placeholder', publicacionSlug);
+    },
+    proyectoPublicSearch: function (titulo) {
+      if (!titulo) return null;
+      return "{% url 'catalogo_publico:buscar' %}?q=" + encodeURIComponent(titulo);
+    },
+    camposPorTipoProyecto: function (id) {
+      return "{% url 'proyectos:campos_por_tipo_proyecto' 0 %}".replace('0', id.toString());
+    },
+    usuariosForSelect: "{% url 'proyectos:usuarios_for_select' %}"
+  };
+
+  // Función para obtener CSRF token
+  function getCSRFToken() {
+    const token = document.querySelector('[name=csrfmiddlewaretoken]');
+    return token ? token.value : '';
+  }
+  
+  // Hacer disponible globalmente
+  window.getCSRFToken = getCSRFToken;
+</script>
+
+<!-- Script principal de proyectos -->
+<script src="{% static 'js/proyectos.js' %}"></script>
+{% endblock %}

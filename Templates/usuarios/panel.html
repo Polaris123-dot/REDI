@@ -1,0 +1,525 @@
+{% load static %}
+{% include 'Nucleo/arriba.html' %}
+
+{% block extra_css %}
+<style>
+  .progress-description a {
+    display: inline-block;
+    margin-top: 5px;
+    font-size: 0.85rem;
+    color: white !important;
+    opacity: 0.9;
+    transition: all 0.2s;
+  }
+
+  .progress-description a:hover {
+    opacity: 1;
+    text-decoration: none;
+    transform: translateX(3px);
+  }
+
+  .hover-shadow {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .hover-shadow:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2) !important;
+  }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+  }
+
+  @keyframes swing {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(5deg); }
+    75% { transform: rotate(-5deg); }
+  }
+
+  @keyframes tada {
+    0% { transform: scale(1) rotate(0deg); }
+    10%, 20% { transform: scale(0.9) rotate(-3deg); }
+    30%, 50%, 70%, 90% { transform: scale(1.1) rotate(3deg); }
+    40%, 60%, 80% { transform: scale(1.1) rotate(-3deg); }
+    100% { transform: scale(1) rotate(0deg); }
+  }
+
+  @keyframes bounce {
+    0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+    40% { transform: translateY(-10px); }
+    60% { transform: translateY(-5px); }
+  }
+
+  .info-box-icon.pulse {
+    animation: pulse 2s infinite;
+  }
+
+  .info-box-icon.swing {
+    animation: swing 2s infinite;
+  }
+
+  .info-box-icon.tada {
+    animation: tada 2s infinite;
+  }
+
+  .info-box-icon.bounce {
+    animation: bounce 2s infinite;
+  }
+
+  /* Estilos para la sección de accesos rápidos */
+  .content-section {
+    background-color: #f4f6f9;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .content-section h4 {
+    color: #495057;
+    font-weight: 600;
+    transition: color 0.3s ease;
+  }
+
+  .content-section .text-muted {
+    font-size: 0.9rem;
+    margin-bottom: 15px;
+    transition: color 0.3s ease;
+  }
+
+  /* Estilos para modo oscuro */
+  body.dark-mode .content-section {
+    background-color: #1e1e2e;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    border: 1px solid #2d2d44;
+  }
+
+  body.dark-mode .content-section h4 {
+    color: #e0e0e0;
+  }
+
+  body.dark-mode .content-section .text-muted {
+    color: #b0b0b0 !important;
+  }
+</style>
+{% endblock %}
+
+{% include 'Nucleo/centro.html' %}
+
+{% block content %}
+    <section class="content">
+        <div class="container-fluid">
+            <!-- Mensajes -->
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <!-- Bienvenida -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="callout callout-info">
+                        <h5><i class="fas fa-user"></i> Bienvenido, {{ nombre_usuario|default:user.username }}!</h5>
+                        <p>Este es tu panel de control. Aquí puedes acceder a las funciones disponibles según tus permisos.</p>
+                        {% if user.is_superuser %}
+                            <p class="mb-0"><strong>Rol:</strong> Superusuario (acceso completo al sistema)</p>
+                        {% else %}
+                            <p class="mb-0">
+                                <strong>Roles asignados:</strong>
+                                {% for grupo in user.groups.all %}
+                                    <span class="badge badge-primary">{{ grupo.name }}</span>
+                                {% empty %}
+                                    <span class="text-muted">Sin roles asignados</span>
+                                {% endfor %}
+                            </p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sección de Accesos Rápidos -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="callout callout-info">
+                        <section class="content">
+                            <div class="container-fluid">
+                                <div class="row mb-3">
+                                    <div class="col-12">
+                                        <h4 class="mb-0"><i class="fas fa-th-large"></i> Accesos Rápidos</h4>
+                                        <p class="text-muted">Selecciona una opción para acceder a las funciones disponibles</p>
+                                    </div>
+                                </div>
+                                
+                        <!-- Cards de opciones según rol -->
+                        <div class="row">
+                          <!-- Acceso público siempre visible -->
+                          <div class="col-12 col-sm-6 col-lg-3 mb-4">
+                              <div class="info-box bg-gradient-primary shadow-lg hover-shadow">
+                                  <span class="info-box-icon"><i class="fas fa-globe-americas"></i></span>
+                                  <div class="info-box-content">
+                                      <span class="info-box-text">Catálogo Público</span>
+                                      <span class="info-box-number">Explorar</span>
+                                      <div class="progress">
+                                          <div class="progress-bar bg-white" style="width: 100%"></div>
+                                      </div>
+                                      <span class="progress-description">
+                                          <a href="{% url 'catalogo_publico:index' %}" class="text-white" target="_blank" rel="noopener noreferrer">
+                                              Ver Proyectos Públicos <i class="fas fa-arrow-circle-right ml-1"></i>
+                                          </a>
+                                      </span>
+                                  </div>
+                              </div>
+                          </div>
+                    <!-- Card para Catalogación -->
+                    {% if can_view_catalogacion %}
+                        <div class="col-12 col-sm-6 col-lg-3 mb-4">
+                            <div class="info-box bg-gradient-primary shadow-lg hover-shadow">
+                                <span class="info-box-icon pulse"><i class="fas fa-tags"></i></span>
+                                <div class="info-box-content">
+                                    <span class="info-box-text">Catalogación</span>
+                                    <span class="info-box-number">
+                                        {% if can_add_catalogacion %}Gestión{% else %}Ver{% endif %}
+                                    </span>
+                                    <div class="progress">
+                                        <div class="progress-bar bg-white" style="width: 100%"></div>
+                                    </div>
+                                    <span class="progress-description">
+                                        <a href="{% url 'catalogacion:index' %}" class="text-white">
+                                            Categorías y Etiquetas <i class="fas fa-arrow-circle-right ml-1"></i>
+                                        </a>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <!-- Card para Proyectos -->
+                    {% if can_view_proyectos %}
+                        <div class="col-12 col-sm-6 col-lg-3 mb-4">
+                            <div class="info-box bg-gradient-danger shadow-lg hover-shadow">
+                                <span class="info-box-icon tada"><i class="fas fa-project-diagram"></i></span>
+                                <div class="info-box-content">
+                                    <span class="info-box-text">Proyectos</span>
+                                    <span class="info-box-number">
+                                        {% if can_add_proyectos %}Gestión{% else %}Ver{% endif %}
+                                    </span>
+                                    <div class="progress">
+                                        <div class="progress-bar bg-white" style="width: 100%"></div>
+                                    </div>
+                                    <span class="progress-description">
+                                        <a href="{% url 'proyectos:index' %}" class="text-white">
+                                            Gestionar Proyectos <i class="fas fa-arrow-circle-right ml-1"></i>
+                                        </a>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <!-- Card para Repositorio -->
+                    {% if can_view_repositorio %}
+                        <div class="col-12 col-sm-6 col-lg-3 mb-4">
+                            <div class="info-box bg-gradient-success shadow-lg hover-shadow">
+                                <span class="info-box-icon bounce"><i class="fas fa-archive"></i></span>
+                                <div class="info-box-content">
+                                    <span class="info-box-text">Repositorio</span>
+                                    <span class="info-box-number">
+                                        {% if can_add_repositorio %}Gestión{% else %}Ver{% endif %}
+                                    </span>
+                                    <div class="progress">
+                                        <div class="progress-bar bg-white" style="width: 100%"></div>
+                                    </div>
+                                    <span class="progress-description">
+                                        <a href="{% url 'repositorio:index' %}" class="text-white">
+                                            Gestionar Repositorio <i class="fas fa-arrow-circle-right ml-1"></i>
+                                        </a>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <!-- Card para Publicaciones -->
+                    {% if can_view_publicaciones %}
+                        <div class="col-12 col-sm-6 col-lg-3 mb-4">
+                            <div class="info-box bg-gradient-warning shadow-lg hover-shadow">
+                                <span class="info-box-icon swing"><i class="fas fa-book"></i></span>
+                                <div class="info-box-content">
+                                    <span class="info-box-text">Publicaciones</span>
+                                    <span class="info-box-number">
+                                        {% if can_add_publicaciones %}Gestión{% else %}Ver{% endif %}
+                                    </span>
+                                    <div class="progress">
+                                        <div class="progress-bar bg-white" style="width: 100%"></div>
+                                    </div>
+                                    <span class="progress-description">
+                                        <a href="{% url 'publicaciones:index' %}" class="text-white">
+                                            Gestionar Publicaciones <i class="fas fa-arrow-circle-right ml-1"></i>
+                                        </a>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <!-- Card para Interacción -->
+                    {% if can_view_interaccion %}
+                        <div class="col-12 col-sm-6 col-lg-3 mb-4">
+                            <div class="info-box bg-gradient-secondary shadow-lg hover-shadow">
+                                <span class="info-box-icon tada"><i class="fas fa-comments"></i></span>
+                                <div class="info-box-content">
+                                    <span class="info-box-text">Interacción</span>
+                                    <span class="info-box-number">
+                                        {% if can_add_interaccion %}Gestión{% else %}Ver{% endif %}
+                                    </span>
+                                    <div class="progress">
+                                        <div class="progress-bar bg-white" style="width: 100%"></div>
+                                    </div>
+                                    <span class="progress-description">
+                                        <a href="{% url 'interaccion:index' %}" class="text-white">
+                                            Gestionar Interacción <i class="fas fa-arrow-circle-right ml-1"></i>
+                                        </a>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <!-- Card para Notificaciones -->
+                    {% if can_view_notificaciones %}
+                        <div class="col-12 col-sm-6 col-lg-3 mb-4">
+                            <div class="info-box bg-gradient-info shadow-lg hover-shadow">
+                                <span class="info-box-icon bounce"><i class="fas fa-bell"></i></span>
+                                <div class="info-box-content">
+                                    <span class="info-box-text">Notificaciones</span>
+                                    <span class="info-box-number">
+                                        {% if can_add_notificaciones %}Gestión{% else %}Ver{% endif %}
+                                    </span>
+                                    <div class="progress">
+                                        <div class="progress-bar bg-white" style="width: 100%"></div>
+                                    </div>
+                                    <span class="progress-description">
+                                        <a href="{% url 'notificaciones:index' %}" class="text-white">
+                                            Gestionar Notificaciones <i class="fas fa-arrow-circle-right ml-1"></i>
+                                        </a>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <!-- Card para Configuración -->
+                    {% if can_view_configuracion %}
+                        <div class="col-12 col-sm-6 col-lg-3 mb-4">
+                            <div class="info-box bg-gradient-dark shadow-lg hover-shadow">
+                                <span class="info-box-icon pulse"><i class="fas fa-cog"></i></span>
+                                <div class="info-box-content">
+                                    <span class="info-box-text">Configuración</span>
+                                    <span class="info-box-number">
+                                        {% if can_add_configuracion %}Gestión{% else %}Ver{% endif %}
+                                    </span>
+                                    <div class="progress">
+                                        <div class="progress-bar bg-white" style="width: 100%"></div>
+                                    </div>
+                                    <span class="progress-description">
+                                        <a href="{% url 'configuracion:index' %}" class="text-white">
+                                            Gestionar Configuración <i class="fas fa-arrow-circle-right ml-1"></i>
+                                        </a>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <!-- Card para Metadatos -->
+                    {% if can_view_metadatos %}
+                        <div class="col-12 col-sm-6 col-lg-3 mb-4">
+                            <div class="info-box bg-gradient-purple shadow-lg hover-shadow">
+                                <span class="info-box-icon swing"><i class="fas fa-layer-group"></i></span>
+                                <div class="info-box-content">
+                                    <span class="info-box-text">Metadatos</span>
+                                    <span class="info-box-number">
+                                        {% if can_add_metadatos %}Gestión{% else %}Ver{% endif %}
+                                    </span>
+                                    <div class="progress">
+                                        <div class="progress-bar bg-white" style="width: 100%"></div>
+                                    </div>
+                                    <span class="progress-description">
+                                        <a href="{% url 'metadatos:index' %}" class="text-white">
+                                            Gestionar Metadatos <i class="fas fa-arrow-circle-right ml-1"></i>
+                                        </a>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <!-- Card para Estadísticas -->
+                    {% if can_view_estadisticas %}
+                        <div class="col-12 col-sm-6 col-lg-3 mb-4">
+                            <div class="info-box bg-gradient-success shadow-lg hover-shadow">
+                                <span class="info-box-icon pulse"><i class="fas fa-chart-bar"></i></span>
+                                <div class="info-box-content">
+                                    <span class="info-box-text">Estadísticas</span>
+                                    <span class="info-box-number">
+                                        {% if can_add_estadisticas %}Gestión{% else %}Ver{% endif %}
+                                    </span>
+                                    <div class="progress">
+                                        <div class="progress-bar bg-white" style="width: 100%"></div>
+                                    </div>
+                                    <span class="progress-description">
+                                        <a href="{% url 'estadisticas:index' %}" class="text-white">
+                                            Ver Estadísticas <i class="fas fa-arrow-circle-right ml-1"></i>
+                                        </a>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <!-- Card para Búsqueda -->
+                    {% if can_view_busqueda %}
+                        <div class="col-12 col-sm-6 col-lg-3 mb-4">
+                            <div class="info-box bg-gradient-warning shadow-lg hover-shadow">
+                                <span class="info-box-icon swing"><i class="fas fa-search"></i></span>
+                                <div class="info-box-content">
+                                    <span class="info-box-text">Búsqueda</span>
+                                    <span class="info-box-number">
+                                        {% if can_add_busqueda %}Gestión{% else %}Ver{% endif %}
+                                    </span>
+                                    <div class="progress">
+                                        <div class="progress-bar bg-white" style="width: 100%"></div>
+                                    </div>
+                                    <span class="progress-description">
+                                        <a href="{% url 'busqueda:index' %}" class="text-white">
+                                            Gestionar Búsqueda <i class="fas fa-arrow-circle-right ml-1"></i>
+                                        </a>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <!-- Card para Revisiones -->
+                    {% if can_view_revisiones %}
+                        <div class="col-12 col-sm-6 col-lg-3 mb-4">
+                            <div class="info-box bg-gradient-danger shadow-lg hover-shadow">
+                                <span class="info-box-icon pulse"><i class="fas fa-clipboard-check"></i></span>
+                                <div class="info-box-content">
+                                    <span class="info-box-text">Revisiones</span>
+                                    <span class="info-box-number">
+                                        {% if can_add_revisiones %}Gestión{% else %}Ver{% endif %}
+                                    </span>
+                                    <div class="progress">
+                                        <div class="progress-bar bg-white" style="width: 100%"></div>
+                                    </div>
+                                    <span class="progress-description">
+                                        <a href="{% url 'revisiones:index' %}" class="text-white">
+                                            Gestionar Revisiones <i class="fas fa-arrow-circle-right ml-1"></i>
+                                        </a>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <!-- Card para usuarios con permiso de ver usuarios -->
+                    {% if can_view_usuarios %}
+                        <div class="col-12 col-sm-6 col-lg-3 mb-4">
+                            <div class="info-box bg-gradient-primary shadow-lg hover-shadow">
+                                <span class="info-box-icon pulse"><i class="fas fa-users"></i></span>
+                                <div class="info-box-content">
+                                    <span class="info-box-text">Usuarios</span>
+                                    <span class="info-box-number">
+                                        {% if user.is_superuser %}Admin{% else %}Ver{% endif %}
+                                    </span>
+                                    <div class="progress">
+                                        <div class="progress-bar bg-white" style="width: 100%"></div>
+                                    </div>
+                                    <span class="progress-description">
+                                        <a href="{% url 'usuarios:lista_usuarios' %}" class="text-white">
+                                            Ver usuarios <i class="fas fa-arrow-circle-right ml-1"></i>
+                                        </a>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    {% if can_manage_roles %}
+                        <!-- Opciones adicionales para superusuario -->
+                        <div class="col-12 col-sm-6 col-lg-3 mb-4">
+                            <div class="info-box bg-gradient-warning shadow-lg hover-shadow">
+                                <span class="info-box-icon tada"><i class="fas fa-users-cog"></i></span>
+                                <div class="info-box-content">
+                                    <span class="info-box-text">Gestión de Roles</span>
+                                    <span class="info-box-number">Admin</span>
+                                    <div class="progress">
+                                        <div class="progress-bar bg-white" style="width: 100%"></div>
+                                    </div>
+                                    <span class="progress-description">
+                                        <a href="{% url 'usuarios:lista_grupos' %}" class="text-white">
+                                            Ver roles <i class="fas fa-arrow-circle-right ml-1"></i>
+                                        </a>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <!-- Opciones disponibles para todos los usuarios autenticados -->
+                    <div class="col-12 col-sm-6 col-lg-3 mb-4">
+                                <div class="info-box bg-gradient-success shadow-lg hover-shadow">
+                                    <span class="info-box-icon swing"><i class="fas fa-user-circle"></i></span>
+                                    <div class="info-box-content">
+                                        <span class="info-box-text">Mi Perfil</span>
+                                        <span class="info-box-number">Perfil</span>
+                                        <div class="progress">
+                                            <div class="progress-bar bg-white" style="width: 100%"></div>
+                                        </div>
+                                        <span class="progress-description">
+                                            <a href="#" class="text-white">
+                                                Ver perfil <i class="fas fa-arrow-circle-right ml-1"></i>
+                                            </a>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+            </div>
+            <!-- Información adicional para usuarios regulares -->
+            {% if not user.is_superuser %}
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card card-warning">
+                            <div class="card-header">
+                                <h3 class="card-title"><i class="fas fa-info-circle"></i> Información</h3>
+                            </div>
+                            <div class="card-body">
+                                <p>Tu cuenta tiene acceso limitado según los roles que te han sido asignados.</p>
+                                <p class="mb-0">Si necesitas acceso a funciones adicionales, contacta con un administrador del sistema.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </section>
+{% endblock %}
+
+{% include 'Nucleo/abajo.html' %}
+

@@ -1,0 +1,341 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REDIMA</title>
+    <link rel="icon" href="{% static 'img/LogoMr.ico' %}" type="image/x-icon">
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="{% static 'lib/bootstrap-4.4.1-dist/css/bootstrap.min.css' %}">
+    
+    <!-- CSS Personalizado (opcional) -->
+
+    <!-- Font Awesome CSS -->
+    <link rel="stylesheet" href="{% static 'lib/adminlte-3.2.0/plugins/fontawesome-free/css/all.min.css' %}">
+    
+
+    <style>
+        /* CSS personalizado para el panel lateral */
+        #panelInfo {
+            position: fixed;
+            top: 0;
+            right: -300px; /* Inicialmente oculto fuera de la pantalla */
+            height: 100%;
+            width: 300px;
+            background-color: white;
+            box-shadow: -2px 0 5px rgba(0, 0, 0, 0.5);
+            overflow-y: auto;
+            z-index: 1050;
+            transition: right 0.3s ease; /* Animación de desplazamiento */
+        }
+
+        /* Panel desplegado */
+        #panelInfo.show {
+            right: 0; /* Desliza el panel desde la derecha */
+        }
+
+        /* Estilo para esconder el botón en pantallas grandes */
+        @media (min-width: 768px) {
+            .panel-toggle-btn {
+                display: none; /* Ocultar el botón en pantallas grandes */
+            }
+        }
+
+        /* Mostrar el panel normalmente en pantallas grandes */
+        @media (min-width: 768px) {
+            #panelInfo {
+                position: static;
+                width: 100%;
+                box-shadow: none;
+                height: auto;
+            }
+        }
+
+        .image-container {
+            position: relative;
+        }
+
+        .icon-placeholder {
+            display: none; /* Ocultar el ícono inicialmente */
+        }
+
+        @media (max-width: 768px) { /* Cambiar el tamaño según tus necesidades */
+            .main-image {
+                display: none; /* Ocultar la imagen */
+            }
+
+            .icon-placeholder {
+                display: inline; /* Mostrar el ícono */
+            }
+        }
+
+
+
+        .title-text {
+            font-family: 'Cascadia Code', sans-serif;
+            font-weight: bold;
+            font-size: 14px; /* Ajusta el tamaño según sea necesario */
+            line-height: 1.2; /* Espaciado entre líneas */
+            margin: 0; /* Asegúrate de eliminar márgenes si los hay */
+            text-align: justify; /* Esto puede no funcionar como esperas para un h2 */
+        }
+
+        .summary-text {
+            font-family: 'Century Gothic', sans-serif;
+            font-size: 12px; /* Tamaño del texto */
+            line-height: 1.5; /* Espaciado entre líneas */
+        }
+
+        .text-justify {
+            text-align: justify; /* Justificar texto */
+        }
+
+        .col-md-8 {
+            padding: 15px; /* Espaciado interior */
+        }
+        .author-text {
+            font-family: 'Century Gothic', sans-serif; /* Establecer fuente si es necesario */
+            font-size: 10px; /* Ajusta el tamaño según sea necesario */
+            font-style: italic; /* Aplicar cursiva */
+            text-align: center; /* Asegurar que esté centrado */
+        }
+
+        .small-access {
+            font-size: 10px; /* Ajusta el tamaño del texto */
+            display: flex; /* Usar flexbox para alinear el ícono y el texto */
+            align-items: center; /* Alinear verticalmente el ícono y el texto */
+            justify-content: flex-start; /* Alinear a la izquierda */
+        }
+
+        .bordered-container {
+            border: 3px solid #ddd; /* Borde de 3px de ancho y color gris claro */
+            border-radius: 10px; /* Bordes redondeados */
+            padding: 20px; /* Espacio interno para que no se pegue al borde */
+            margin-bottom: 20px; /* Espacio externo debajo del contenedor */
+            background-color: #f9f9f9; /* Fondo opcional para mejorar la visibilidad */
+        }
+
+/* Estilo base para pantallas medianas y grandes */
+.h1-custom {
+    font-size: 100%;  /* Tamaño base en pantallas medianas y grandes */
+    font-weight: bold; /* Mantener el peso de la fuente */
+    font-family: 'Cascadia Code', sans-serif; /* Mantener el estilo de letra del sitio */
+    text-align: justify;  /* Alineación justificada */
+    line-height: 1.5;  
+}
+
+/* Para pantallas grandes (por encima de 1200px de ancho) */
+@media (min-width: 1200px) {
+    .h1-custom {
+        font-size: 150%;  /* Aumenta el tamaño en pantallas muy grandes */
+        
+    }
+}
+
+/* Para pantallas pequeñas (por debajo de 768px de ancho) */
+@media (max-width: 767px) {
+    .h1-custom {
+        font-size: 75;  /* Disminuye el tamaño en pantallas pequeñas */
+    }
+}
+
+/* Para pantallas muy pequeñas (por debajo de 576px de ancho) */
+@media (max-width: 575px) {
+    .h1-custom {
+        font-size: 1rem;  /* Tamaño aún más pequeño para móviles */
+    }
+}
+
+
+/* Clase para aplicar un tipo de letra a todo el contenido de un bloque */
+.custom-block-font {
+    font-family: 'Cascadia Code', sans-serif; /* Fuente personalizada */
+    font-size: 100%; /* Tamaño de letra base (100%) */
+}
+
+/* Ajustes específicos para encabezados dentro del bloque */
+.custom-block-font h1, 
+.custom-block-font h2, 
+.custom-block-font h3, 
+.custom-block-font h4, 
+.custom-block-font h5,
+.custom-block-font h6 {
+    font-size: inherit;  /* Mantener la escala predeterminada según cada encabezado */
+}
+
+/* Estilos personalizados para las etiquetas <p> */
+.custom-block-font p {
+    font-size: 75%;           /* Tamaño de letra reducido al 75% del tamaño base */
+    text-align: justify;      /* Texto justificado */
+    line-height: 2.5;         /* Interlineado de 1.5 */
+}
+
+.custom-block-font h6 {
+    font-size: 75%;           /* Tamaño de letra reducido al 60% del tamaño base */
+    text-align: justify;      /* Texto justificado */
+    line-height: 1.5;         /* Interlineado de 1.5 */
+}
+
+
+/* Media Queries para ajuste más específico según el tamaño de pantalla */
+@media (max-width: 1200px) {
+    .custom-block-font {
+        font-size: 90%; /* Ajusta el tamaño base para pantallas más pequeñas */
+    }
+    .custom-block-font p {
+        font-size: 70%; /* Ajusta el tamaño de letra de párrafos */
+    }
+    .custom-block-font h6 {
+        font-size: 55%; /* Ajusta el tamaño de letra de h6 */
+    }
+}
+
+@media (max-width: 800px) {
+    .custom-block-font {
+        font-size: 80%; /* Ajusta el tamaño base para pantallas aún más pequeñas */
+    }
+    .custom-block-font p {
+        font-size: 65%; /* Ajusta el tamaño de letra de párrafos */
+    }
+    .custom-block-font h6 {
+        font-size: 50%; /* Ajusta el tamaño de letra de h6 */
+    }
+}
+
+.profile-block {
+    font-family: 'Cascadia Code', sans-serif; /* Fuente */
+    text-align: justify; /* Justificar texto */
+    line-height: 1.5; /* Interlineado */
+    padding: 2%; /* Espaciado interno en porcentaje */
+    border: 1px solid #007bff; /* Borde del bloque */
+    border-radius: 8px; /* Esquinas redondeadas */
+}
+
+.profile-image {
+    border: 2px solid #007bff; /* Borde de la imagen */
+    width: 15%; /* Ancho en porcentaje */
+    height: auto; /* Alto automático para mantener la relación de aspecto */
+    max-width: 100px; /* Ancho máximo */
+}
+
+.profile-title {
+    font-size: 150%; /* Tamaño de fuente en porcentaje */
+    margin: 0.5em 0; /* Margen superior e inferior */
+}
+
+.profile-subtitle {
+    font-size: 125%; /* Tamaño de fuente en porcentaje */
+    margin: 0.25em 0; /* Margen superior e inferior */
+}
+
+.profile-list {
+    font-size: 100%; /* Tamaño de fuente en porcentaje */
+}
+
+/* Media Queries para redimensionar en pantallas más pequeñas */
+@media (max-width: 768px) {
+    .profile-title {
+        font-size: 130%; /* Reduce el tamaño en pantallas pequeñas */
+    }
+
+    .profile-subtitle {
+        font-size: 110%; /* Reduce el tamaño en pantallas pequeñas */
+    }
+
+    .profile-list {
+        font-size: 90%; /* Reduce el tamaño en pantallas pequeñas */
+    }
+}
+
+@media (max-width: 480px) {
+    .profile-title {
+        font-size: 120%; /* Reduce aún más el tamaño en móviles */
+    }
+
+    .profile-subtitle {
+        font-size: 100%; /* Reduce aún más el tamaño en móviles */
+    }
+
+    .profile-list {
+        font-size: 80%; /* Reduce aún más el tamaño en móviles */
+    }
+}
+
+    </style>
+    <style>
+        /* Contenedor del documento */
+    .document-icon {
+      width: 100px;
+      height: 130px;
+      position: relative;
+      border: 2px solid #333;
+      border-radius: 5px;
+      overflow: hidden;
+      background-color: white;
+      margin: 50px auto;
+    }
+    
+    /* Parte superior derecha que simula una esquina doblada */
+    .document-icon::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 30px;
+      height: 40px;
+      background-color: white;
+      border: 2px solid #333;
+      border-left: none;
+      border-bottom: none;
+      transform: rotate(-45deg);
+      transform-origin: 0 100%;
+    }
+    
+    /* Cuerpo del documento */
+    .document-body {
+      width: 100%;
+      height: 100%;
+    }
+    
+    /* Líneas que simulan texto */
+    .document-lines {
+      position: absolute;
+      top: 30px;
+      left: 10px;
+      right: 10px;
+    }
+    
+    .line {
+      width: 80%;
+      height: 5px;
+      background-color: #2ecc71;
+      margin-bottom: 10px;
+      border-radius: 3px;
+      animation: loading 2s infinite;
+    }
+    
+    /* Animación de las líneas */
+    @keyframes loading {
+      0% {
+        width: 0;
+      }
+      100% {
+        width: 80%;
+      }
+    }
+    
+    
+    
+    </style>
+
+        <!-- Agrega esto en el head de tu documento -->
+
+</head>
+
+
+
+
+<body>
+    
+

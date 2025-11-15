@@ -1,0 +1,442 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Proyecto Bootstrap</title>
+    
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="{% static 'lib/bootstrap-4.4.1-dist/css/bootstrap.min.css' %}">
+    
+    <!-- CSS Personalizado (opcional) -->
+    <link rel="stylesheet" href="{% static 'css/custom.css' %}">
+
+    <!-- Font Awesome CSS -->
+    <link rel="stylesheet" href="{% static 'lib/adminlte-3.2.0/plugins/fontawesome-free/css/all.min.css' %}">
+    
+
+    <!-- ========================================== -->
+    <!-- ESTILOS CSS ORGANIZADOS -->
+    <!-- ========================================== -->
+    <style>
+        /* ========================================== */
+        /* PANEL LATERAL */
+        /* ========================================== */
+        #panelInfo {
+            position: fixed;
+            top: 0;
+            right: -300px;
+            height: 100%;
+            width: 300px;
+            background-color: white;
+            box-shadow: -2px 0 5px rgba(0, 0, 0, 0.5);
+            overflow-y: auto;
+            z-index: 1050;
+            transition: right 0.3s ease;
+        }
+
+        #panelInfo.show {
+            right: 0;
+        }
+
+        .panel-toggle-btn {
+            display: none;
+        }
+
+        @media (min-width: 768px) {
+            .panel-toggle-btn {
+                display: none;
+            }
+            
+            #panelInfo {
+                position: static;
+                width: 100%;
+                box-shadow: none;
+                height: auto;
+            }
+        }
+
+        /* ========================================== */
+        /* CONTENEDORES DE IMÁGENES */
+        /* ========================================== */
+        .image-container {
+            position: relative;
+        }
+
+        .icon-placeholder {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .main-image {
+                display: none;
+            }
+
+            .icon-placeholder {
+                display: inline;
+            }
+        }
+
+        /* ========================================== */
+        /* TIPOGRAFÍA Y TEXTOS */
+        /* ========================================== */
+        .title-text {
+            font-family: 'Cascadia Code', sans-serif;
+            font-weight: bold;
+            font-size: 14px;
+            line-height: 1.2;
+            margin: 0;
+            text-align: justify;
+        }
+
+        .summary-text {
+            font-family: 'Century Gothic', sans-serif;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .text-justify {
+            text-align: justify;
+        }
+
+        .author-text {
+            font-family: 'Century Gothic', sans-serif;
+            font-size: 10px;
+            font-style: italic;
+            text-align: center;
+        }
+
+        .small-access {
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+        }
+
+        .small-access i {
+            color: green;
+            font-size: 10px;
+        }
+
+        /* ========================================== */
+        /* CONTENEDORES */
+        /* ========================================== */
+        .col-md-8 {
+            padding: 15px;
+        }
+
+        .bordered-container {
+            border: 3px solid #ddd;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            background-color: #f9f9f9;
+        }
+    </style>
+</head>
+<body>
+    <header class="bg-white p-3">
+        <div class="container-fluid d-flex justify-content-between align-items-center">
+            <div class="logo">
+                <a href="#">
+                    <img src="https://repositorio.ucv.edu.pe/themes/Mirage2/images/banner.png" alt="Logo" width="160">
+                </a>
+            </div>
+            <nav class="navbar navbar-expand-lg">
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                    <i class="fas fa-bars"></i> <!-- Icono de menú (Font Awesome) -->
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ml-auto"> <!-- Alineación a la derecha -->
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">Ingresar</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">Registrar</a>
+                        </li>
+                    </ul>
+                    <!-- Agregar el campo de búsqueda -->
+                    <form class="form-inline w-100 my-2 my-lg-0">
+                        <div class="input-group w-100">
+                            <input class="form-control" type="search" placeholder="Buscar" aria-label="Buscar">
+                            <div class="input-group-append">
+                                <button class="btn btn-outline-success" type="submit">Buscar</button>
+                            </div>
+                        </div>
+                    </form>
+                    
+                </div>
+            </nav>
+        </div>
+    </header>
+
+        <main class="container mt-5">
+            <h1 class="text-center">Bienvenido al Reposotirio digital</h1>
+            <br>
+            <p class="text-justify summary-text">Una plataforma digital diseñada para almacenar, preservar y difundir la producción académica, científica, tecnológica y cultural producida por la comunidad universitaria empleando protocolos y tecnologías que aseguran la interoperabilidad, la integridad de los datos y la protección de la propiedad intelectual mediante la aplicación de licencias pertinentes, con el propósito de facilitar la búsqueda, recuperación y reutilización de recursos para el avance del conocimiento y la investigación.</p>
+            <br>
+
+            <form class="form-inline w-100 my-2 my-lg-0">
+                <div class="input-group w-100">
+                    <input class="form-control" type="search" placeholder="Buscar" aria-label="Buscar">
+                    <div class="input-group-append">
+                        <button class="btn btn-outline-success" type="submit">Buscar</button>
+                    </div>
+                </div>
+            </form>
+
+
+
+        <div class="row">
+            <div class="col-md-8"> <!-- Columna para el texto -->
+                <!-- Nueva fila para las dos secciones -->
+                <div class="row bordered-container">
+                    <div class="col-md-2"> <!-- Primera sección -->
+                        <div class="image-container text-center">
+                            <img src="https://repositorio.ucv.edu.pe/bitstream/handle/20.500.12692/149934/Ledesma_VKS-SD.pdf.jpg?sequence=6&isAllowed=y" alt="Descripción de la imagen" class="img-fluid main-image">
+                            <i class="fas fa-scroll fa-3x icon-placeholder" aria-hidden="true"></i>
+                        </div>
+                    </div>
+                    <div class="col-md-10"> <!-- Segunda sección -->
+                        <h2 class="font-weight-bold title-text text-justify">Uso de Claude AI y el análisis de textos narrativos en una universidad de Trujillo-2023</h2>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <p class="text-success small-access mb-0">
+                                <i class="fas fa-lock"></i> 
+                                Acceso abierto
+                            </p>
+                            <p class="text-center author-text mb-0">Moreno Gamio, Analucía del Rosario (Universidad César Vallejo, 2024)</p>
+                        </div>
+                        <br>
+                        <p class="text-justify summary-text">
+                            Con el propósito de determinar en qué medida el uso de Claude AI optimiza el análisis de textos narrativos en una universidad de Trujillo-2023; en el desarrollo del trabajo se empleó un enfoque cuantitativo, de diseño...
+                        </p>
+                    </div>
+                </div>
+
+                <div class="row bordered-container">
+                    <div class="col-md-2"> <!-- Primera sección -->
+                        <div class="image-container text-center">
+                            <img src="https://repositorio.ucv.edu.pe/bitstream/handle/20.500.12692/149934/Ledesma_VKS-SD.pdf.jpg?sequence=6&isAllowed=y" alt="Descripción de la imagen" class="img-fluid main-image">
+                            <i class="fas fa-scroll fa-3x icon-placeholder" aria-hidden="true"></i>
+                        </div>
+                    </div>
+                    <div class="col-md-10"> <!-- Segunda sección -->
+                        <h2 class="font-weight-bold title-text text-justify">Uso de Claude AI y el análisis de textos narrativos en una universidad de Trujillo-2023</h2>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <p class="text-success small-access mb-0">
+                                <i class="fas fa-lock"></i> 
+                                Acceso abierto
+                            </p>
+                            <p class="text-center author-text mb-0">Moreno Gamio, Analucía del Rosario (Universidad César Vallejo, 2024)</p>
+                        </div>
+                        <br>
+                        <p class="text-justify summary-text">
+                            Con el propósito de determinar en qué medida el uso de Claude AI optimiza el análisis de textos narrativos en una universidad de Trujillo-2023; en el desarrollo del trabajo se empleó un enfoque cuantitativo, de diseño...
+                        </p>
+                    </div>
+                </div>
+                <div class="row bordered-container">
+                    <div class="col-md-2"> <!-- Primera sección -->
+                        <div class="image-container text-center">
+                            <img src="https://repositorio.ucv.edu.pe/bitstream/handle/20.500.12692/149934/Ledesma_VKS-SD.pdf.jpg?sequence=6&isAllowed=y" alt="Descripción de la imagen" class="img-fluid main-image">
+                            <i class="fas fa-scroll fa-3x icon-placeholder" aria-hidden="true"></i>
+                        </div>
+                    </div>
+                    <div class="col-md-10"> <!-- Segunda sección -->
+                        <h2 class="font-weight-bold title-text text-justify">Uso de Claude AI y el análisis de textos narrativos en una universidad de Trujillo-2023</h2>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <p class="text-success small-access mb-0">
+                                <i class="fas fa-lock"></i> 
+                                Acceso abierto
+                            </p>
+                            <p class="text-center author-text mb-0">Moreno Gamio, Analucía del Rosario (Universidad César Vallejo, 2024)</p>
+                        </div>
+                        <br>
+                        <p class="text-justify summary-text">
+                            Con el propósito de determinar en qué medida el uso de Claude AI optimiza el análisis de textos narrativos en una universidad de Trujillo-2023; en el desarrollo del trabajo se empleó un enfoque cuantitativo, de diseño...
+                        </p>
+                    </div>
+                </div>
+                <div class="row bordered-container">
+                    <div class="col-md-2"> <!-- Primera sección -->
+                        <div class="image-container text-center">
+                            <img src="https://repositorio.ucv.edu.pe/bitstream/handle/20.500.12692/149934/Ledesma_VKS-SD.pdf.jpg?sequence=6&isAllowed=y" alt="Descripción de la imagen" class="img-fluid main-image">
+                            <i class="fas fa-scroll fa-3x icon-placeholder" aria-hidden="true"></i>
+                        </div>
+                    </div>
+                    <div class="col-md-10"> <!-- Segunda sección -->
+                        <h2 class="font-weight-bold title-text text-justify">Uso de Claude AI y el análisis de textos narrativos en una universidad de Trujillo-2023</h2>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <p class="text-success small-access mb-0">
+                                <i class="fas fa-lock"></i> 
+                                Acceso abierto
+                            </p>
+                            <p class="text-center author-text mb-0">Moreno Gamio, Analucía del Rosario (Universidad César Vallejo, 2024)</p>
+                        </div>
+                        <br>
+                        <p class="text-justify summary-text">
+                            Con el propósito de determinar en qué medida el uso de Claude AI optimiza el análisis de textos narrativos en una universidad de Trujillo-2023; en el desarrollo del trabajo se empleó un enfoque cuantitativo, de diseño...
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="col-md-4">
+                <!-- Panel de Información colapsable -->
+    
+                    <div id="panelInfo">
+                        <div class="card mt-3">
+                            <div class="card-header">
+                                Panel de Información
+                                <button type="button" class="close" aria-label="Close" id="closePanelBtn">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="card-body">
+
+                                
+                                <!-- Formulario de búsqueda con filtros -->
+                                <form class="form-inline w-100 my-2 my-lg-0">
+                                    <!-- Input de búsqueda -->
+                                    <div class="input-group w-100 mb-3">
+                                        <input class="form-control" type="search" placeholder="Buscar" aria-label="Buscar">
+                                        <div class="input-group-append">
+                                            <button class="btn btn-outline-success" type="submit">Buscar</button>
+                                        </div>
+                                    </div>
+
+
+
+                                    <!-- Filtro: Fecha de publicación -->
+                                    <div class="form-group w-100 mb-3">
+                                        <label>Por fecha de publicación:</label>
+                                        <select class="form-control w-100">
+                                            <option value="">Seleccione un rango</option>
+                                            <option value="2020-2025">2020 - 2025</option>
+                                            <option value="2010-2019">2010 - 2019</option>
+                                            <option value="2003-2009">2003 - 2009</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Filtro: Autor -->
+                                    <div class="form-group w-100 mb-3">
+                                        <label>Autor:</label>
+                                        <select class="form-control w-100">
+                                            <option value="">Seleccione un autor</option>
+                                            <option value="holguin">Holguín Álvarez, Jhon Alexander</option>
+                                            <option value="nunez">Núñez Lira, Luis Alberto</option>
+                                            <option value="rodriguez">Rodríguez Díaz, David René</option>
+                                            <option value="lora">Lora Loza, Miryam Griselda</option>
+                                            <option value="meneses">Meneses La Riva, Mónica Elisa</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Filtro: Asesor -->
+                                    <div class="form-group w-100 mb-3">
+                                        <label>Asesor:</label>
+                                        <select class="form-control w-100">
+                                            <option value="">Seleccione un asesor</option>
+                                            <option value="cruz">Cruz Montero, Juana</option>
+                                            <option value="holguin">Holguín Álvarez, Jhon</option>
+                                            <option value="ludeña">Ludeña González, Gerardo Francisco</option>
+                                        </select>
+                                    </div>
+
+
+
+                                    <!-- Filtro: Temas -->
+                                    <div class="form-group w-100 mb-3">
+                                        <label>Tema:</label>
+                                        <select class="form-control w-100">
+                                            <option value="">Seleccione un tema</option>
+                                            <option value="desempeño">Desempeño laboral</option>
+                                            <option value="productividad">Productividad</option>
+                                            <option value="estudiantes">Estudiantes</option>
+                                            <option value="instituciones">Instituciones educativas</option>
+                                            <option value="aprendizaje">Aprendizaje</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Filtro: Sede -->
+                                    <div class="form-group w-100 mb-3">
+                                        <label>Sedes:</label>
+                                        <select class="form-control w-100">
+                                            <option value="">Seleccione una sede</option>
+                                            <option value="huaraz">Huaraz</option>
+                                            <option value="carhuaz">Carhuaz</option>
+                                            <option value="yungay">Yungay</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Filtro: Tiene archivo -->
+                                    <div class="form-group w-100 mb-3">
+                                        <label>Tiene archivo(s):</label>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="archivo" id="conArchivo" value="si">
+                                            <label class="form-check-label" for="conArchivo">Sí</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="archivo" id="sinArchivo" value="no">
+                                            <label class="form-check-label" for="sinArchivo">No</label>
+                                        </div>
+                                    </div>
+
+                                    <!-- Botón para aplicar los filtros -->
+                                    <div class="form-group w-100">
+                                        <button class="btn btn-primary" type="submit">Filtrar búsqueda</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- Botón que despliega el panel solo en pantallas pequeñas -->
+    <button class="btn btn-primary panel-toggle-btn" style="position: fixed; bottom: 20px; right: 20px;" type="button" id="togglePanelBtn">
+        Mostrar Panel
+    </button>
+
+
+
+    <footer class="bg-white text-center p-3 mt-5">
+        <strong>© 2024 <a href="#">Repositorio Digital</a>.</strong> Todos los derechos reservados.
+    </footer>
+
+    <!-- ========================================== -->
+    <!-- SCRIPTS JAVASCRIPT -->
+    <!-- ========================================== -->
+    <script src="{% static 'lib/adminlte-3.2.0/plugins/jquery/jquery.min.js' %}"></script>
+    <script src="{% static 'lib/bootstrap-4.4.1-dist/js/bootstrap.min.js' %}"></script>
+
+    <script>
+        /* ========================================== */
+        /* CONTROL DE PANEL LATERAL */
+        /* ========================================== */
+        document.addEventListener('DOMContentLoaded', function() {
+            const togglePanelBtn = document.getElementById('togglePanelBtn');
+            const closePanelBtn = document.getElementById('closePanelBtn');
+            const panel = document.getElementById('panelInfo');
+
+            if (togglePanelBtn && panel) {
+                togglePanelBtn.addEventListener('click', function () {
+                    panel.classList.toggle('show');
+                });
+            }
+
+            if (closePanelBtn && panel) {
+                closePanelBtn.addEventListener('click', function () {
+                    panel.classList.remove('show');
+                });
+            }
+        });
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,233 @@
+{% load static %}
+
+{% include 'Nucleo/arriba.html' %}
+{% include 'Nucleo/centro.html' %}
+
+{% block extra_css %}
+<style>
+  .action-card {
+    margin-bottom: 1rem;
+    border-left: 4px solid #007bff;
+    transition: all 0.3s ease;
+  }
+  
+  .action-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  }
+  
+  .action-card.proyectos {
+    border-left-color: #dc3545;
+  }
+  
+  .action-card.usuarios {
+    border-left-color: #28a745;
+  }
+  
+  .action-card.egresados {
+    border-left-color: #ffc107;
+  }
+  
+  .action-card.publicaciones {
+    border-left-color: #17a2b8;
+  }
+  
+  .action-card.mensajes {
+    border-left-color: #6f42c1;
+  }
+  
+  .action-card.tareas {
+    border-left-color: #fd7e14;
+  }
+  
+  .action-card.administracion {
+    border-left-color: #e83e8c;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1 class="m-0">
+          <i class="fas fa-tasks mr-2"></i>
+          Gestionar Acciones
+        </h1>
+      </div>
+      <div class="col-sm-6">
+        <ol class="breadcrumb float-sm-right">
+          <!-- TODO: Crear vista y URL para 'panel' y 'panel_permisos' -->
+          <li class="breadcrumb-item"><a href="#">Panel</a></li>
+          <li class="breadcrumb-item"><a href="#">Permisos</a></li>
+          <li class="breadcrumb-item active">Acciones</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+<section class="content">
+  <div class="container-fluid">
+    <div class="row">
+      <!-- Formulario para crear nueva acción -->
+      <div class="col-md-4">
+        <div class="card card-outline card-primary">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fas fa-plus mr-2"></i>
+              Crear Nueva Acción
+            </h3>
+          </div>
+          <form method="post" id="accion-form">
+            {% csrf_token %}
+            <div class="card-body">
+              <div class="form-group">
+                <label>Código de la Acción</label>
+                <input type="text" name="codigo" class="form-control" required 
+                       placeholder="Ej: crear_proyecto" pattern="[a-z_]+">
+                <small class="form-text text-muted">
+                  Solo letras minúsculas y guiones bajos. Debe ser único.
+                </small>
+              </div>
+              
+              <div class="form-group">
+                <label>Nombre</label>
+                <input type="text" name="nombre" class="form-control" required 
+                       placeholder="Ej: Crear Proyecto">
+              </div>
+              
+              <div class="form-group">
+                <label>Descripción</label>
+                <textarea name="descripcion" class="form-control" rows="3" 
+                          placeholder="Descripción de qué permite esta acción..."></textarea>
+              </div>
+              
+              <div class="form-group">
+                <label>Categoría</label>
+                <select name="categoria" class="form-control" required>
+                  <option value="proyectos">Proyectos</option>
+                  <option value="usuarios">Usuarios</option>
+                  <option value="egresados">Egresados</option>
+                  <option value="publicaciones">Publicaciones</option>
+                  <option value="mensajes">Mensajes</option>
+                  <option value="tareas">Tareas</option>
+                  <option value="administracion">Administración</option>
+                  <option value="general">General</option>
+                </select>
+              </div>
+            </div>
+            <div class="card-footer">
+              <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save mr-1"></i>
+                Crear Acción
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+      
+      <!-- Lista de acciones por categoría -->
+      <div class="col-md-8">
+        {% for categoria, acciones_list in acciones_por_categoria.items %}
+          <div class="card card-outline card-info mb-3">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="fas fa-folder mr-2"></i>
+                {{ categoria|title }}
+              </h3>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                {% for accion in acciones_list %}
+                  <div class="col-md-6 mb-3">
+                    <div class="card action-card {{ categoria }}">
+                      <div class="card-body">
+                        <h5 class="mb-1">
+                          {{ accion.nombre }}
+                          {% if not accion.activo %}
+                            <span class="badge badge-secondary">Inactivo</span>
+                          {% endif %}
+                        </h5>
+                        <p class="text-muted mb-1">
+                          <code>{{ accion.codigo }}</code>
+                        </p>
+                        {% if accion.descripcion %}
+                          <p class="mb-0 small">{{ accion.descripcion }}</p>
+                        {% endif %}
+                        <div class="mt-2">
+                          <span class="badge badge-light">
+                            {{ accion.roles.count }} rol(es)
+                          </span>
+                          <span class="badge badge-light">
+                            {{ accion.permisos_adicionales.count }} usuario(s)
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+        {% empty %}
+          <div class="alert alert-info">
+            <i class="fas fa-info-circle mr-2"></i>
+            No hay acciones creadas. Crea la primera acción usando el formulario.
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  $(document).ready(function() {
+    // Enviar formulario con AJAX
+    $('#accion-form').on('submit', function(e) {
+      e.preventDefault();
+      
+      var formData = new FormData(this);
+      
+      $.ajax({
+        url: window.location.href,
+        type: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function(response) {
+          if (response.success) {
+            Swal.fire({
+              icon: 'success',
+              title: 'Éxito',
+              text: response.message || 'Acción creada correctamente.',
+              showConfirmButton: true
+            }).then(() => {
+              location.reload();
+            });
+          } else {
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: response.message || 'Error al crear la acción.'
+            });
+          }
+        },
+        error: function() {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Error al procesar la solicitud.'
+          });
+        }
+      });
+    });
+  });
+</script>
+{% endblock %}
+
+{% include 'Nucleo/abajo.html' %}
+

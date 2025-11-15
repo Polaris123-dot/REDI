@@ -1,0 +1,94 @@
+<script>
+    function updatePagination(totalPages, currentPage) {
+    $('#pagination-controls').empty(); // Limpiar controles anteriores
+
+    // Enlace a la página anterior
+    if (currentPage > 1) {
+        $('#pagination-controls').append(`
+            <li class="page-item">
+                <a class="page-link" href="#" data-page="${currentPage - 1}" aria-label="Previous">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+        `);
+    } else {
+        $('#pagination-controls').append(`
+            <li class="page-item disabled">
+                <span class="page-link" aria-label="Previous">
+                    <span aria-hidden="true">&laquo;</span>
+                </span>
+            </li>
+        `);
+    }
+
+    // Mostrar las páginas alrededor de la actual
+    const range = 4; // Cuántas páginas mostrar a la izquierda y derecha de la actual
+    const startPage = Math.max(1, currentPage - range);
+    const endPage = Math.min(totalPages, currentPage + range);
+
+    // Enlace a la primera página con "..."
+    if (startPage > 1) {
+        $('#pagination-controls').append(`
+            <li class="page-item">
+                <a class="page-link" href="#" data-page="1">1</a>
+            </li>
+        `);
+        if (startPage > 2) {
+            $('#pagination-controls').append(`
+                <li class="page-item disabled"><span class="page-link">...</span></li>
+            `);
+        }
+    }
+
+    // Enlaces a las páginas del rango calculado
+    for (let i = startPage; i <= endPage; i++) {
+        if (i === currentPage) {
+            $('#pagination-controls').append(`
+                <li class="page-item active">
+                    <span class="page-link">${i} <span class="sr-only">(current)</span></span>
+                </li>
+            `);
+        } else {
+            $('#pagination-controls').append(`
+                <li class="page-item">
+                    <a class="page-link" href="#" data-page="${i}">${i}</a>
+                </li>
+            `);
+        }
+    }
+
+    // Enlace a la última página con "..."
+    if (endPage < totalPages) {
+        if (endPage < totalPages - 1) {
+            $('#pagination-controls').append(`
+                <li class="page-item disabled"><span class="page-link">...</span></li>
+            `);
+        }
+        $('#pagination-controls').append(`
+            <li class="page-item">
+                <a class="page-link" href="#" data-page="${totalPages}">${totalPages}</a>
+            </li>
+        `);
+    }
+
+    // Enlace a la página siguiente
+    if (currentPage < totalPages) {
+        $('#pagination-controls').append(`
+            <li class="page-item">
+                <a class="page-link" href="#" data-page="${currentPage + 1}" aria-label="Next">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+        `);
+    } else {
+        $('#pagination-controls').append(`
+            <li class="page-item disabled">
+                <span class="page-link" aria-label="Next">
+                    <span aria-hidden="true">&raquo;</span>
+                </span>
+            </li>
+        `);
+    }
+}
+
+</script>

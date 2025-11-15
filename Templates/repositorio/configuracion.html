@@ -1,0 +1,513 @@
+{% load static %}
+{% include 'Nucleo/arriba.html' %}
+
+{% block extra_css %}
+<!-- DataTables CSS - Local -->
+<link rel="stylesheet" href="{% static 'DataTables/css/dataTables.bootstrap4.min.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/datatables-responsive/css/responsive.bootstrap4.min.css' %}">
+<!-- SweetAlert2 CSS -->
+<link rel="stylesheet" href="{% static 'plugins/sweetalert2/sweetalert2.min.css' %}">
+<style>
+  /* Estilos para tabs */
+  .nav-tabs .nav-link {
+    color: #495057;
+  }
+
+  .nav-tabs .nav-link.active {
+    color: #007bff;
+    font-weight: 600;
+  }
+
+  /* Icono preview */
+  .icono-preview {
+    font-size: 1.2rem;
+    margin-right: 8px;
+  }
+
+  /* Estilos responsivos para botones */
+  .btn-group-sm .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+  }
+
+  /* En pantallas pequeñas, solo mostrar iconos */
+  @media (max-width: 767px) {
+    .btn-group-sm .btn span {
+      display: none !important;
+    }
+
+    .btn-group-sm .btn {
+      padding: 0.25rem 0.4rem;
+    }
+  }
+
+  /* En pantallas medianas y grandes, mostrar texto */
+  @media (min-width: 768px) {
+    .btn-group-sm .btn span {
+      display: inline !important;
+    }
+  }
+
+  /* Loading overlay */
+  .loading-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .loading-overlay.show {
+    display: flex;
+  }
+
+  .spinner-border-custom {
+    width: 3rem;
+    height: 3rem;
+    border-width: 0.3rem;
+  }
+</style>
+{% endblock %}
+
+{% include 'Nucleo/sidebar.html' %}
+
+<!-- Content Wrapper. Contains page content -->
+<div class="content-wrapper">
+  <!-- Content Header -->
+  <div class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-sm-6">
+          <h1 class="m-0">Configuración del Repositorio</h1>
+        </div>
+        <div class="col-sm-6">
+          <ol class="breadcrumb float-sm-right d-none d-sm-flex">
+            <li class="breadcrumb-item"><a href="{% url 'usuarios:panel' %}">Inicio</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'repositorio:index' %}">Repositorio</a></li>
+            <li class="breadcrumb-item active">Configuración</li>
+          </ol>
+        </div>
+      </div>
+      <!-- Accesos Rápidos -->
+      <div class="row">
+        <div class="col-12">
+          <div class="btn-group" role="group">
+            <a href="{% url 'repositorio:configuracion' %}" class="btn btn-info btn-sm active">
+              <i class="fas fa-cog"></i> Configuración
+            </a>
+            <a href="{% url 'repositorio:organizacion' %}" class="btn btn-success btn-sm">
+              <i class="fas fa-sitemap"></i> Organización
+            </a>
+            <a href="{% url 'repositorio:personal' %}" class="btn btn-purple btn-sm">
+              <i class="fas fa-users"></i> Personal
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main content -->
+  <section class="content">
+    <div class="container-fluid">
+
+      <!-- Tabs Navigation -->
+      <ul class="nav nav-tabs" id="configuracionTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+          <a class="nav-link active" id="tipos-recurso-tab" data-toggle="tab" href="#tipos-recurso" role="tab"
+            aria-controls="tipos-recurso" aria-selected="true">
+            <i class="fas fa-file-alt"></i> Tipos de Recurso
+          </a>
+        </li>
+        <li class="nav-item" role="presentation">
+          <a class="nav-link" id="estados-documento-tab" data-toggle="tab" href="#estados-documento" role="tab"
+            aria-controls="estados-documento" aria-selected="false">
+            <i class="fas fa-info-circle"></i> Estados de Documento
+          </a>
+        </li>
+        <li class="nav-item" role="presentation">
+          <a class="nav-link" id="licencias-tab" data-toggle="tab" href="#licencias" role="tab"
+            aria-controls="licencias" aria-selected="false">
+            <i class="fas fa-file-contract"></i> Licencias
+          </a>
+        </li>
+      </ul>
+
+      <!-- Tabs Content -->
+      <div class="tab-content" id="configuracionTabsContent">
+
+        <!-- Tab Tipos de Recurso -->
+        <div class="tab-pane fade show active" id="tipos-recurso" role="tabpanel" aria-labelledby="tipos-recurso-tab">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="fas fa-file-alt"></i> Gestión de Tipos de Recurso
+              </h3>
+              <div class="card-tools">
+                <button type="button" class="btn btn-primary btn-sm" id="btnCrearTipoRecurso">
+                  <i class="fas fa-plus"></i> Nuevo Tipo de Recurso
+                </button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table id="tableTiposRecurso" class="table" style="width:100%">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Nombre</th>
+                      <th>Descripción</th>
+                      <th>Icono</th>
+                      <th>Categoría</th>
+                      <th class="text-center">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab Estados de Documento -->
+        <div class="tab-pane fade" id="estados-documento" role="tabpanel" aria-labelledby="estados-documento-tab">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="fas fa-info-circle"></i> Gestión de Estados de Documento
+              </h3>
+              <div class="card-tools">
+                <button type="button" class="btn btn-primary btn-sm" id="btnCrearEstadoDocumento">
+                  <i class="fas fa-plus"></i> Nuevo Estado
+                </button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table id="tableEstadosDocumento" class="table" style="width:100%">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Orden</th>
+                      <th>Nombre</th>
+                      <th>Descripción</th>
+                      <th class="text-center">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab Licencias -->
+        <div class="tab-pane fade" id="licencias" role="tabpanel" aria-labelledby="licencias-tab">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="fas fa-file-contract"></i> Gestión de Licencias
+              </h3>
+              <div class="card-tools">
+                <button type="button" class="btn btn-primary btn-sm" id="btnCrearLicencia">
+                  <i class="fas fa-plus"></i> Nueva Licencia
+                </button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table id="tableLicencias" class="table" style="width:100%">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Nombre</th>
+                      <th>Código</th>
+                      <th>Versión</th>
+                      <th>Comercial</th>
+                      <th>Modificación</th>
+                      <th>Atribución</th>
+                      <th class="text-center">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+</div>
+<!-- /.content-wrapper -->
+
+<!-- Modal para Tipo de Recurso -->
+<div class="modal fade" id="modalTipoRecurso" tabindex="-1" role="dialog" aria-labelledby="modalTipoRecursoLabel"
+  aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalTipoRecursoLabel">Nuevo Tipo de Recurso</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form id="formTipoRecurso">
+        {% csrf_token %}
+        <div class="modal-body">
+          <input type="hidden" id="tipoRecursoId" name="id">
+
+          <div class="form-group">
+            <label for="tipoRecursoNombre">Nombre <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="tipoRecursoNombre" name="nombre" required>
+          </div>
+
+          <div class="form-group">
+            <label for="tipoRecursoDescripcion">Descripción</label>
+            <textarea class="form-control" id="tipoRecursoDescripcion" name="descripcion" rows="3"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="tipoRecursoIcono">Icono</label>
+            <input type="text" class="form-control" id="tipoRecursoIcono" name="icono"
+              placeholder="Ej: fas fa-file-pdf">
+            <small class="form-text text-muted">Clase de icono FontAwesome (ej: fas fa-file-pdf)</small>
+          </div>
+
+          <div class="form-group">
+            <label for="tipoRecursoCategoria">Categoría</label>
+            <input type="text" class="form-control" id="tipoRecursoCategoria" name="categoria">
+          </div>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> Guardar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para Estado de Documento -->
+<div class="modal fade" id="modalEstadoDocumento" tabindex="-1" role="dialog" aria-labelledby="modalEstadoDocumentoLabel"
+  aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalEstadoDocumentoLabel">Nuevo Estado de Documento</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form id="formEstadoDocumento">
+        {% csrf_token %}
+        <div class="modal-body">
+          <input type="hidden" id="estadoDocumentoId" name="id">
+
+          <div class="form-group">
+            <label for="estadoDocumentoNombre">Nombre <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="estadoDocumentoNombre" name="nombre" required>
+          </div>
+
+          <div class="form-group">
+            <label for="estadoDocumentoDescripcion">Descripción</label>
+            <textarea class="form-control" id="estadoDocumentoDescripcion" name="descripcion" rows="3"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="estadoDocumentoOrden">Orden</label>
+            <input type="number" class="form-control" id="estadoDocumentoOrden" name="orden" value="0" min="0">
+            <small class="form-text text-muted">Orden de visualización (menor número primero)</small>
+          </div>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> Guardar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para Licencia -->
+<div class="modal fade" id="modalLicencia" tabindex="-1" role="dialog" aria-labelledby="modalLicenciaLabel"
+  aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalLicenciaLabel">Nueva Licencia</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form id="formLicencia">
+        {% csrf_token %}
+        <div class="modal-body">
+          <input type="hidden" id="licenciaId" name="id">
+
+          <div class="row">
+            <div class="col-md-8">
+              <div class="form-group">
+                <label for="licenciaNombre">Nombre <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="licenciaNombre" name="nombre" required>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-group">
+                <label for="licenciaCodigo">Código <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="licenciaCodigo" name="codigo" required>
+                <small class="form-text text-muted">Código único de la licencia (ej: MIT, GPL, CC-BY)</small>
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="licenciaVersion">Versión</label>
+                <input type="text" class="form-control" id="licenciaVersion" name="version">
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="licenciaUrl">URL</label>
+                <input type="url" class="form-control" id="licenciaUrl" name="url">
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="licenciaDescripcion">Descripción</label>
+            <textarea class="form-control" id="licenciaDescripcion" name="descripcion" rows="3"></textarea>
+          </div>
+
+          <div class="row">
+            <div class="col-md-4">
+              <div class="form-group">
+                <label>
+                  <input type="checkbox" id="licenciaPermiteComercial" name="permite_comercial"> Permite uso comercial
+                </label>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-group">
+                <label>
+                  <input type="checkbox" id="licenciaPermiteModificacion" name="permite_modificacion"> Permite modificación
+                </label>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-group">
+                <label>
+                  <input type="checkbox" id="licenciaRequiereAttribucion" name="requiere_attribucion" checked> Requiere atribución
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="licenciaTextoCompleto">Texto Completo</label>
+            <textarea class="form-control" id="licenciaTextoCompleto" name="texto_completo" rows="5"></textarea>
+          </div>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> Guardar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner-border spinner-border-custom text-light" role="status">
+    <span class="sr-only">Cargando...</span>
+  </div>
+</div>
+
+{% include 'Nucleo/abajo.html' %}
+
+{% block extra_js %}
+<!-- DataTables JS - Local -->
+<script src="{% static 'DataTables/js/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'DataTables/js/dataTables.bootstrap4.min.js' %}"></script>
+<script src="{% static 'plugins/datatables-responsive/js/dataTables.responsive.min.js' %}"></script>
+<script src="{% static 'plugins/datatables-responsive/js/responsive.bootstrap4.min.js' %}"></script>
+<!-- SweetAlert2 -->
+<script src="{% static 'plugins/sweetalert2/sweetalert2.all.min.js' %}"></script>
+
+<!-- URL Reverse Helper -->
+<script>
+  // Configuración de URLs usando URL reverse
+  const REPOSITORIO_URLS = {
+    tiposRecursoList: "{% url 'repositorio:tipos_recurso_list' %}",
+    tipoRecursoCreate: "{% url 'repositorio:tipo_recurso_create' %}",
+    tipoRecursoDetail: function (id) {
+      return "{% url 'repositorio:tipo_recurso_detail' 0 %}".replace('0', id.toString());
+    },
+    tipoRecursoUpdate: function (id) {
+      return "{% url 'repositorio:tipo_recurso_update' 0 %}".replace('0', id.toString());
+    },
+    tipoRecursoDelete: function (id) {
+      return "{% url 'repositorio:tipo_recurso_delete' 0 %}".replace('0', id.toString());
+    },
+    estadosDocumentoList: "{% url 'repositorio:estados_documento_list' %}",
+    estadoDocumentoCreate: "{% url 'repositorio:estado_documento_create' %}",
+    estadoDocumentoDetail: function (id) {
+      return "{% url 'repositorio:estado_documento_detail' 0 %}".replace('0', id.toString());
+    },
+    estadoDocumentoUpdate: function (id) {
+      return "{% url 'repositorio:estado_documento_update' 0 %}".replace('0', id.toString());
+    },
+    estadoDocumentoDelete: function (id) {
+      return "{% url 'repositorio:estado_documento_delete' 0 %}".replace('0', id.toString());
+    },
+    licenciasList: "{% url 'repositorio:licencias_list' %}",
+    licenciaCreate: "{% url 'repositorio:licencia_create' %}",
+    licenciaDetail: function (id) {
+      return "{% url 'repositorio:licencia_detail' 0 %}".replace('0', id.toString());
+    },
+    licenciaUpdate: function (id) {
+      return "{% url 'repositorio:licencia_update' 0 %}".replace('0', id.toString());
+    },
+    licenciaDelete: function (id) {
+      return "{% url 'repositorio:licencia_delete' 0 %}".replace('0', id.toString());
+    },
+    tiposRecursoForSelect: "{% url 'repositorio:tipos_recurso_for_select' %}",
+    estadosDocumentoForSelect: "{% url 'repositorio:estados_documento_for_select' %}",
+    licenciasForSelect: "{% url 'repositorio:licencias_for_select' %}"
+  };
+
+  // Función para obtener CSRF token
+  function getCSRFToken() {
+    const token = document.querySelector('[name=csrfmiddlewaretoken]');
+    return token ? token.value : '';
+  }
+  
+  // Hacer disponible globalmente
+  window.getCSRFToken = getCSRFToken;
+</script>
+<!-- Repositorio JS -->
+<script src="{% static 'js/repositorio.js' %}"></script>
+{% endblock %}
+
+

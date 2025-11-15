@@ -1,0 +1,413 @@
+{% load static %}
+
+<!-- Main Sidebar Container -->
+<aside class="main-sidebar elevation-4 sidebar-light-maroon">
+  <!-- Brand Logo -->
+  <a href="index3.html" class="brand-link">
+    <!-- <img src="dist/img/AdminLTELogo.png" alt="Logotipo de AdminLTE" class="brand-image img-circle elevation-3" style="opacity: .8"> -->
+    <span class="brand-text font-weight-light"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Administrador REDIMA</font></font></span>
+  </a>
+
+  <!-- Sidebar -->
+  <div class="sidebar os-theme-dark" style="overflow-y: auto;">
+    <!-- Sidebar user panel (optional) -->
+    <div class="user-panel mt-3 pb-3 mb-3 d-flex">
+      <div class="image">
+        <img src="{% static 'img/imgh.png' %}" alt="Descripción de la imagen" class="tu-clase-css">
+      </div>
+      <div class="info">
+        <a href="{% url 'usuarios:panel' %}" class="d-block">
+            {% if user.is_authenticated %}
+              {% if user.get_full_name %}
+                {{ user.get_full_name }}
+              {% else %}
+                {{ user.username }}
+              {% endif %}
+            {% else %}
+              Usuario
+            {% endif %} 
+        </a>
+      </div>
+    </div>
+
+
+    <!-- Sidebar Menu -->
+    <nav class="mt-2">
+      <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+    
+
+     <!-- PANEL DE CONTROL -->
+        <li class="nav-item menu-open">
+          <a href="{% url 'usuarios:panel' %}" class="nav-link active">
+            <i class="nav-icon fas fa-tachometer-alt"></i>
+            <p><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">
+              Principal
+              </font></font><i class="right fas fa-angle-left"></i>
+            </p>
+          </a>
+          <ul class="nav nav-treeview">
+            {% if user.is_authenticated %}
+              <!-- Enlace a usuarios si tiene permiso de ver usuarios -->
+              {% if perms.auth.view_user or user.is_superuser %}
+                <li class="nav-item">
+                  <a href="{% url 'usuarios:lista_usuarios' %}" class="nav-link">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>Ver Usuarios</p>
+                  </a>
+                </li>
+              {% endif %}
+              
+              {% if user.is_superuser %}
+                <!-- Superusuario ve todas las opciones -->
+                {% if perms.catalogacion.view_categoria or perms.catalogacion.view_etiqueta %}
+                <li class="nav-item">
+                  <a href="{% url 'catalogacion:index' %}" class="nav-link">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>Catálogo</p>
+                  </a>
+                </li>
+                {% endif %}
+                <li class="nav-item">
+                  <a href="#" class="nav-link">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>Egresado</p>
+                  </a>
+                </li>
+                {% if perms.proyectos.view_proyecto or perms.proyectos.view_tipoproyecto %}
+                <li class="nav-item">
+                  <a href="{% url 'proyectos:index' %}" class="nav-link">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>Proyectos</p>
+                  </a>
+                </li>
+                {% endif %}
+                {% if perms.repositorio.view_tiporecurso or perms.repositorio.view_estadodocumento or perms.repositorio.view_comunidad or perms.repositorio.view_coleccion or perms.repositorio.view_licencia %}
+                <li class="nav-item">
+                  <a href="{% url 'repositorio:index' %}" class="nav-link">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>Repositorio</p>
+                  </a>
+                </li>
+                {% endif %}
+                {% if perms.publicaciones.view_publicacion %}
+                <li class="nav-item">
+                  <a href="{% url 'publicaciones:index' %}" class="nav-link">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>Publicaciones</p>
+                  </a>
+                </li>
+                {% endif %}
+                {% if perms.interaccion.view_comentario or perms.interaccion.view_valoracion or perms.interaccion.view_cita or perms.interaccion.view_referenciabibliografica %}
+                <li class="nav-item">
+                  <a href="{% url 'interaccion:index' %}" class="nav-link">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>Interacción</p>
+                  </a>
+                </li>
+                {% endif %}
+                {% if perms.notificaciones.view_tiponotificacion or perms.notificaciones.view_notificacion %}
+                <li class="nav-item">
+                  <a href="{% url 'notificaciones:index' %}" class="nav-link">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>Notificaciones</p>
+                  </a>
+                </li>
+                {% endif %}
+                {% if perms.configuracion.view_configuracionsistema or perms.configuracion.view_logsistema %}
+                <li class="nav-item">
+                  <a href="{% url 'configuracion:index' %}" class="nav-link">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>Configuración</p>
+                  </a>
+                </li>
+                {% endif %}
+                {% if perms.metadatos.view_esquametadatos or perms.metadatos.view_campometadatos or perms.metadatos.view_metadatosdocumento %}
+                <li class="nav-item">
+                  <a href="{% url 'metadatos:index' %}" class="nav-link">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>Metadatos</p>
+                  </a>
+                </li>
+                {% endif %}
+                {% if perms.estadisticas.view_visitadocumento or perms.estadisticas.view_descargaarchivo or perms.estadisticas.view_estadisticaagregada %}
+                <li class="nav-item">
+                  <a href="{% url 'estadisticas:index' %}" class="nav-link">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>Estadísticas</p>
+                  </a>
+                </li>
+                {% endif %}
+                {% if perms.busqueda.view_indicebusqueda or perms.busqueda.view_busqueda %}
+                <li class="nav-item">
+                  <a href="{% url 'busqueda:index' %}" class="nav-link">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>Búsqueda</p>
+                  </a>
+                </li>
+                {% endif %}
+                {% if perms.revisiones.view_criteriorevision or perms.revisiones.view_procesorevision or perms.revisiones.view_revision or perms.revisiones.view_evaluacioncriterio %}
+                <li class="nav-item">
+                  <a href="{% url 'revisiones:index' %}" class="nav-link">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>Revisiones</p>
+                  </a>
+                </li>
+                {% endif %}
+                <li class="nav-item">
+                  <a href="./index3.html" class="nav-link">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>Visitantes</p>
+                  </a>
+                </li>
+              {% else %}
+                <!-- Usuarios regulares ven solo opciones según sus roles -->
+                {% if perms.catalogacion.view_categoria or perms.catalogacion.view_etiqueta %}
+                <li class="nav-item">
+                  <a href="{% url 'catalogacion:index' %}" class="nav-link">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>Catálogo</p>
+                  </a>
+                </li>
+                {% endif %}
+                {% for grupo in user.groups.all %}
+                  {% if 'egresado' in grupo.name|lower or grupo.name == 'Egresados' %}
+                    <li class="nav-item">
+                      <a href="#" class="nav-link">
+                        <i class="far fa-circle nav-icon"></i>
+                        <p>Egresado</p>
+                      </a>
+                    </li>
+                  {% endif %}
+                {% endfor %}
+                {% if perms.proyectos.view_proyecto or perms.proyectos.view_tipoproyecto %}
+                <li class="nav-item">
+                  <a href="{% url 'proyectos:index' %}" class="nav-link">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>Proyectos</p>
+                  </a>
+                </li>
+                {% endif %}
+                {% if perms.repositorio.view_tiporecurso or perms.repositorio.view_estadodocumento or perms.repositorio.view_comunidad or perms.repositorio.view_coleccion or perms.repositorio.view_licencia %}
+                <li class="nav-item">
+                  <a href="{% url 'repositorio:index' %}" class="nav-link">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>Repositorio</p>
+                  </a>
+                </li>
+                {% endif %}
+                {% if perms.publicaciones.view_publicacion %}
+                <li class="nav-item">
+                  <a href="{% url 'publicaciones:index' %}" class="nav-link">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>Publicaciones</p>
+                  </a>
+                </li>
+                {% endif %}
+                {% if perms.interaccion.view_comentario or perms.interaccion.view_valoracion or perms.interaccion.view_cita or perms.interaccion.view_referenciabibliografica %}
+                <li class="nav-item">
+                  <a href="{% url 'interaccion:index' %}" class="nav-link">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>Interacción</p>
+                  </a>
+                </li>
+                {% endif %}
+                {% if perms.notificaciones.view_tiponotificacion or perms.notificaciones.view_notificacion %}
+                <li class="nav-item">
+                  <a href="{% url 'notificaciones:index' %}" class="nav-link">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>Notificaciones</p>
+                  </a>
+                </li>
+                {% endif %}
+                {% if perms.configuracion.view_configuracionsistema or perms.configuracion.view_logsistema %}
+                <li class="nav-item">
+                  <a href="{% url 'configuracion:index' %}" class="nav-link">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>Configuración</p>
+                  </a>
+                </li>
+                {% endif %}
+                {% if perms.metadatos.view_esquametadatos or perms.metadatos.view_campometadatos or perms.metadatos.view_metadatosdocumento %}
+                <li class="nav-item">
+                  <a href="{% url 'metadatos:index' %}" class="nav-link">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>Metadatos</p>
+                  </a>
+                </li>
+                {% endif %}
+                {% if perms.estadisticas.view_visitadocumento or perms.estadisticas.view_descargaarchivo or perms.estadisticas.view_estadisticaagregada %}
+                <li class="nav-item">
+                  <a href="{% url 'estadisticas:index' %}" class="nav-link">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>Estadísticas</p>
+                  </a>
+                </li>
+                {% endif %}
+                {% if perms.busqueda.view_indicebusqueda or perms.busqueda.view_busqueda %}
+                <li class="nav-item">
+                  <a href="{% url 'busqueda:index' %}" class="nav-link">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>Búsqueda</p>
+                  </a>
+                </li>
+                {% endif %}
+                {% if perms.revisiones.view_criteriorevision or perms.revisiones.view_procesorevision or perms.revisiones.view_revision or perms.revisiones.view_evaluacioncriterio %}
+                <li class="nav-item">
+                  <a href="{% url 'revisiones:index' %}" class="nav-link">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>Revisiones</p>
+                  </a>
+                </li>
+                {% endif %}
+              {% endif %}
+            {% endif %}
+          </ul>
+        </li>
+
+
+
+
+    <!-- PANEL DE NAVEGACION DATOS ESTADISTICOS-->
+    {% if user.is_authenticated and user.is_superuser %}
+        <li class="nav-item">
+          <a href="#" class="nav-link">
+            <i class="nav-icon fas fa-chart-pie"></i>
+            <p><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">
+              Gráficos Estadiscos
+              </font></font><i class="right fas fa-angle-left"></i>
+            </p>
+          </a>
+          <ul class="nav nav-treeview">
+            <li class="nav-item">
+              <a href="pages/charts/chartjs.html" class="nav-link">
+                <i class="far fa-circle nav-icon"></i>
+                <p><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Gráfico de visitas</font></font></p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="pages/charts/flot.html" class="nav-link">
+                <i class="far fa-circle nav-icon"></i>
+                <p><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Grafico de publicaciónes</font></font></p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="pages/charts/inline.html" class="nav-link">
+                <i class="far fa-circle nav-icon"></i>
+                <p><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Grafico de usuarios</font></font></p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="pages/charts/uplot.html" class="nav-link">
+                <i class="far fa-circle nav-icon"></i>
+                <p><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Grafico intereacciones</font></font></p>
+              </a>
+            </li>
+          </ul>
+        </li>
+
+    <!-- PANEL DE NAVEGACION ELEMENTOS DE LA INTERFAZ-->
+        <li class="nav-item">
+          <a href="#" class="nav-link">
+            <i class="nav-icon fas fa-tree"></i>
+            <p><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">
+              Apariencia
+              </font></font><i class="fas fa-angle-left right"></i>
+            </p>
+          </a>
+          <ul class="nav nav-treeview">
+            <li class="nav-item">
+              <a href="pages/UI/general.html" class="nav-link">
+                <i class="far fa-circle nav-icon"></i>
+                <p><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Configuracion de banner</font></font></p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="pages/UI/icons.html" class="nav-link">
+                <i class="far fa-circle nav-icon"></i>
+                <p><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Organizacion actual</font></font></p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="pages/UI/buttons.html" class="nav-link">
+                <i class="far fa-circle nav-icon"></i>
+                <p><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Noticias</font></font></p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="pages/UI/buttons.html" class="nav-link">
+                <i class="far fa-circle nav-icon"></i>
+                <p><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">formatos</font></font></p>
+              </a>
+            </li>
+          </ul>
+        </li>
+    {% endif %}
+
+
+                    <!-- PANEL DE NAVEGACION NUEVOS INGRESOS -->
+                    {% if user.is_authenticated and user.is_superuser %}
+                    <li class="nav-item">
+                      <a href="#" class="nav-link">
+                        <i class="nav-icon fas fa-copy"></i>
+                        <p><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">
+                          Nuevos ingresos
+                          </font></font><i class="fas fa-angle-left right"></i>
+                          <span class="badge badge-info right"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">6</font></font></span>
+                        </p>
+                      </a>
+                      <ul class="nav nav-treeview">
+                        <li class="nav-item">
+                          <a href="pages/layout/top-nav.html" class="nav-link">
+                            <i class="far fa-circle nav-icon"></i>
+                            <p><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Egresados</font></font></p>
+                          </a>
+                        </li>
+                        <li class="nav-item">
+                          <a href="pages/layout/top-nav-sidebar.html" class="nav-link">
+                            <i class="far fa-circle nav-icon"></i>
+                            <p><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Proyectos</font></font></p>
+                          </a>
+                        </li>
+                        <li class="nav-item">
+                          <a href="pages/layout/boxed.html" class="nav-link">
+                            <i class="far fa-circle nav-icon"></i>
+                            <p><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Publicaciones</font></font></p>
+                          </a>
+                        </li>
+                        <li class="nav-item">
+                          <a href="{% url 'usuarios:lista_usuarios' %}" class="nav-link">
+                            <i class="far fa-circle nav-icon"></i>
+                            <p>Usuarios</p>
+                          </a>
+                        </li>
+                        <li class="nav-item">
+                          <a href="pages/layout/fixed-topnav.html" class="nav-link">
+                            <i class="far fa-circle nav-icon"></i>
+                            <p><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Preguntas</font></font></p>
+                          </a>
+                        </li>
+                        <li class="nav-item">
+                          <a href="pages/layout/fixed-footer.html" class="nav-link">
+                            <i class="far fa-circle nav-icon"></i>
+                            <p><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Tareas</font></font></p>
+                          </a>
+                        </li>
+                        <li class="nav-item">
+                          <a href="pages/layout/collapsed-sidebar.html" class="nav-link">
+                            <i class="far fa-circle nav-icon"></i>
+                            <p><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Perfiles egresados</font></font></p>
+                          </a>
+                        </li>
+                      </ul>
+                    </li>
+                    {% endif %}
+
+         
+          
+      </ul>
+    </nav>
+     
+  </div>
+  
+</aside>
+

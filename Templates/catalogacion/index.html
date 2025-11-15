@@ -1,0 +1,358 @@
+{% load static %}
+{% include 'Nucleo/arriba.html' %}
+
+{% block extra_css %}
+<!-- DataTables CSS - CDN Bootstrap 4 -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap4.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap4.min.css">
+<!-- SweetAlert2 CSS -->
+<link rel="stylesheet" href="{% static 'sweetalert2/sweetalert2.min.css' %}">
+<!-- Color Picker CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/themes/nano.min.css">
+<style>
+  /* Estilos para tabs */
+  .nav-tabs .nav-link {
+    color: #495057;
+  }
+
+  .nav-tabs .nav-link.active {
+    color: #007bff;
+    font-weight: 600;
+  }
+
+  /* Color preview para etiquetas */
+  .color-preview {
+    width: 30px;
+    height: 30px;
+    border-radius: 4px;
+    display: inline-block;
+    border: 1px solid #ddd;
+    vertical-align: middle;
+    margin-right: 8px;
+  }
+
+  /* Badge para nivel de categoría */
+  .badge-nivel {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+  }
+
+  /* Estilos responsivos para botones */
+  .btn-group-sm .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+  }
+
+  /* En pantallas pequeñas, solo mostrar iconos */
+  @media (max-width: 767px) {
+    .btn-group-sm .btn span {
+      display: none !important;
+    }
+
+    .btn-group-sm .btn {
+      padding: 0.25rem 0.4rem;
+    }
+  }
+
+  /* En pantallas medianas y grandes, mostrar texto */
+  @media (min-width: 768px) {
+    .btn-group-sm .btn span {
+      display: inline !important;
+    }
+  }
+
+  /* Indicador de carga */
+  .loading-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .loading-overlay.show {
+    display: flex;
+  }
+
+  .spinner-border-custom {
+    width: 3rem;
+    height: 3rem;
+    border-width: 0.3rem;
+  }
+</style>
+{% endblock %}
+
+{% include 'Nucleo/centro.html' %}
+
+<!-- Content Header -->
+<div class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1 class="m-0">Catálogo</h1>
+      </div>
+      <div class="col-sm-6">
+        <ol class="breadcrumb float-sm-right d-none d-sm-flex">
+          <li class="breadcrumb-item"><a href="{% url 'usuarios:panel' %}">Inicio</a></li>
+          <li class="breadcrumb-item active">Catálogo</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Main content -->
+<section class="content">
+  <div class="container-fluid">
+
+    <!-- Tabs Navigation -->
+    <ul class="nav nav-tabs" id="catalogTabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <a class="nav-link active" id="categorias-tab" data-toggle="tab" href="#categorias" role="tab"
+          aria-controls="categorias" aria-selected="true">
+          <i class="fas fa-folder"></i> Categorías
+        </a>
+      </li>
+      <li class="nav-item" role="presentation">
+        <a class="nav-link" id="etiquetas-tab" data-toggle="tab" href="#etiquetas" role="tab" aria-controls="etiquetas"
+          aria-selected="false">
+          <i class="fas fa-tags"></i> Etiquetas
+        </a>
+      </li>
+    </ul>
+
+    <!-- Tabs Content -->
+    <div class="tab-content" id="catalogTabsContent">
+
+      <!-- Tab Categorías -->
+      <div class="tab-pane fade show active" id="categorias" role="tabpanel" aria-labelledby="categorias-tab">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fas fa-folder"></i> Gestión de Categorías
+            </h3>
+            <div class="card-tools">
+              <button type="button" class="btn btn-primary btn-sm" id="btnCrearCategoria">
+                <i class="fas fa-plus"></i> Nueva Categoría
+              </button>
+            </div>
+          </div>
+          <div class="card-body">
+
+            <div class="table-responsive">
+
+
+              <table id="tableCategorias" class="table" style="width:100%">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Descripción</th>
+                    <th>Categoría Padre</th>
+                    <th>Nivel</th>
+                    <th>Subcategorías</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Etiquetas -->
+      <div class="tab-pane fade" id="etiquetas" role="tabpanel" aria-labelledby="etiquetas-tab">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fas fa-tags"></i> Gestión de Etiquetas
+            </h3>
+            <div class="card-tools">
+              <button type="button" class="btn btn-primary btn-sm" id="btnCrearEtiqueta">
+                <i class="fas fa-plus"></i> Nueva Etiqueta
+              </button>
+            </div>
+          </div>
+          <div class="card-body table-responsive">
+            <table id="tableEtiquetas" class="table table-bordered table-striped table-hover" style="width:100%">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Nombre</th>
+                  <th>Descripción</th>
+                  <th>Color</th>
+                  <th class="text-center">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</section>
+
+<!-- Modal para Categoría -->
+<div class="modal fade" id="modalCategoria" tabindex="-1" role="dialog" aria-labelledby="modalCategoriaLabel"
+  aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalCategoriaLabel">Nueva Categoría</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form id="formCategoria">
+        {% csrf_token %}
+        <div class="modal-body">
+          <input type="hidden" id="categoriaId" name="id">
+
+          <div class="form-group">
+            <label for="categoriaNombre">Nombre <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="categoriaNombre" name="nombre" required>
+            <small class="form-text text-muted">Nombre único de la categoría</small>
+          </div>
+
+          <div class="form-group">
+            <label for="categoriaDescripcion">Descripción</label>
+            <textarea class="form-control" id="categoriaDescripcion" name="descripcion" rows="3"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="categoriaPadre">Categoría Padre</label>
+            <select class="form-control" id="categoriaPadre" name="categoria_padre_id">
+              <option value="">Ninguna (Categoría raíz)</option>
+            </select>
+            <small class="form-text text-muted">Seleccione una categoría padre si esta es una subcategoría</small>
+          </div>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> Guardar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para Etiqueta -->
+<div class="modal fade" id="modalEtiqueta" tabindex="-1" role="dialog" aria-labelledby="modalEtiquetaLabel"
+  aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalEtiquetaLabel">Nueva Etiqueta</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form id="formEtiqueta">
+        {% csrf_token %}
+        <div class="modal-body">
+          <input type="hidden" id="etiquetaId" name="id">
+
+          <div class="form-group">
+            <label for="etiquetaNombre">Nombre <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="etiquetaNombre" name="nombre" required>
+            <small class="form-text text-muted">Nombre único de la etiqueta</small>
+          </div>
+
+          <div class="form-group">
+            <label for="etiquetaDescripcion">Descripción</label>
+            <textarea class="form-control" id="etiquetaDescripcion" name="descripcion" rows="3"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="etiquetaColor">Color</label>
+            <div class="input-group">
+              <input type="text" class="form-control" id="etiquetaColor" name="color" placeholder="#FF5733">
+              <div class="input-group-append">
+                <span class="input-group-text color-preview" id="colorPreview"
+                  style="background-color: #FF5733;"></span>
+              </div>
+            </div>
+            <small class="form-text text-muted">Color hexadecimal para la etiqueta (ej: #FF5733)</small>
+          </div>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> Guardar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner-border spinner-border-custom text-light" role="status">
+    <span class="sr-only">Cargando...</span>
+  </div>
+</div>
+
+{% include 'Nucleo/abajo.html' %}
+
+{% block extra_js %}
+<!-- DataTables JS - CDN -->
+<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap4.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap4.min.js"></script>
+<!-- SweetAlert2 -->
+<script src="{% static 'sweetalert2/sweetalert2.all.min.js' %}"></script>
+
+<!-- URL Reverse Helper -->
+<script>
+  // Configuración de URLs usando URL reverse
+  const CATALOGACION_URLS = {
+    categoriasList: "{% url 'catalogacion:categorias_list' %}",
+    categoriaCreate: "{% url 'catalogacion:categoria_create' %}",
+    categoriaDetail: function (id) {
+      return "{% url 'catalogacion:categoria_detail' 0 %}".replace('0', id);
+    },
+    categoriaUpdate: function (id) {
+      return "{% url 'catalogacion:categoria_update' 0 %}".replace('0', id);
+    },
+    categoriaDelete: function (id) {
+      return "{% url 'catalogacion:categoria_delete' 0 %}".replace('0', id);
+    },
+    etiquetasList: "{% url 'catalogacion:etiquetas_list' %}",
+    etiquetaCreate: "{% url 'catalogacion:etiqueta_create' %}",
+    etiquetaDetail: function (id) {
+      return "{% url 'catalogacion:etiqueta_detail' 0 %}".replace('0', id);
+    },
+    etiquetaUpdate: function (id) {
+      return "{% url 'catalogacion:etiqueta_update' 0 %}".replace('0', id);
+    },
+    etiquetaDelete: function (id) {
+      return "{% url 'catalogacion:etiqueta_delete' 0 %}".replace('0', id);
+    },
+  };
+
+  // Función para obtener CSRF token
+  function getCSRFToken() {
+    const token = document.querySelector('[name=csrfmiddlewaretoken]');
+    return token ? token.value : '';
+  }
+</script>
+<!-- Catalogación JS -->
+<script src="{% static 'js/catalogacion.js' %}"></script>
+{% endblock %}

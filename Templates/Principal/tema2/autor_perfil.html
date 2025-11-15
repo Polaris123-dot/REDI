@@ -1,0 +1,112 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" href="{% static 'img/LogoMr.ico' %}" type="image/x-icon">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ titulo_pagina }} - DocuArchive</title>
+    <link rel="stylesheet" href="{% static 'Personalizados/Paginaciones/styles.css' %}">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <h1>DocuArchive</h1>
+                </div>
+                <nav class="nav">
+                    <a href="{% url 'catalogo_publico:index' %}" class="nav-link">Inicio</a>
+                    <a href="{% url 'catalogo_publico:buscar' %}" class="nav-link">Búsqueda</a>
+                    <a href="#" class="nav-link">Acerca de</a>
+                </nav>
+                <div class="header-actions">
+                    <a href="{% url 'usuarios:login' %}" class="header-login">Iniciar sesión</a>
+                    <button class="theme-toggle" id="themeToggle" aria-label="Cambiar tema">
+                        <span class="theme-icon">☀️</span>
+                    </button>
+                </div>
+                <button class="mobile-menu-toggle" id="mobileMenuToggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="search-page">
+        <div class="container">
+            <div class="results-header" style="text-align: center; padding: 3rem 0;">
+                <h2 style="font-size: 2.5rem;">{{ autor.get_full_name|default:autor.username }}</h2>
+                <p class="results-count">{{ total_resultados }} publicacion(es) encontrada(s)</p>
+            </div>
+
+            {% if proyectos %}
+            <div class="results-list">
+                {% for proyecto in proyectos %}
+                <article class="result-card">
+                    <h3 class="result-title">
+                        <a href="{{ proyecto.url }}">{{ proyecto.titulo }}</a>
+                    </h3>
+                    <div class="result-meta">
+                        {% if proyecto.fecha_publicacion %}
+                        <span class="meta-date">Publicado: {{ proyecto.fecha_publicacion|date:"d \d\e F, Y" }}</span>
+                        {% endif %}
+                        {% if proyecto.autor %}
+                        <span class="meta-author">Por: {{ proyecto.autor }}</span>
+                        {% endif %}
+                    </div>
+                    <p class="result-description">{{ proyecto.resumen|truncatewords:40 }}</p>
+                </article>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <p>{{ sin_resultados_mensaje }}</p>
+            </div>
+            {% endif %}
+
+            <!-- Paginación -->
+            {% if is_paginated %}
+            <nav class="pagination">
+                <ul class="pagination-list">
+                    {% if page_obj.has_previous %}
+                    <li class="pagination-item">
+                        <a href="?page={{ page_obj.previous_page_number }}&{{ query_string }}" class="pagination-link">Anterior</a>
+                    </li>
+                    {% endif %}
+
+                    {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                    <li class="pagination-item active">
+                        <span class="pagination-link">{{ num }}</span>
+                    </li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="pagination-item">
+                        <a href="?page={{ num }}&{{ query_string }}" class="pagination-link">{{ num }}</a>
+                    </li>
+                    {% endif %}
+                    {% endfor %}
+
+                    {% if page_obj.has_next %}
+                    <li class="pagination-item">
+                        <a href="?page={{ page_obj.next_page_number }}&{{ query_string }}" class="pagination-link">Siguiente</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 DocuArchive. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <script src="{% static 'Personalizados/Paginaciones/script.js' %}"></script>
+</body>
+</html>

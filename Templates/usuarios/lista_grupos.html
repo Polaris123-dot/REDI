@@ -1,0 +1,291 @@
+{% load static %}
+{% include 'Nucleo/arriba.html' %}
+
+{% block extra_css %}
+<!-- DataTables CSS -->
+<link rel="stylesheet" href="{% static 'DataTables/css/dataTables.bootstrap4.min.css' %}">
+<!-- DataTables Responsive CSS -->
+<link rel="stylesheet" href="{% static 'plugins/datatables-responsive/css/responsive.bootstrap4.min.css' %}">
+<style>
+  /* Estilos para botones responsivos */
+  .btn-actions-cell {
+    white-space: nowrap;
+  }
+
+  /* Botones con texto en móvil */
+  .btn-responsive {
+    width: 100%;
+    margin-bottom: 2px;
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+  }
+
+  /* Botones con solo iconos en pantallas grandes */
+  .btn-icon-only {
+    min-width: 32px;
+    padding: 0.25rem 0.5rem;
+  }
+
+  .btn-icon-only i {
+    font-size: 0.875rem;
+  }
+
+  /* En pantallas pequeñas, mostrar solo botones con texto */
+  @media (max-width: 767.98px) {
+    .btn-group.d-none.d-md-inline-flex {
+      display: none !important;
+    }
+    
+    .btn-group-vertical.d-md-none {
+      display: flex !important;
+      width: 100%;
+    }
+  }
+
+  /* En pantallas medianas y grandes, mostrar solo botones con iconos */
+  @media (min-width: 768px) {
+    .btn-group-vertical.d-md-none {
+      display: none !important;
+    }
+    
+    .btn-group.d-none.d-md-inline-flex {
+      display: inline-flex !important;
+    }
+  }
+
+  /* Estilos para DataTables responsivo */
+  table.dataTable {
+    width: 100% !important;
+    margin: 0 auto;
+    clear: both;
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+
+  /* Mejorar el contraste en modo oscuro para DataTables */
+  body.dark-mode .dataTables_wrapper .dataTables_filter input,
+  body.dark-mode .dataTables_wrapper .dataTables_length select {
+    background-color: #1e1e2e;
+    color: #e0e0e0;
+    border-color: #2d2d44;
+  }
+
+  body.dark-mode .dataTables_wrapper .dataTables_paginate .paginate_button {
+    color: #e0e0e0 !important;
+  }
+
+  body.dark-mode .dataTables_wrapper .dataTables_info {
+    color: #e0e0e0;
+  }
+</style>
+{% endblock %}
+
+{% include 'Nucleo/centro.html' %}
+
+{% block content %}
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0"></h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="{% url 'usuarios:lista_usuarios' %}">Usuarios</a></li>
+                        <li class="breadcrumb-item active">Roles</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <section class="content">
+        <div class="container-fluid">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <div class="row">
+                <div class="col-12 col-lg-9">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Lista de Roles</h3>
+                            <div class="card-tools">
+                                <a href="{% url 'usuarios:crear_grupo' %}" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-plus"></i> Nuevo Rol
+                                </a>
+                                <a href="{% url 'usuarios:lista_usuarios' %}" class="btn btn-secondary btn-sm">
+                                    <i class="fas fa-users"></i> Ver Usuarios
+                                </a>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <!-- Tabla de grupos -->
+                            <div class="table-responsive">
+                                <table id="tabla-grupos" class="table table-bordered table-striped table-hover" style="width:100%">
+                                    <thead>
+                                        <tr>
+                                            <th>Nombre del Rol</th>
+                                            <th>Número de Usuarios</th>
+                                            <th>Permisos</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for item in grupos %}
+                                            <tr>
+                                                <td><strong>{{ item.grupo.name }}</strong></td>
+                                                <td>
+                                                    <span class="badge badge-info">{{ item.num_usuarios }} usuario{{ item.num_usuarios|pluralize }}</span>
+                                                </td>
+                                                <td>
+                                                    <span class="badge badge-warning">{{ item.grupo.permissions.count }} permiso{{ item.grupo.permissions.count|pluralize }}</span>
+                                                </td>
+                                                <td class="btn-actions-cell">
+                                                    <div class="btn-group-vertical btn-group-sm d-md-none" role="group">
+                                                        <a href="{% url 'usuarios:detalle_grupo' item.grupo.id %}" class="btn btn-info btn-responsive" title="Ver detalles">
+                                                            Ver
+                                                        </a>
+                                                        <a href="{% url 'usuarios:gestionar_permisos_grupo' item.grupo.id %}" class="btn btn-warning btn-responsive" title="Gestionar permisos">
+                                                            Permisos
+                                                        </a>
+                                                        <a href="{% url 'usuarios:eliminar_grupo' item.grupo.id %}" class="btn btn-danger btn-responsive" title="Eliminar">
+                                                            Eliminar
+                                                        </a>
+                                                    </div>
+                                                    <div class="btn-group btn-group-sm d-none d-md-inline-flex" role="group">
+                                                        <a href="{% url 'usuarios:detalle_grupo' item.grupo.id %}" class="btn btn-info btn-icon-only" title="Ver detalles">
+                                                            <i class="fas fa-eye"></i>
+                                                        </a>
+                                                        <a href="{% url 'usuarios:gestionar_permisos_grupo' item.grupo.id %}" class="btn btn-warning btn-icon-only" title="Gestionar permisos">
+                                                            <i class="fas fa-key"></i>
+                                                        </a>
+                                                        <a href="{% url 'usuarios:eliminar_grupo' item.grupo.id %}" class="btn btn-danger btn-icon-only" title="Eliminar">
+                                                            <i class="fas fa-trash"></i>
+                                                        </a>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        {% empty %}
+                                            <tr>
+                                                <td colspan="4" class="text-center">No se encontraron roles</td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ========================================== -->
+                <!-- PANEL LATERAL DERECHO - ACCIONES RÁPIDAS -->
+                <!-- ========================================== -->
+                <div class="col-12 col-lg-3 mt-3 mt-lg-0">
+                    <div class="card card-primary">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-bolt"></i> Acciones Rápidas
+                            </h3>
+                        </div>
+                        <div class="card-body p-0">
+                            <ul class="nav nav-pills flex-column">
+                                <li class="nav-item">
+                                    <a href="{% url 'usuarios:crear_grupo' %}" class="nav-link">
+                                        <i class="fas fa-plus-circle"></i> Nuevo Rol
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{% url 'usuarios:lista_usuarios' %}" class="nav-link">
+                                        <i class="fas fa-users"></i> Ver Usuarios
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{% url 'usuarios:crear_usuario' %}" class="nav-link">
+                                        <i class="fas fa-user-plus"></i> Nuevo Usuario
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{% url 'admin:index' %}" class="nav-link">
+                                        <i class="fas fa-cog"></i> Panel Admin Django
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="card card-info">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-info-circle"></i> Información
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-sm">
+                                <strong>Total de Roles:</strong><br>
+                                <span class="badge badge-primary">{{ grupos|length }}</span>
+                            </p>
+                            <p class="text-sm">
+                                <strong>Usuario Actual:</strong><br>
+                                <span class="text-muted">{{ request.user.username }}</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}
+
+{% block extra_js %}
+<!-- DataTables JS -->
+<script src="{% static 'DataTables/js/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'DataTables/js/dataTables.bootstrap4.min.js' %}"></script>
+<!-- DataTables Responsive (si está disponible) -->
+<script src="{% static 'plugins/datatables-responsive/js/responsive.bootstrap4.min.js' %}"></script>
+<script>
+// Inicializar DataTables con modo responsivo
+$(document).ready(function() {
+    $('#tabla-grupos').DataTable({
+        responsive: true,
+        language: {
+            url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json',
+            search: "Buscar:",
+            lengthMenu: "Mostrar _MENU_ registros por página",
+            info: "Mostrando _START_ a _END_ de _TOTAL_ registros",
+            infoEmpty: "Mostrando 0 a 0 de 0 registros",
+            infoFiltered: "(filtrado de _MAX_ registros totales)",
+            paginate: {
+                first: "Primero",
+                last: "Último",
+                next: "Siguiente",
+                previous: "Anterior"
+            },
+            zeroRecords: "No se encontraron registros",
+            emptyTable: "No hay datos disponibles en la tabla"
+        },
+        pageLength: 10,
+        lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "Todos"]],
+        order: [[0, 'asc']],
+        columnDefs: [
+            {
+                targets: -1, // Última columna (Acciones)
+                orderable: false,
+                searchable: false
+            }
+        ],
+        dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>rt<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>'
+    });
+});
+</script>
+{% endblock %}
+
+{% include 'Nucleo/abajo.html' %}
+
