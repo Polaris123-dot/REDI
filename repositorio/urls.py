@@ -35,6 +35,7 @@ urlpatterns = [
     
     # URLs para Colecciones
     path('colecciones/', views.colecciones_list, name='colecciones_list'),
+    path('colecciones/para-select/', views.colecciones_for_select, name='colecciones_for_select'),
     path('colecciones/por-comunidad/<int:comunidad_id>/', views.colecciones_por_comunidad, name='colecciones_por_comunidad'),
     path('colecciones/crear/', views.coleccion_create, name='coleccion_create'),
     path('colecciones/<int:coleccion_id>/', views.coleccion_detail, name='coleccion_detail'),
@@ -71,6 +72,14 @@ urlpatterns = [
     path('colaboradores/<int:colaborador_id>/', views.colaborador_detail, name='colaborador_detail'),
     path('colaboradores/<int:colaborador_id>/editar/', views.colaborador_update, name='colaborador_update'),
     path('colaboradores/<int:colaborador_id>/eliminar/', views.colaborador_delete, name='colaborador_delete'),
+    
+    # URLs para Versiones de Documento
+    path('versiones/', views.versiones_list, name='versiones_list'),
+    path('versiones/por-documento/<int:documento_id>/', views.versiones_por_documento, name='versiones_por_documento'),
+    path('versiones/crear/', views.version_create, name='version_create'),
+    path('versiones/<int:version_id>/', views.version_detail, name='version_detail'),
+    path('versiones/<int:version_id>/editar/', views.version_update, name='version_update'),
+    path('versiones/<int:version_id>/eliminar/', views.version_delete, name='version_delete'),
     
     # URLs para Archivos (PDFs)
     path('archivos/', views.archivos_list, name='archivos_list'),

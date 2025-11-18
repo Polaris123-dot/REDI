@@ -33,5 +33,8 @@ urlpatterns = [
     
     # URLs auxiliares para selects
     path('usuarios/para-select/', views.usuarios_for_select, name='usuarios_for_select'),
+    
+    # Wizard de acceso rápido
+    path('wizard-rapido/', views.wizard_rapido, name='wizard_rapido'),
 ]
 

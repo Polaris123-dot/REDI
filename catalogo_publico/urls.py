@@ -28,6 +28,10 @@ urlpatterns = [
     path('filtros/tipos-proyecto/', views.obtener_tipos_proyecto, name='obtener_tipos_proyecto'),
     path('filtros/autores/', views.obtener_autores, name='obtener_autores'),
     path('filtros/categorias/', views.obtener_categorias, name='obtener_categorias'),
+    
+    # URLs para comentarios públicos
+    path('comentarios/documento/<int:documento_id>/', views.comentarios_por_documento, name='comentarios_por_documento'),
+    path('comentarios/crear/', views.comentario_publico_create, name='comentario_publico_create'),
 ]
 
 

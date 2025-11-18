@@ -1147,8 +1147,7 @@ jQuery(document).ready(function($) {
                     const proyecto = response.data;
                     $('#modalProyectoLabel').text('Editar Proyecto');
                     $('#proyectoId').val(proyecto.id);
-                    $('#proyectoTitulo').val(proyecto.titulo);
-                    $('#proyectoResumen').val(proyecto.resumen || '');
+                    // Título y resumen vienen del documento, no se editan aquí
                     $('#proyectoDescripcion').val(proyecto.descripcion || '');
                     $('#proyectoEstado').val(proyecto.estado);
                     $('#proyectoVisibilidad').val(proyecto.visibilidad);
@@ -1797,28 +1796,27 @@ jQuery(document).ready(function($) {
         }
         
         // Recolectar datos del formulario
-        const formData = {
-            titulo: $('#proyectoTitulo').val().trim(),
-            tipo_proyecto_id: tipoProyectoId,
-            resumen: $('#proyectoResumen').val().trim(),
-            descripcion: $('#proyectoDescripcion').val().trim(),
-            estado: $('#proyectoEstado').val(),
-            visibilidad: $('#proyectoVisibilidad').val(),
-            documento_id: $('#proyectoDocumento').val() || null,  // Documento existente (opcional)
-            autores: getAutoresData(),
-            campos_dinamicos: {}
-        };
-        
-        // Validar título
-        if (!formData.titulo) {
+        // Validar documento (ahora es requerido)
+        const documentoId = $('#proyectoDocumento').val();
+        if (!documentoId) {
             Swal.fire({
                 icon: 'warning',
                 title: 'Validación',
-                text: 'El título es obligatorio',
+                text: 'Debe seleccionar un documento',
                 confirmButtonText: 'Aceptar'
             });
             return;
         }
+        
+        const formData = {
+            tipo_proyecto_id: tipoProyectoId,
+            descripcion: $('#proyectoDescripcion').val().trim(),
+            estado: $('#proyectoEstado').val(),
+            visibilidad: $('#proyectoVisibilidad').val(),
+            documento_id: documentoId,  // Documento existente (requerido)
+            autores: getAutoresData(),
+            campos_dinamicos: {}
+        };
         
         // Recolectar valores de campos dinámicos
         $('.campo-dinamico-item').each(function() {
@@ -1903,26 +1901,46 @@ jQuery(document).ready(function($) {
     });
     
     /**
-     * Carga los documentos disponibles (sin proyecto) para el select
+     * Carga los documentos disponibles (sin proyecto) para el select con Select2
      */
     function loadDocumentosDisponibles() {
         $.ajax({
             url: '/repositorio/documentos/disponibles/',
             method: 'GET',
             headers: {
-                'X-CSRFToken': getCSRFToken()
+                'X-CSRFToken': getCSRFToken(),
+                'Accept': 'application/json'
             },
             success: function(response) {
                 if (response.success) {
                     const select = $('#proyectoDocumento');
                     select.empty();
-                    select.append('<option value="">Seleccione un documento existente (opcional)</option>');
+                    select.append('<option value="">Seleccione un documento disponible</option>');
                     
                     response.data.forEach(function(doc) {
                         const tieneArchivo = doc.tiene_archivo ? ' (con PDF)' : ' (sin PDF)';
+                        const titulo = doc.titulo || `Documento #${doc.id}`;
                         select.append(
-                            `<option value="${doc.id}">${escapeHtml(doc.titulo)}${tieneArchivo}</option>`
+                            `<option value="${doc.id}">${escapeHtml(titulo)}${tieneArchivo}</option>`
                         );
+                    });
+                    
+                    // Inicializar o actualizar Select2
+                    if (select.hasClass('select2-hidden-accessible')) {
+                        select.select2('destroy');
+                    }
+                    select.select2({
+                        theme: 'bootstrap4',
+                        placeholder: 'Seleccione un documento disponible',
+                        allowClear: true,
+                        language: {
+                            noResults: function() {
+                                return "No se encontraron documentos";
+                            },
+                            searching: function() {
+                                return "Buscando...";
+                            }
+                        }
                     });
                 }
             },

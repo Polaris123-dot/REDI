@@ -160,16 +160,71 @@ def publicacion_create(request):
                 'error': 'El primer proyecto asociado no tiene un ID válido.'
             }, status=400)
         
-        # Generar slug único a partir de un timestamp y el ID del proyecto
-        timestamp = int(datetime.now().timestamp())
-        slug_base = f"{timestamp}-{primer_proyecto_id}"
-        slug = slug_base
+        # Verificar si se proporcionó un slug (por ejemplo, desde el wizard)
+        slug_proporcionado = data.get('slug')
         
-        # Verificar que el slug no exista (aunque es muy improbable)
-        contador = 1
-        while Publicacion.objects.filter(slug=slug).exists():
-            slug = f"{slug_base}-{contador}"
-            contador += 1
+        # PRIORIDAD 1: Si se proporcionó un slug explícitamente, usarlo (viene de la URL generada)
+        if slug_proporcionado:
+            slug_proporcionado = slug_proporcionado.strip()
+            # Verificar que el slug no exista para otra publicación
+            if Publicacion.objects.filter(slug=slug_proporcionado).exists():
+                # Si existe, verificar si es del mismo proyecto
+                try:
+                    proyecto = Proyecto.objects.get(id=primer_proyecto_id)
+                    publicacion_existente = proyecto.publicaciones.filter(slug=slug_proporcionado).first()
+                    if publicacion_existente:
+                        # Es la misma publicación, usar el slug
+                        slug = slug_proporcionado
+                    else:
+                        # El slug existe pero es de otro proyecto, generar uno nuevo
+                        timestamp = int(datetime.now().timestamp())
+                        slug_base = f"{timestamp}-{primer_proyecto_id}"
+                        slug = slug_base
+                        contador = 1
+                        while Publicacion.objects.filter(slug=slug).exists():
+                            slug = f"{slug_base}-{contador}"
+                            contador += 1
+                except Proyecto.DoesNotExist:
+                    # Proyecto no existe, generar slug nuevo
+                    timestamp = int(datetime.now().timestamp())
+                    slug_base = f"{timestamp}-{primer_proyecto_id}"
+                    slug = slug_base
+                    contador = 1
+                    while Publicacion.objects.filter(slug=slug).exists():
+                        slug = f"{slug_base}-{contador}"
+                        contador += 1
+            else:
+                # El slug no existe, usarlo directamente
+                slug = slug_proporcionado
+        else:
+            # PRIORIDAD 2: Verificar si el proyecto ya tiene una publicación asociada
+            try:
+                proyecto = Proyecto.objects.get(id=primer_proyecto_id)
+                publicacion_existente = proyecto.publicaciones.first()
+                
+                if publicacion_existente and publicacion_existente.slug:
+                    # Si ya existe una publicación, usar su slug
+                    slug = publicacion_existente.slug
+                else:
+                    # PRIORIDAD 3: Generar slug único a partir de un timestamp y el ID del proyecto
+                    timestamp = int(datetime.now().timestamp())
+                    slug_base = f"{timestamp}-{primer_proyecto_id}"
+                    slug = slug_base
+                    
+                    # Verificar que el slug no exista (aunque es muy improbable)
+                    contador = 1
+                    while Publicacion.objects.filter(slug=slug).exists():
+                        slug = f"{slug_base}-{contador}"
+                        contador += 1
+            except Proyecto.DoesNotExist:
+                # Si el proyecto no existe, generar slug normalmente
+                timestamp = int(datetime.now().timestamp())
+                slug_base = f"{timestamp}-{primer_proyecto_id}"
+                slug = slug_base
+                contador = 1
+                while Publicacion.objects.filter(slug=slug).exists():
+                    slug = f"{slug_base}-{contador}"
+                    contador += 1
         
         # Validar editor
         editor_id = data.get('editor_id')
@@ -518,13 +573,29 @@ def generar_slug_preview(request):
         if not proyecto_id:
             return JsonResponse({'success': False, 'error': 'Se requiere un ID de proyecto.'}, status=400)
 
-        # Generar un slug potencial (no se guarda, solo para previsualización)
+        # Verificar si el proyecto ya tiene una publicación asociada
+        try:
+            proyecto = Proyecto.objects.get(id=proyecto_id)
+            publicacion_existente = proyecto.publicaciones.first()
+            
+            if publicacion_existente and publicacion_existente.slug:
+                # Si ya existe una publicación con slug, usar ese slug
+                return JsonResponse({
+                    'success': True,
+                    'slug_preview': publicacion_existente.slug,
+                    'publicacion_existente': True
+                })
+        except Proyecto.DoesNotExist:
+            pass
+        
+        # Si no existe publicación, generar un slug nuevo
         timestamp = int(datetime.now().timestamp())
         slug_preview = f"{timestamp}-{proyecto_id}"
         
         return JsonResponse({
             'success': True,
-            'slug_preview': slug_preview
+            'slug_preview': slug_preview,
+            'publicacion_existente': False
         })
     except Exception as e:
         return JsonResponse({

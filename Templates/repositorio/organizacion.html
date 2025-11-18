@@ -168,6 +168,12 @@
           </a>
         </li>
         <li class="nav-item" role="presentation">
+          <a class="nav-link" id="versiones-tab" data-toggle="tab" href="#versiones" role="tab"
+            aria-controls="versiones" aria-selected="false">
+            <i class="fas fa-code-branch"></i> Versiones
+          </a>
+        </li>
+        <li class="nav-item" role="presentation">
           <a class="nav-link" id="archivos-tab" data-toggle="tab" href="#archivos" role="tab"
             aria-controls="archivos" aria-selected="false">
             <i class="fas fa-file-pdf"></i> Archivos
@@ -273,6 +279,43 @@
                       <th>Creador</th>
                       <th>Estado</th>
                       <th>Visibilidad</th>
+                      <th>Fecha Creación</th>
+                      <th class="text-center">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab Versiones -->
+        <div class="tab-pane fade" id="versiones" role="tabpanel" aria-labelledby="versiones-tab">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="fas fa-code-branch"></i> Gestión de Versiones
+              </h3>
+              <div class="card-tools">
+                <button type="button" class="btn btn-primary btn-sm" id="btnCrearVersion">
+                  <i class="fas fa-plus"></i> Nueva Versión
+                </button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table id="tableVersiones" class="table table-bordered table-striped" style="width:100%">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Documento</th>
+                      <th>Número Versión</th>
+                      <th>Notas</th>
+                      <th>Creado Por</th>
+                      <th>Es Actual</th>
+                      <th>Archivos</th>
                       <th>Fecha Creación</th>
                       <th class="text-center">Acciones</th>
                     </tr>
@@ -492,6 +535,57 @@
             <label>
               <input type="checkbox" id="coleccionEsPublica" name="es_publica" checked> Es pública
             </label>
+          </div>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> Guardar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Versión -->
+<div class="modal fade" id="modalVersion" tabindex="-1" role="dialog" aria-labelledby="modalVersionLabel"
+  aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalVersionLabel">Nueva Versión</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form id="formVersion">
+        {% csrf_token %}
+        <div class="modal-body">
+          <input type="hidden" id="versionId" name="id">
+
+          <div class="form-group">
+            <label for="versionDocumento">Documento <span class="text-danger">*</span></label>
+            <select class="form-control" id="versionDocumento" name="documento_id" required>
+              <option value="">Seleccione un documento</option>
+            </select>
+            <small class="form-text text-muted">El número de versión se generará automáticamente</small>
+          </div>
+
+          <div class="form-group">
+            <label for="versionNotas">Notas de Versión</label>
+            <textarea class="form-control" id="versionNotas" name="notas_version" rows="4" placeholder="Descripción de los cambios en esta versión..."></textarea>
+          </div>
+
+          <div class="form-group">
+            <div class="form-check">
+              <input type="checkbox" class="form-check-input" id="versionActual" name="es_version_actual" value="true">
+              <label class="form-check-label" for="versionActual">
+                Marcar como versión actual
+              </label>
+              <small class="form-text text-muted d-block">Si está marcado, esta será la versión actual del documento</small>
+            </div>
           </div>
 
         </div>
@@ -914,7 +1008,21 @@
     archivoDownload: function (id) {
       return "{% url 'repositorio:archivo_download' 0 %}".replace('0', id.toString());
     },
-    documentosDisponibles: "{% url 'repositorio:documentos_disponibles' %}"
+    documentosDisponibles: "{% url 'repositorio:documentos_disponibles' %}",
+    versionesList: "{% url 'repositorio:versiones_list' %}",
+    versionesPorDocumento: function (id) {
+      return "{% url 'repositorio:versiones_por_documento' 0 %}".replace('0', id.toString());
+    },
+    versionCreate: "{% url 'repositorio:version_create' %}",
+    versionDetail: function (id) {
+      return "{% url 'repositorio:version_detail' 0 %}".replace('0', id.toString());
+    },
+    versionUpdate: function (id) {
+      return "{% url 'repositorio:version_update' 0 %}".replace('0', id.toString());
+    },
+    versionDelete: function (id) {
+      return "{% url 'repositorio:version_delete' 0 %}".replace('0', id.toString());
+    }
   };
 
   // Función para obtener CSRF token

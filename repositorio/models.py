@@ -364,17 +364,43 @@ class VersionDocumento(models.Model):
 
 
 def archivo_upload_path(instance, filename):
-    """Genera la ruta de almacenamiento para el archivo"""
+    """
+    Genera la ruta de almacenamiento para el archivo.
+    Usa IDs en lugar de handles para evitar caracteres inválidos en Windows.
+    """
+    import os
+    import re
+    
+    # Sanitizar el nombre del archivo (remover caracteres inválidos)
+    def sanitize_filename(name):
+        # Remover caracteres inválidos para Windows: < > : " | ? * \
+        name = re.sub(r'[<>:"|?*\\]', '_', name)
+        # Limitar longitud
+        if len(name) > 200:
+            name, ext = os.path.splitext(name)
+            name = name[:200-len(ext)] + ext
+        return name
+    
+    # Sanitizar el nombre del archivo
+    safe_filename = sanitize_filename(filename)
+    
     if instance.version and instance.version.documento:
-        # Si hay proyecto, usar el slug del proyecto
-        if instance.version.documento.proyecto:
-            proyecto_slug = instance.version.documento.proyecto.slug
-            return f'documentos/proyectos/{proyecto_slug}/{instance.version.numero_version}/{filename}'
-        # Si no hay proyecto, usar el handle del documento
-        documento_handle = instance.version.documento.handle or f"doc_{instance.version.documento.id}"
-        return f'documentos/{documento_handle}/{instance.version.numero_version}/{filename}'
-    # Fallback
-    return f'documentos/genericos/{filename}'
+        documento = instance.version.documento
+        documento_id = documento.id
+        version_num = instance.version.numero_version
+        
+        # Si hay proyecto, usar el ID del proyecto
+        if documento.proyecto:
+            proyecto_id = documento.proyecto.id
+            return f'documentos/proyectos/proyecto_{proyecto_id}/doc_{documento_id}/v{version_num}/{safe_filename}'
+        
+        # Si no hay proyecto, usar solo el ID del documento
+        return f'documentos/doc_{documento_id}/v{version_num}/{safe_filename}'
+    
+    # Fallback: usar timestamp para evitar colisiones
+    import time
+    timestamp = int(time.time())
+    return f'documentos/genericos/{timestamp}/{safe_filename}'
 
 
 class Archivo(models.Model):

@@ -5,6 +5,9 @@
 <!-- DataTables CSS - Local -->
 <link rel="stylesheet" href="{% static 'DataTables/css/dataTables.bootstrap4.min.css' %}">
 <link rel="stylesheet" href="{% static 'plugins/datatables-responsive/css/responsive.bootstrap4.min.css' %}">
+<!-- Select2 CSS -->
+<link rel="stylesheet" href="{% static 'plugins/select2/css/select2.min.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css' %}">
 <!-- Color Picker CSS -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/themes/nano.min.css">
 <!-- SweetAlert2 CSS -->
@@ -200,6 +203,9 @@
       <div class="row">
         <div class="col-12">
           <div class="btn-group" role="group">
+            <a href="{% url 'proyectos:wizard_rapido' %}" class="btn btn-warning btn-sm">
+              <i class="fas fa-magic"></i> Wizard Rápido
+            </a>
             <button type="button" class="btn btn-primary btn-sm" onclick="$('#proyectos-tab').tab('show');">
               <i class="fas fa-project-diagram"></i> Proyectos
             </button>
@@ -595,13 +601,7 @@
 
           <!-- Campos Básicos -->
           <div class="row">
-            <div class="col-md-8">
-              <div class="form-group">
-                <label for="proyectoTitulo">Título <span class="text-danger">*</span></label>
-                <input type="text" class="form-control" id="proyectoTitulo" name="titulo" required>
-              </div>
-            </div>
-            <div class="col-md-4">
+            <div class="col-md-6">
               <div class="form-group">
                 <label for="proyectoTipoProyecto">Tipo de Proyecto <span class="text-danger">*</span></label>
                 <select class="form-control" id="proyectoTipoProyecto" name="tipo_proyecto_id" required>
@@ -609,25 +609,24 @@
                 </select>
               </div>
             </div>
-          </div>
-
-          <div class="form-group">
-            <label for="proyectoResumen">Resumen</label>
-            <textarea class="form-control" id="proyectoResumen" name="resumen" rows="2"></textarea>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="proyectoDocumento">Documento (PDF) <span class="text-danger">*</span></label>
+                <select class="form-control select2" id="proyectoDocumento" name="documento_id" style="width: 100%;" required>
+                  <option value="">Seleccione un documento disponible</option>
+                </select>
+                <small class="form-text text-muted">
+                  Solo se muestran documentos que no están asociados a ningún proyecto
+                </small>
+              </div>
+            </div>
           </div>
 
           <div class="form-group">
             <label for="proyectoDescripcion">Descripción</label>
             <textarea class="form-control" id="proyectoDescripcion" name="descripcion" rows="4"></textarea>
-          </div>
-
-          <div class="form-group">
-            <label for="proyectoDocumento">Documento (PDF)</label>
-            <select class="form-control" id="proyectoDocumento" name="documento_id">
-              <option value="">Seleccione un documento existente (opcional)</option>
-            </select>
             <small class="form-text text-muted">
-              Primero debe crear el documento con su PDF en la sección de Repositorio
+              El título y resumen se obtienen del documento seleccionado
             </small>
           </div>
 
@@ -771,6 +770,8 @@
   window.getCSRFToken = getCSRFToken;
 </script>
 
+<!-- Select2 JS -->
+<script src="{% static 'plugins/select2/js/select2.full.min.js' %}"></script>
 <!-- Script principal de proyectos -->
 <script src="{% static 'js/proyectos.js' %}"></script>
 {% endblock %}

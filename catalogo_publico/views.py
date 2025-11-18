@@ -699,11 +699,45 @@ def buscar_ajax(request):
 def publicacion_detalle(request, slug):
     """
     Vista de detalle de una publicación pública
+    Permite acceso por URL slug incluso si la publicación no está publicada
     """
-    publicacion = get_object_or_404(
-        get_publicaciones_publicas(),
-        slug=slug
-    )
+    # Primero intentar obtener de publicaciones públicas
+    try:
+        publicacion = get_publicaciones_publicas().get(slug=slug)
+    except Publicacion.DoesNotExist:
+        # Si no está en publicaciones públicas, intentar obtenerla directamente
+        # Esto permite acceso por URL incluso si está en borrador o es privada
+        try:
+            publicacion = Publicacion.objects.select_related(
+                'editor'
+            ).prefetch_related(
+                Prefetch(
+                    'proyectos',
+                    queryset=Proyecto.objects.select_related(
+                        'tipo_proyecto'
+                    ).prefetch_related(
+                        'autores__usuario'
+                    )
+                ),
+                'categorias',
+                'etiquetas'
+            ).get(slug=slug)
+            
+            # Si no está publicada o no es pública, verificar permisos
+            if publicacion.estado != 'publicada' or publicacion.visibilidad != 'publico':
+                # Permitir acceso si el usuario es el editor, es superusuario, o tiene permisos
+                if not request.user.is_authenticated:
+                    # Si no está autenticado y la publicación no es pública, mostrar 404
+                    from django.http import Http404
+                    raise Http404("La publicación no está disponible públicamente")
+                elif not (request.user.is_superuser or 
+                         (publicacion.editor and publicacion.editor.id == request.user.id)):
+                    # Si no tiene permisos, mostrar 404
+                    from django.http import Http404
+                    raise Http404("No tiene permisos para ver esta publicación")
+        except Publicacion.DoesNotExist:
+            from django.http import Http404
+            raise Http404("La publicación no existe")
     
     # Obtener el primer proyecto para el título y resumen principal
     primer_proyecto = publicacion.proyectos.first()
@@ -777,6 +811,24 @@ def publicacion_detalle(request, slug):
             if archivo_principal and archivo_principal.archivo:
                 archivo_url = archivo_principal.archivo.url
     
+    # Obtener comentarios públicos del documento si existe
+    comentarios_data = []
+    if documento:
+        from interaccion.models import Comentario
+        comentarios = Comentario.objects.filter(
+            documento=documento,
+            es_publico=True
+        ).select_related('usuario').order_by('-fecha_creacion')[:50]
+        
+        for comentario in comentarios:
+            comentarios_data.append({
+                'id': comentario.id,
+                'usuario_nombre': comentario.usuario.get_full_name() or comentario.usuario.username,
+                'contenido': comentario.contenido,
+                'fecha_creacion': comentario.fecha_creacion,
+                'fecha_creacion_str': comentario.fecha_creacion.strftime('%d de %B, %Y') if comentario.fecha_creacion else '',
+            })
+    
     context = {
         'publicacion': publicacion,
         'titulo': primer_proyecto.titulo if primer_proyecto else "Publicación sin título",
@@ -792,6 +844,7 @@ def publicacion_detalle(request, slug):
         'archivo': archivo_principal,
         'archivo_url': archivo_url,
         'documento_id': documento_id,
+        'comentarios': comentarios_data,
         'proyectos_relacionados': publicaciones_relacionadas_data,
         'proyectos': proyectos_relacionados_data,
         'tipo_publicacion': dict(Publicacion.TIPO_PUBLICACION_CHOICES).get(publicacion.tipo_publicacion, publicacion.tipo_publicacion),
@@ -807,21 +860,51 @@ def publicacion_detalle(request, slug):
 def descargar_documento(request, documento_id):
     """
     Vista para descargar un documento y registrar la descarga
+    Permite descarga si el documento está asociado a una publicación accesible
     """
     documento = get_object_or_404(
         Documento.objects.select_related('proyecto'),
-        id=documento_id,
-        visibilidad='publico'
+        id=documento_id
     )
     
-    # Verificar que el proyecto asociado sea público
+    # Verificar acceso: el documento debe estar en una publicación accesible
+    tiene_acceso = False
+    
+    # Si tiene proyecto, verificar si está en una publicación accesible
     if documento.proyecto:
-        if documento.proyecto.estado != 'publicado' or documento.proyecto.visibilidad != 'publico':
-            raise Http404("Documento no disponible")
-    else:
-        # Si no tiene proyecto, verificar que el documento sea público
-        if documento.visibilidad != 'publico':
-            raise Http404("Documento no disponible")
+        # Verificar si el proyecto está en alguna publicación
+        publicaciones = documento.proyecto.publicaciones.all()
+        for publicacion in publicaciones:
+            # Si la publicación es pública y publicada, permitir acceso
+            if publicacion.estado == 'publicada' and publicacion.visibilidad == 'publico':
+                tiene_acceso = True
+                break
+            # Si el usuario es el editor o superusuario, permitir acceso
+            elif request.user.is_authenticated and (
+                request.user.is_superuser or 
+                (publicacion.editor and publicacion.editor.id == request.user.id)
+            ):
+                tiene_acceso = True
+                break
+    
+    # Si no tiene acceso por publicación, verificar visibilidad tradicional
+    if not tiene_acceso:
+        if documento.visibilidad == 'publico':
+            # Si el documento es público, verificar proyecto
+            if documento.proyecto:
+                if documento.proyecto.estado == 'publicado' and documento.proyecto.visibilidad == 'publico':
+                    tiene_acceso = True
+            else:
+                tiene_acceso = True
+        # Si el usuario es el creador o superusuario, permitir acceso
+        elif request.user.is_authenticated and (
+            request.user.is_superuser or 
+            (documento.creador and documento.creador.id == request.user.id)
+        ):
+            tiene_acceso = True
+    
+    if not tiene_acceso:
+        raise Http404("Documento no disponible")
     
     # Obtener la versión actual
     version_actual = documento.versiones.filter(es_version_actual=True).first()
@@ -863,6 +946,118 @@ def descargar_documento(request, documento_id):
             return response
     else:
         raise Http404("Archivo no encontrado en el servidor")
+
+
+def comentarios_por_documento(request, documento_id):
+    """
+    Obtiene los comentarios públicos de un documento
+    """
+    try:
+        documento = get_object_or_404(Documento, id=documento_id)
+        
+        from interaccion.models import Comentario
+        comentarios = Comentario.objects.filter(
+            documento=documento,
+            es_publico=True
+        ).select_related('usuario').order_by('-fecha_creacion')
+        
+        comentarios_data = []
+        for comentario in comentarios:
+            comentarios_data.append({
+                'id': comentario.id,
+                'usuario_nombre': comentario.usuario.get_full_name() or comentario.usuario.username,
+                'contenido': comentario.contenido,
+                'fecha_creacion': comentario.fecha_creacion.isoformat() if comentario.fecha_creacion else None,
+                'fecha_creacion_str': comentario.fecha_creacion.strftime('%d de %B, %Y') if comentario.fecha_creacion else '',
+            })
+        
+        return JsonResponse({
+            'success': True,
+            'data': comentarios_data,
+            'total': len(comentarios_data)
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+
+def comentario_publico_create(request):
+    """
+    Crea un comentario público (puede ser anónimo o autenticado)
+    """
+    try:
+        data = json.loads(request.body)
+        
+        documento_id = data.get('documento_id')
+        if not documento_id:
+            return JsonResponse({
+                'success': False,
+                'error': 'El documento es obligatorio'
+            }, status=400)
+        
+        documento = get_object_or_404(Documento, id=documento_id)
+        
+        contenido = data.get('contenido', '').strip()
+        if not contenido:
+            return JsonResponse({
+                'success': False,
+                'error': 'El contenido es obligatorio'
+            }, status=400)
+        
+        # Si el usuario está autenticado, usar su cuenta
+        # Si no, crear un usuario temporal o permitir comentario anónimo
+        from interaccion.models import Comentario
+        from django.contrib.auth.models import User
+        
+        if request.user.is_authenticated:
+            usuario = request.user
+        else:
+            # Para comentarios anónimos, usar un usuario genérico o crear uno temporal
+            nombre_anonimo = data.get('nombre_autor', 'Anónimo').strip()
+            if not nombre_anonimo:
+                nombre_anonimo = 'Anónimo'
+            
+            # Intentar obtener o crear un usuario genérico para comentarios anónimos
+            try:
+                usuario = User.objects.get(username='anonimo_comentarios')
+            except User.DoesNotExist:
+                # Crear usuario genérico si no existe
+                usuario = User.objects.create_user(
+                    username='anonimo_comentarios',
+                    email='anonimo@example.com',
+                    first_name='Usuario',
+                    last_name='Anónimo'
+                )
+        
+        comentario = Comentario(
+            documento=documento,
+            usuario=usuario,
+            contenido=contenido,
+            es_publico=True,
+            es_moderado=False
+        )
+        
+        comentario.full_clean()
+        comentario.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Comentario creado exitosamente',
+            'data': {
+                'id': comentario.id,
+                'usuario_nombre': usuario.get_full_name() or usuario.username,
+                'contenido': comentario.contenido,
+                'fecha_creacion': comentario.fecha_creacion.isoformat() if comentario.fecha_creacion else None,
+                'fecha_creacion_str': comentario.fecha_creacion.strftime('%d de %B, %Y') if comentario.fecha_creacion else '',
+            }
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
 
 
 def autor_perfil(request, user_id):

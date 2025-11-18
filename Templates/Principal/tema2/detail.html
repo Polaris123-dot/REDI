@@ -94,63 +94,53 @@
                         </div>
 
                         <!-- Comments section now within main column -->
+                        {% if documento_id %}
                         <section class="comments-section">
                             <h2 class="comments-title">Comentarios</h2>
                             
                             <form class="comment-form" id="commentForm">
+                                {% csrf_token %}
+                                <input type="hidden" id="documentoId" value="{{ documento_id }}">
                                 <textarea 
                                     class="comment-textarea" 
                                     placeholder="Escriba su comentario aquí..." 
                                     rows="4"
                                     id="commentText"
+                                    required
                                 ></textarea>
                                 <div class="comment-form-footer">
+                                    {% if user.is_authenticated %}
+                                    <span class="comment-author-display">Comentando como: {{ user.get_full_name|default:user.username }}</span>
+                                    {% else %}
                                     <input 
                                         type="text" 
                                         class="comment-author-input" 
                                         placeholder="Su nombre"
                                         id="commentAuthor"
+                                        required
                                     >
+                                    {% endif %}
                                     <button type="submit" class="comment-submit">Publicar Comentario</button>
                                 </div>
                             </form>
 
-                            <div class="comments-list">
-                                <article class="comment">
-                                    <div class="comment-header">
-                                        <span class="comment-author">Dra. María González</span>
-                                        <span class="comment-date">20 de Marzo, 2024</span>
-                                    </div>
-                                    <p class="comment-text">
-                                        Excelente análisis del sistema. Hemos implementado una solución similar en nuestra 
-                                        organización y los resultados han sido muy positivos. ¿Tienen previsto incluir 
-                                        capacidades de inteligencia artificial para la clasificación automática?
-                                    </p>
-                                </article>
-
-                                <article class="comment">
-                                    <div class="comment-header">
-                                        <span class="comment-author">Ing. Carlos Ramírez</span>
-                                        <span class="comment-date">18 de Marzo, 2024</span>
-                                    </div>
-                                    <p class="comment-text">
-                                        Me gustaría conocer más detalles sobre la integración con sistemas legacy. 
-                                        ¿Qué protocolos de comunicación soporta el sistema?
-                                    </p>
-                                </article>
-
-                                <article class="comment">
-                                    <div class="comment-header">
-                                        <span class="comment-author">Prof. Ana Martín</span>
-                                        <span class="comment-date">16 de Marzo, 2024</span>
-                                    </div>
-                                    <p class="comment-text">
-                                        Documentación muy completa. Sería útil incluir casos de estudio específicos que 
-                                        demuestren la aplicación práctica en diferentes sectores industriales.
-                                    </p>
-                                </article>
+                            <div class="comments-list" id="commentsList">
+                                {% if comentarios %}
+                                    {% for comentario in comentarios %}
+                                    <article class="comment">
+                                        <div class="comment-header">
+                                            <span class="comment-author">{{ comentario.usuario_nombre }}</span>
+                                            <span class="comment-date">{{ comentario.fecha_creacion_str|default:comentario.fecha_creacion|date:"d \\d\\e F, Y" }}</span>
+                                        </div>
+                                        <p class="comment-text">{{ comentario.contenido }}</p>
+                                    </article>
+                                    {% endfor %}
+                                {% else %}
+                                    <p class="no-comments">No hay comentarios aún. ¡Sé el primero en comentar!</p>
+                                {% endif %}
                             </div>
                         </section>
+                        {% endif %}
                     </article>
 
                     <!-- Added sidebar column (20%) -->
@@ -296,6 +286,89 @@
                 link.classList.add("active");
             }
         });
+        
+        // Manejo de comentarios
+        const commentForm = document.getElementById('commentForm');
+        if (commentForm) {
+            commentForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const documentoId = document.getElementById('documentoId').value;
+                const contenido = document.getElementById('commentText').value.trim();
+                const nombreAutor = document.getElementById('commentAuthor') ? document.getElementById('commentAuthor').value.trim() : '';
+                
+                if (!contenido) {
+                    alert('Por favor, escriba un comentario');
+                    return;
+                }
+                
+                // Obtener token CSRF
+                const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                
+                const data = {
+                    documento_id: parseInt(documentoId),
+                    contenido: contenido
+                };
+                
+                if (nombreAutor) {
+                    data.nombre_autor = nombreAutor;
+                }
+                
+                fetch('{% url "catalogo_publico:comentario_publico_create" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrftoken
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Agregar el comentario a la lista
+                        const commentsList = document.getElementById('commentsList');
+                        const noCommentsMsg = commentsList.querySelector('.no-comments');
+                        if (noCommentsMsg) {
+                            noCommentsMsg.remove();
+                        }
+                        
+                        const commentArticle = document.createElement('article');
+                        commentArticle.className = 'comment';
+                        commentArticle.innerHTML = `
+                            <div class="comment-header">
+                                <span class="comment-author">${escapeHtml(data.data.usuario_nombre)}</span>
+                                <span class="comment-date">${data.data.fecha_creacion_str || 'Ahora'}</span>
+                            </div>
+                            <p class="comment-text">${escapeHtml(data.data.contenido)}</p>
+                        `;
+                        commentsList.insertBefore(commentArticle, commentsList.firstChild);
+                        
+                        // Limpiar el formulario
+                        document.getElementById('commentText').value = '';
+                        if (document.getElementById('commentAuthor')) {
+                            document.getElementById('commentAuthor').value = '';
+                        }
+                    } else {
+                        alert('Error al publicar comentario: ' + (data.error || 'Error desconocido'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error al publicar comentario. Por favor, intente nuevamente.');
+                });
+            });
+        }
+        
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return String(text).replace(/[&<>"']/g, m => map[m]);
+        }
     });
     </script>
 

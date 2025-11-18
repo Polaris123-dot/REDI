@@ -1012,6 +1012,25 @@ def colecciones_por_comunidad(request, comunidad_id):
 
 
 @login_required
+@require_http_methods(["GET"])
+def colecciones_for_select(request):
+    """Obtiene las colecciones para usar en selects"""
+    try:
+        colecciones = Coleccion.objects.all().order_by('comunidad__nombre', 'nombre')
+        colecciones_data = [{'id': c.id, 'nombre': f"{c.comunidad.nombre} - {c.nombre}"} for c in colecciones]
+        
+        return JsonResponse({
+            'success': True,
+            'data': colecciones_data
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': f'Error al obtener colecciones: {str(e)}'
+        }, status=500)
+
+
+@login_required
 @require_http_methods(["POST"])
 def coleccion_create(request):
     """Crea una nueva colección"""
@@ -1986,7 +2005,7 @@ def documento_create(request):
                 }, status=400)
         
         # Generar handle único
-        handle = data.get('handle', '').strip()
+        handle = (data.get('handle') or '').strip()
         if not handle:
             handle = generar_handle()
         else:
@@ -1998,7 +2017,7 @@ def documento_create(request):
                 }, status=400)
         
         # Validar DOI único si se proporciona
-        doi = data.get('doi', '').strip() or None
+        doi = (data.get('doi') or '').strip() or None
         if doi and Documento.objects.filter(doi=doi).exists():
             return JsonResponse({
                 'success': False,
@@ -2074,23 +2093,23 @@ def documento_create(request):
             proyecto=proyecto,
             handle=handle or None,  # Puede ser None si no se proporciona
             titulo=titulo,
-            resumen=data.get('resumen', '').strip() or None,
+            resumen=(data.get('resumen') or '').strip() or None,
             tipo_recurso=tipo_recurso,
             coleccion=coleccion,
             creador=request.user,  # El usuario que crea el documento
             estado=estado,
-            idioma=data.get('idioma', 'es'),
+            idioma=data.get('idioma') or 'es',
             fecha_publicacion=fecha_publicacion,
             fecha_aceptacion=fecha_aceptacion,
             fecha_publicacion_disponible=fecha_publicacion_disponible,
-            visibilidad=data.get('visibilidad', 'publico'),
-            version_actual=data.get('version_actual', 1),
-            numero_acceso=data.get('numero_acceso', '').strip() or None,
+            visibilidad=data.get('visibilidad') or 'publico',
+            version_actual=data.get('version_actual') or 1,
+            numero_acceso=(data.get('numero_acceso') or '').strip() or None,
             doi=doi,
-            isbn=data.get('isbn', '').strip() or None,
-            issn=data.get('issn', '').strip() or None,
+            isbn=(data.get('isbn') or '').strip() or None,
+            issn=(data.get('issn') or '').strip() or None,
             licencia=licencia,
-            palabras_clave=data.get('palabras_clave', '').strip() or None,
+            palabras_clave=(data.get('palabras_clave') or '').strip() or None,
             temas=temas,
             campos_personalizados=campos_personalizados,
             metadata_completa=metadata_completa,
@@ -2725,15 +2744,6 @@ def autor_create(request):
                 'error': 'El documento no existe'
             }, status=400)
         
-        nombre = data.get('nombre', '').strip()
-        apellidos = data.get('apellidos', '').strip()
-        
-        if not nombre or not apellidos:
-            return JsonResponse({
-                'success': False,
-                'error': 'El nombre y los apellidos son obligatorios'
-            }, status=400)
-        
         # Validar usuario si se proporciona
         usuario_id = data.get('usuario_id')
         usuario = None
@@ -2745,6 +2755,27 @@ def autor_create(request):
                     'success': False,
                     'error': 'El usuario no existe'
                 }, status=400)
+        
+        # Obtener nombre y apellidos
+        nombre = data.get('nombre', '').strip()
+        apellidos = data.get('apellidos', '').strip()
+        
+        # Si es autor-usuario y no se proporcionaron nombre/apellidos, usar los del usuario
+        if usuario and (not nombre or not apellidos):
+            nombre_completo = usuario.get_full_name()
+            if nombre_completo:
+                partes = nombre_completo.split(' ', 1)
+                nombre = partes[0] if partes else nombre_completo
+                apellidos = partes[1] if len(partes) > 1 else ''
+            else:
+                nombre = usuario.username
+                apellidos = ''
+        
+        if not nombre or not apellidos:
+            return JsonResponse({
+                'success': False,
+                'error': 'El nombre y los apellidos son obligatorios'
+            }, status=400)
         
         # Validar ORCID si se proporciona
         orcid_id = data.get('orcid_id', '').strip() or None
@@ -2760,8 +2791,8 @@ def autor_create(request):
             usuario=usuario,
             nombre=nombre,
             apellidos=apellidos,
-            email=data.get('email', '').strip() or None,
-            afiliacion=data.get('afiliacion', '').strip() or None,
+            email=(data.get('email') or '').strip() or None,
+            afiliacion=(data.get('afiliacion') or '').strip() or None,
             orcid_id=orcid_id,
             orden_autor=data.get('orden_autor', 1),
             es_correspondiente=data.get('es_correspondiente', False),
@@ -2915,8 +2946,8 @@ def autor_update(request, autor_id):
         autor.usuario = usuario
         autor.nombre = nombre
         autor.apellidos = apellidos
-        autor.email = data.get('email', '').strip() or None
-        autor.afiliacion = data.get('afiliacion', '').strip() or None
+        autor.email = (data.get('email') or '').strip() or None
+        autor.afiliacion = (data.get('afiliacion') or '').strip() or None
         autor.orcid_id = orcid_id
         autor.orden_autor = data.get('orden_autor', autor.orden_autor)
         autor.es_correspondiente = data.get('es_correspondiente', False)
@@ -3397,6 +3428,334 @@ def calcular_checksums(archivo_file):
     archivo_file.seek(0)  # Resetear al inicio para guardar
     return md5_hash.hexdigest(), sha256_hash.hexdigest()
 
+
+# ========================================================================
+# VERSIONES DE DOCUMENTO
+# ========================================================================
+
+@login_required
+@require_http_methods(["GET"])
+def versiones_list(request):
+    """Lista todas las versiones de documentos"""
+    try:
+        versiones = VersionDocumento.objects.select_related('documento', 'creado_por').order_by('-fecha_creacion')
+        versiones_data = []
+        
+        for version in versiones:
+            doc_titulo = version.documento.get_titulo() if hasattr(version.documento, 'get_titulo') else (version.documento.titulo or f"Doc #{version.documento.id}")
+            version_dict = {
+                'id': version.id,
+                'documento_id': version.documento.id,
+                'documento_titulo': doc_titulo,
+                'numero_version': version.numero_version,
+                'notas_version': version.notas_version or '',
+                'creado_por_id': version.creado_por.id,
+                'creado_por_nombre': version.creado_por.get_full_name() or version.creado_por.username,
+                'fecha_creacion': version.fecha_creacion.strftime('%Y-%m-%d %H:%M:%S') if version.fecha_creacion else None,
+                'es_version_actual': version.es_version_actual,
+                'archivos_count': version.archivos.count()
+            }
+            versiones_data.append(version_dict)
+        
+        if request.headers.get('Accept') == 'application/json' or request.GET.get('format') == 'json':
+            return JsonResponse({
+                'success': True,
+                'data': versiones_data,
+                'total': len(versiones_data)
+            })
+        
+        from django.shortcuts import redirect
+        return redirect('repositorio:organizacion')
+        
+    except Exception as e:
+        if request.headers.get('Accept') == 'application/json' or request.GET.get('format') == 'json':
+            return JsonResponse({
+                'success': False,
+                'error': f'Error al listar versiones: {str(e)}'
+            }, status=500)
+        from django.contrib import messages
+        messages.error(request, f'Error al listar versiones: {str(e)}')
+        return redirect('repositorio:organizacion')
+
+
+@login_required
+@require_http_methods(["GET"])
+def versiones_por_documento(request, documento_id):
+    """Lista las versiones de un documento específico"""
+    try:
+        documento = get_object_or_404(Documento, id=documento_id)
+        versiones = VersionDocumento.objects.filter(documento=documento).select_related('creado_por').order_by('-numero_version')
+        versiones_data = []
+        
+        for version in versiones:
+            version_dict = {
+                'id': version.id,
+                'documento_id': version.documento.id,
+                'documento_titulo': documento.get_titulo(),
+                'numero_version': version.numero_version,
+                'notas_version': version.notas_version or '',
+                'creado_por_id': version.creado_por.id,
+                'creado_por_nombre': version.creado_por.get_full_name() or version.creado_por.username,
+                'fecha_creacion': version.fecha_creacion.strftime('%Y-%m-%d %H:%M:%S') if version.fecha_creacion else None,
+                'es_version_actual': version.es_version_actual,
+                'archivos_count': version.archivos.count()
+            }
+            versiones_data.append(version_dict)
+        
+        return JsonResponse({
+            'success': True,
+            'data': versiones_data,
+            'documento': {
+                'id': documento.id,
+                'titulo': documento.get_titulo(),
+            },
+            'total': len(versiones_data)
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': f'Error al listar versiones del documento: {str(e)}'
+        }, status=500)
+
+
+@login_required
+@require_http_methods(["POST"])
+@transaction.atomic
+def version_create(request):
+    """Crea una nueva versión de documento"""
+    try:
+        data = json.loads(request.body)
+        
+        # Validar documento
+        documento_id = data.get('documento_id')
+        if not documento_id:
+            return JsonResponse({
+                'success': False,
+                'error': 'El documento es obligatorio'
+            }, status=400)
+        
+        try:
+            documento = Documento.objects.get(id=documento_id)
+        except Documento.DoesNotExist:
+            return JsonResponse({
+                'success': False,
+                'error': 'El documento no existe'
+            }, status=400)
+        
+        # Calcular el número de versión siguiente
+        ultima_version = documento.versiones.order_by('-numero_version').first()
+        numero_version = (ultima_version.numero_version + 1) if ultima_version else 1
+        
+        # Validar que no exista ya esta versión
+        if documento.versiones.filter(numero_version=numero_version).exists():
+            return JsonResponse({
+                'success': False,
+                'error': f'Ya existe la versión {numero_version} para este documento'
+            }, status=400)
+        
+        # Crear la versión
+        version = VersionDocumento.objects.create(
+            documento=documento,
+            numero_version=numero_version,
+            notas_version=(data.get('notas_version') or '').strip() or None,
+            creado_por=request.user,
+            es_version_actual=data.get('es_version_actual', False)
+        )
+        
+        # Si esta es la versión actual, desmarcar las demás
+        if version.es_version_actual:
+            documento.versiones.exclude(id=version.id).update(es_version_actual=False)
+            documento.version_actual = numero_version
+            documento.save()
+        
+        # Retornar los datos de la versión creada
+        doc_titulo = documento.get_titulo() if hasattr(documento, 'get_titulo') else (documento.titulo or f"Doc #{documento.id}")
+        version_dict = {
+            'id': version.id,
+            'documento_id': version.documento.id,
+            'documento_titulo': doc_titulo,
+            'numero_version': version.numero_version,
+            'notas_version': version.notas_version or '',
+            'creado_por_id': version.creado_por.id,
+            'creado_por_nombre': version.creado_por.get_full_name() or version.creado_por.username,
+            'fecha_creacion': version.fecha_creacion.strftime('%Y-%m-%d %H:%M:%S') if version.fecha_creacion else None,
+            'es_version_actual': version.es_version_actual,
+            'archivos_count': 0
+        }
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Versión creada exitosamente',
+            'data': version_dict
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'success': False,
+            'error': 'JSON inválido'
+        }, status=400)
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': f'Error al crear versión: {str(e)}'
+        }, status=500)
+
+
+@login_required
+@require_http_methods(["GET"])
+def version_detail(request, version_id):
+    """Obtiene los detalles de una versión"""
+    try:
+        version = get_object_or_404(VersionDocumento, id=version_id)
+        doc_titulo = version.documento.get_titulo() if hasattr(version.documento, 'get_titulo') else (version.documento.titulo or f"Doc #{version.documento.id}")
+        
+        version_dict = {
+            'id': version.id,
+            'documento_id': version.documento.id,
+            'documento_titulo': doc_titulo,
+            'numero_version': version.numero_version,
+            'notas_version': version.notas_version or '',
+            'creado_por_id': version.creado_por.id,
+            'creado_por_nombre': version.creado_por.get_full_name() or version.creado_por.username,
+            'fecha_creacion': version.fecha_creacion.strftime('%Y-%m-%d %H:%M:%S') if version.fecha_creacion else None,
+            'es_version_actual': version.es_version_actual,
+            'archivos_count': version.archivos.count()
+        }
+        
+        return JsonResponse({
+            'success': True,
+            'data': version_dict
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': f'Error al obtener versión: {str(e)}'
+        }, status=500)
+
+
+@login_required
+@require_http_methods(["POST", "PUT"])
+@transaction.atomic
+def version_update(request, version_id):
+    """Actualiza una versión de documento"""
+    try:
+        version = get_object_or_404(VersionDocumento, id=version_id)
+        data = json.loads(request.body)
+        
+        # Actualizar notas
+        if 'notas_version' in data:
+            version.notas_version = (data.get('notas_version') or '').strip() or None
+        
+        # Actualizar si es versión actual
+        if 'es_version_actual' in data:
+            es_version_actual = data.get('es_version_actual', False)
+            version.es_version_actual = es_version_actual
+            
+            # Si se marca como actual, desmarcar las demás
+            if es_version_actual:
+                version.documento.versiones.exclude(id=version.id).update(es_version_actual=False)
+                version.documento.version_actual = version.numero_version
+                version.documento.save()
+        
+        version.full_clean()
+        version.save()
+        
+        # Retornar los datos actualizados
+        doc_titulo = version.documento.get_titulo() if hasattr(version.documento, 'get_titulo') else (version.documento.titulo or f"Doc #{version.documento.id}")
+        version_dict = {
+            'id': version.id,
+            'documento_id': version.documento.id,
+            'documento_titulo': doc_titulo,
+            'numero_version': version.numero_version,
+            'notas_version': version.notas_version or '',
+            'creado_por_id': version.creado_por.id,
+            'creado_por_nombre': version.creado_por.get_full_name() or version.creado_por.username,
+            'fecha_creacion': version.fecha_creacion.strftime('%Y-%m-%d %H:%M:%S') if version.fecha_creacion else None,
+            'es_version_actual': version.es_version_actual,
+            'archivos_count': version.archivos.count()
+        }
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Versión actualizada exitosamente',
+            'data': version_dict
+        })
+        
+    except ValidationError as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=400)
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'success': False,
+            'error': 'JSON inválido'
+        }, status=400)
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': f'Error al actualizar versión: {str(e)}'
+        }, status=500)
+
+
+@login_required
+@require_http_methods(["POST", "DELETE"])
+@transaction.atomic
+def version_delete(request, version_id):
+    """Elimina una versión de documento"""
+    try:
+        version = get_object_or_404(VersionDocumento, id=version_id)
+        
+        # Manejar tanto POST con _method como DELETE directo
+        if request.method == 'POST':
+            data = json.loads(request.body) if request.body else {}
+            if data.get('_method') != 'DELETE':
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Método no permitido'
+                }, status=405)
+        
+        # Verificar si tiene archivos asociados
+        if version.archivos.exists():
+            return JsonResponse({
+                'success': False,
+                'error': 'No se puede eliminar esta versión porque tiene archivos asociados. Elimine primero los archivos.'
+            }, status=400)
+        
+        # Si es la versión actual, actualizar el documento
+        if version.es_version_actual:
+            # Buscar la versión anterior más reciente
+            version_anterior = version.documento.versiones.exclude(id=version.id).order_by('-numero_version').first()
+            if version_anterior:
+                version_anterior.es_version_actual = True
+                version_anterior.save()
+                version.documento.version_actual = version_anterior.numero_version
+            else:
+                version.documento.version_actual = 0
+            version.documento.save()
+        
+        # Eliminar la versión
+        numero_version = version.numero_version
+        documento_titulo = version.documento.get_titulo() if hasattr(version.documento, 'get_titulo') else (version.documento.titulo or f"Doc #{version.documento.id}")
+        version.delete()
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Versión {numero_version} del documento "{documento_titulo}" eliminada exitosamente'
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': f'Error al eliminar versión: {str(e)}'
+        }, status=500)
+
+
+# ========================================================================
+# ARCHIVOS
+# ========================================================================
 
 @login_required
 @require_http_methods(["GET"])

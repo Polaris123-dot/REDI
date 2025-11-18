@@ -2,6 +2,9 @@
 {% include 'Nucleo/arriba.html' %}
 
 {% block extra_css %}
+<!-- Select2 CSS -->
+<link rel="stylesheet" href="{% static 'plugins/select2/css/select2.min.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css' %}">
 <style>
   .progress-description a {
     display: inline-block;
@@ -154,8 +157,17 @@
                             <div class="container-fluid">
                                 <div class="row mb-3">
                                     <div class="col-12">
-                                        <h4 class="mb-0"><i class="fas fa-th-large"></i> Accesos Rápidos</h4>
-                                        <p class="text-muted">Selecciona una opción para acceder a las funciones disponibles</p>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <h4 class="mb-0"><i class="fas fa-th-large"></i> Accesos Rápidos</h4>
+                                                <p class="text-muted mb-0">Selecciona una opción para acceder a las funciones disponibles</p>
+                                            </div>
+                                            {% if can_add_proyectos or can_add_repositorio or can_add_publicaciones or user.is_superuser %}
+                                            <button type="button" class="btn btn-success btn-lg" id="btnWizardRapido" data-toggle="modal" data-target="#modalWizardRapido">
+                                                <i class="fas fa-magic"></i> Wizard Rápido
+                                            </button>
+                                            {% endif %}
+                                        </div>
                                     </div>
                                 </div>
                                 
@@ -519,6 +531,302 @@
             {% endif %}
         </div>
     </section>
+
+    <!-- Modal Wizard Rápido -->
+    <div class="modal fade" id="modalWizardRapido" tabindex="-1" role="dialog" aria-labelledby="modalWizardRapidoLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title" id="modalWizardRapidoLabel">
+                        <i class="fas fa-magic"></i> Wizard Rápido - Crear Documento, Archivo, Proyecto y Publicación
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <!-- Progress Bar -->
+                    <div class="progress mb-4" style="height: 30px;">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" 
+                             id="wizardProgress" style="width: 33.33%">
+                            Paso 1 de 3
+                        </div>
+                    </div>
+
+                    <!-- Wizard Steps -->
+                    <form id="formWizardRapido">
+                        {% csrf_token %}
+                        
+                        <!-- Paso 1: Documento con PDF -->
+                        <div class="wizard-step" id="step1" data-step="1">
+                            <h5 class="mb-3"><i class="fas fa-file"></i> Paso 1: Crear Documento con PDF</h5>
+                            <div class="form-group">
+                                <label for="wizardTitulo">Título del Documento <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="wizardTitulo" name="titulo" required>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="wizardTipoRecurso">Tipo de Recurso</label>
+                                        <select class="form-control" id="wizardTipoRecurso" name="tipo_recurso_id">
+                                            <option value="">Seleccione un tipo</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="wizardColeccion">Colección</label>
+                                        <select class="form-control" id="wizardColeccion" name="coleccion_id">
+                                            <option value="">Seleccione una colección</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="wizardResumen">Resumen</label>
+                                <textarea class="form-control" id="wizardResumen" name="resumen" rows="3"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="wizardArchivo">Archivo PDF <span class="text-danger">*</span></label>
+                                <input type="file" class="form-control-file" id="wizardArchivo" name="archivo" accept=".pdf" required>
+                                <small class="form-text text-muted">Solo archivos PDF</small>
+                            </div>
+                            <div id="wizardArchivoPreview" class="mt-3"></div>
+                            
+                            <!-- Sección de Autores -->
+                            <hr class="my-4">
+                            <h6 class="mb-3"><i class="fas fa-users"></i> Autores del Documento</h6>
+                            <div id="wizardAutoresList" class="mb-3"></div>
+                            <button type="button" class="btn btn-sm btn-primary" id="btnAgregarAutor">
+                                <i class="fas fa-plus"></i> Agregar Autor
+                            </button>
+                        </div>
+
+                        <!-- Paso 2: Proyecto -->
+                        <div class="wizard-step d-none" id="step2" data-step="2">
+                            <h5 class="mb-3"><i class="fas fa-project-diagram"></i> Paso 2: Crear Proyecto</h5>
+                            <div class="form-group">
+                                <label for="wizardTipoProyecto">Tipo de Proyecto <span class="text-danger">*</span></label>
+                                <select class="form-control" id="wizardTipoProyecto" name="tipo_proyecto_id" required>
+                                    <option value="">Seleccione un tipo de proyecto</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="wizardDescripcionProyecto">Descripción del Proyecto</label>
+                                <textarea class="form-control" id="wizardDescripcionProyecto" name="descripcion" rows="3"></textarea>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="wizardEstadoProyecto">Estado</label>
+                                        <select class="form-control" id="wizardEstadoProyecto" name="estado">
+                                            <option value="borrador">Borrador</option>
+                                            <option value="en_revision">En Revisión</option>
+                                            <option value="aprobado">Aprobado</option>
+                                            <option value="publicado">Publicado</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="wizardVisibilidadProyecto">Visibilidad</label>
+                                        <select class="form-control" id="wizardVisibilidadProyecto" name="visibilidad">
+                                            <option value="publico">Público</option>
+                                            <option value="privado">Privado</option>
+                                            <option value="restringido">Restringido</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Paso 3: Publicación -->
+                        <div class="wizard-step d-none" id="step3" data-step="3">
+                            <h5 class="mb-3"><i class="fas fa-book"></i> Paso 3: Crear Publicación</h5>
+                            <div class="form-group">
+                                <label for="wizardTipoPublicacion">Tipo de Publicación</label>
+                                <select class="form-control" id="wizardTipoPublicacion" name="tipo_publicacion">
+                                    <option value="repositorio">Repositorio</option>
+                                    <option value="revista">Revista</option>
+                                    <option value="libro">Libro</option>
+                                    <option value="congreso">Congreso</option>
+                                    <option value="otro">Otro</option>
+                                </select>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="wizardEstadoPublicacion">Estado</label>
+                                        <select class="form-control" id="wizardEstadoPublicacion" name="estado_publicacion">
+                                            <option value="borrador">Borrador</option>
+                                            <option value="en_proceso">En Proceso</option>
+                                            <option value="publicada">Publicada</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="wizardFechaPublicacion">Fecha de Publicación</label>
+                                        <input type="date" class="form-control" id="wizardFechaPublicacion" name="fecha_publicacion">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="wizardCategorias">Categorías</label>
+                                <select class="form-control select2" id="wizardCategorias" name="categorias_ids" multiple style="width: 100%;">
+                                </select>
+                                <small class="form-text text-muted">Seleccione una o más categorías</small>
+                            </div>
+                            <div class="form-group">
+                                <label for="wizardEtiquetas">Etiquetas</label>
+                                <select class="form-control select2" id="wizardEtiquetas" name="etiquetas_ids" multiple style="width: 100%;">
+                                </select>
+                                <small class="form-text text-muted">Seleccione una o más etiquetas</small>
+                            </div>
+                            <div class="form-group">
+                                <label for="wizardUrlExterna">URL Externa</label>
+                                <div class="input-group">
+                                    <input type="url" class="form-control" id="wizardUrlExterna" name="url_externa" placeholder="https://ejemplo.com/publicacion">
+                                    <div class="input-group-append">
+                                        <button class="btn btn-outline-secondary" type="button" id="btnWizardGenerarUrl">
+                                            <i class="fas fa-link"></i> Generar URL
+                                        </button>
+                                    </div>
+                                </div>
+                                <small class="form-text text-muted">URL externa de la publicación (opcional)</small>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="btnWizardAnterior" style="display: none;">
+                        <i class="fas fa-arrow-left"></i> Anterior
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success" id="btnWizardSiguiente">
+                        Siguiente <i class="fas fa-arrow-right"></i>
+                    </button>
+                    <button type="button" class="btn btn-primary" id="btnWizardFinalizar" style="display: none;">
+                        <i class="fas fa-check"></i> Finalizar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Agregar Autor -->
+    <div class="modal fade" id="modalAgregarAutor" tabindex="-1" role="dialog" aria-labelledby="modalAgregarAutorLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalAgregarAutorLabel">Agregar Autor</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form id="formAgregarAutor">
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label>¿El autor es usuario del sistema?</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="autorTipo" id="autorUsuario" value="usuario" checked>
+                                <label class="form-check-label" for="autorUsuario">
+                                    Sí, es usuario
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="autorTipo" id="autorNoUsuario" value="no_usuario">
+                                <label class="form-check-label" for="autorNoUsuario">
+                                    No, no es usuario
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <!-- Campos para autor-usuario -->
+                        <div id="autorUsuarioFields">
+                            <div class="form-group">
+                                <label for="autorUsuarioSelect">Seleccionar Usuario <span class="text-danger">*</span></label>
+                                <select class="form-control" id="autorUsuarioSelect" name="usuario_id">
+                                    <option value="">Seleccione un usuario</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="autorUsuarioAfiliacion">Afiliación</label>
+                                <input type="text" class="form-control" id="autorUsuarioAfiliacion" name="afiliacion" placeholder="Institución o afiliación">
+                            </div>
+                            <div class="form-group">
+                                <label for="autorUsuarioOrcid">ORCID ID</label>
+                                <input type="text" class="form-control" id="autorUsuarioOrcid" name="orcid_id" placeholder="0000-0000-0000-0000" maxlength="19">
+                            </div>
+                        </div>
+                        
+                        <!-- Campos para autor-no-usuario -->
+                        <div id="autorNoUsuarioFields" style="display: none;">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="autorNombre">Nombre <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="autorNombre" name="nombre" placeholder="Nombre">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="autorApellidos">Apellidos <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="autorApellidos" name="apellidos" placeholder="Apellidos">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="autorEmail">Email</label>
+                                <input type="email" class="form-control" id="autorEmail" name="email" placeholder="email@ejemplo.com">
+                            </div>
+                            <div class="form-group">
+                                <label for="autorAfiliacion">Afiliación</label>
+                                <input type="text" class="form-control" id="autorAfiliacion" name="afiliacion" placeholder="Institución o afiliación">
+                            </div>
+                            <div class="form-group">
+                                <label for="autorOrcid">ORCID ID</label>
+                                <input type="text" class="form-control" id="autorOrcid" name="orcid_id" placeholder="0000-0000-0000-0000" maxlength="19">
+                            </div>
+                        </div>
+                        
+                        <!-- Campos comunes -->
+                        <div class="form-group">
+                            <label for="autorOrden">Orden de Autoría</label>
+                            <input type="number" class="form-control" id="autorOrden" name="orden_autor" value="1" min="1">
+                            <small class="form-text text-muted">1 = primer autor</small>
+                        </div>
+                        <div class="form-group">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="autorCorrespondiente" name="es_correspondiente" value="true">
+                                <label class="form-check-label" for="autorCorrespondiente">
+                                    Autor de correspondencia
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="autorPrincipal" name="es_autor_principal" value="true">
+                                <label class="form-check-label" for="autorPrincipal">
+                                    Autor principal
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Agregar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Select2 JS -->
+<script src="{% static 'plugins/select2/js/select2.full.min.js' %}"></script>
+<script src="{% static 'js/wizard_rapido.js' %}"></script>
 {% endblock %}
 
 {% include 'Nucleo/abajo.html' %}

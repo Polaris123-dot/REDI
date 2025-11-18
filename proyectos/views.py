@@ -49,60 +49,49 @@ def tipos_proyecto_list(request):
             'plantilla_vista': tipo.plantilla_vista or '',
             'es_activo': tipo.es_activo,
             'orden': tipo.orden,
-            'fecha_creacion': tipo.fecha_creacion.isoformat() if tipo.fecha_creacion else None,
-            'campos_count': tipo.campos.count(),
-            'proyectos_count': tipo.proyectos.count(),
+            'fecha_creacion': tipo.fecha_creacion.strftime('%Y-%m-%d %H:%M:%S') if tipo.fecha_creacion else None,
         }
         tipos_data.append(tipo_dict)
     
     return JsonResponse({
         'success': True,
-        'data': tipos_data,
-        'total': len(tipos_data)
+        'data': tipos_data
+    })
+
+
+@login_required
+@require_http_methods(["GET"])
+def tipos_proyecto_for_select(request):
+    """Lista tipos de proyecto para usar en selects"""
+    tipos = TipoProyecto.objects.filter(es_activo=True).order_by('orden', 'nombre')
+    tipos_data = [{'id': t.id, 'nombre': t.nombre} for t in tipos]
+    
+    return JsonResponse({
+        'success': True,
+        'data': tipos_data
     })
 
 
 @login_required
 @require_http_methods(["POST"])
+@transaction.atomic
 def tipo_proyecto_create(request):
     """Crea un nuevo tipo de proyecto"""
     try:
         data = json.loads(request.body)
         
-        # Validar campos requeridos
         nombre = data.get('nombre', '').strip()
         if not nombre:
-            return JsonResponse({
-                'success': False,
-                'error': 'El nombre es obligatorio'
-            }, status=400)
+            return JsonResponse({'success': False, 'error': 'El nombre es obligatorio'}, status=400)
         
-        # Validar que el nombre no exista
-        if TipoProyecto.objects.filter(nombre=nombre).exists():
-            return JsonResponse({
-                'success': False,
-                'error': 'Ya existe un tipo de proyecto con este nombre'
-            }, status=400)
-        
-        # Generar slug desde el nombre
         slug = slugify(nombre)
-        
-        # Verificar que el slug no esté vacío
         if not slug:
-            return JsonResponse({
-                'success': False,
-                'error': 'El nombre no puede generar un slug válido'
-            }, status=400)
+            return JsonResponse({'success': False, 'error': 'No se pudo generar un slug válido'}, status=400)
         
-        # Validar que el slug no exista
         if TipoProyecto.objects.filter(slug=slug).exists():
-            return JsonResponse({
-                'success': False,
-                'error': 'Ya existe un tipo de proyecto con un nombre similar'
-            }, status=400)
+            return JsonResponse({'success': False, 'error': 'Ya existe un tipo de proyecto con este nombre'}, status=400)
         
-        # Crear el tipo de proyecto
-        tipo = TipoProyecto(
+        tipo = TipoProyecto.objects.create(
             nombre=nombre,
             slug=slug,
             descripcion=data.get('descripcion', '').strip() or None,
@@ -113,47 +102,17 @@ def tipo_proyecto_create(request):
             orden=data.get('orden', 0)
         )
         
-        # Validar antes de guardar
-        tipo.full_clean()
-        tipo.save()
-        
-        # Retornar los datos del tipo creado
-        tipo_dict = {
-            'id': tipo.id,
-            'nombre': tipo.nombre,
-            'slug': tipo.slug,
-            'descripcion': tipo.descripcion or '',
-            'icono': tipo.icono or '',
-            'color': tipo.color or '',
-            'plantilla_vista': tipo.plantilla_vista or '',
-            'es_activo': tipo.es_activo,
-            'orden': tipo.orden,
-            'fecha_creacion': tipo.fecha_creacion.isoformat() if tipo.fecha_creacion else None,
-            'campos_count': 0,
-            'proyectos_count': 0,
-        }
-        
         return JsonResponse({
             'success': True,
             'message': 'Tipo de proyecto creado exitosamente',
-            'data': tipo_dict
+            'data': {
+                'id': tipo.id,
+                'nombre': tipo.nombre,
+                'slug': tipo.slug,
+            }
         })
-        
-    except ValidationError as e:
-        return JsonResponse({
-            'success': False,
-            'error': str(e)
-        }, status=400)
-    except json.JSONDecodeError:
-        return JsonResponse({
-            'success': False,
-            'error': 'JSON inválido'
-        }, status=400)
     except Exception as e:
-        return JsonResponse({
-            'success': False,
-            'error': f'Error al crear tipo de proyecto: {str(e)}'
-        }, status=500)
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 
 @login_required
@@ -162,161 +121,84 @@ def tipo_proyecto_detail(request, tipo_proyecto_id):
     """Obtiene los detalles de un tipo de proyecto"""
     try:
         tipo = get_object_or_404(TipoProyecto, id=tipo_proyecto_id)
-        
-        tipo_dict = {
-            'id': tipo.id,
-            'nombre': tipo.nombre,
-            'slug': tipo.slug,
-            'descripcion': tipo.descripcion or '',
-            'icono': tipo.icono or '',
-            'color': tipo.color or '',
-            'plantilla_vista': tipo.plantilla_vista or '',
-            'es_activo': tipo.es_activo,
-            'orden': tipo.orden,
-            'fecha_creacion': tipo.fecha_creacion.isoformat() if tipo.fecha_creacion else None,
-            'campos_count': tipo.campos.count(),
-            'proyectos_count': tipo.proyectos.count(),
-        }
-        
         return JsonResponse({
             'success': True,
-            'data': tipo_dict
+            'data': {
+                'id': tipo.id,
+                'nombre': tipo.nombre,
+                'slug': tipo.slug,
+                'descripcion': tipo.descripcion or '',
+                'icono': tipo.icono or '',
+                'color': tipo.color or '',
+                'plantilla_vista': tipo.plantilla_vista or '',
+                'es_activo': tipo.es_activo,
+                'orden': tipo.orden,
+            }
         })
-        
     except Exception as e:
-        return JsonResponse({
-            'success': False,
-            'error': f'Error al obtener tipo de proyecto: {str(e)}'
-        }, status=500)
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 
 @login_required
 @require_http_methods(["POST", "PUT"])
+@transaction.atomic
 def tipo_proyecto_update(request, tipo_proyecto_id):
     """Actualiza un tipo de proyecto"""
     try:
         tipo = get_object_or_404(TipoProyecto, id=tipo_proyecto_id)
+        data = json.loads(request.body)
         
-        # Manejar tanto POST con _method como PUT directo
-        if request.method == 'POST':
-            data = json.loads(request.body)
-            if data.get('_method') != 'PUT':
-                return JsonResponse({
-                    'success': False,
-                    'error': 'Método no permitido'
-                }, status=405)
-        else:
-            data = json.loads(request.body)
-        
-        # Validar campos requeridos
         nombre = data.get('nombre', '').strip()
         if not nombre:
-            return JsonResponse({
-                'success': False,
-                'error': 'El nombre es obligatorio'
-            }, status=400)
+            return JsonResponse({'success': False, 'error': 'El nombre es obligatorio'}, status=400)
         
-        # Validar que el nombre no exista en otro tipo
-        if TipoProyecto.objects.filter(nombre=nombre).exclude(id=tipo_proyecto_id).exists():
-            return JsonResponse({
-                'success': False,
-                'error': 'Ya existe otro tipo de proyecto con este nombre'
-            }, status=400)
-        
-        # Generar slug desde el nombre si cambió
         nuevo_slug = slugify(nombre)
+        if nuevo_slug != tipo.slug:
+            if TipoProyecto.objects.filter(slug=nuevo_slug).exclude(id=tipo_proyecto_id).exists():
+                return JsonResponse({'success': False, 'error': 'Ya existe un tipo de proyecto con este nombre'}, status=400)
+            tipo.slug = nuevo_slug
         
-        # Verificar que el slug no esté vacío
-        if not nuevo_slug:
-            return JsonResponse({
-                'success': False,
-                'error': 'El nombre no puede generar un slug válido'
-            }, status=400)
-        
-        # Si el slug cambió, validar que no exista
-        if nuevo_slug != tipo.slug and TipoProyecto.objects.filter(slug=nuevo_slug).exists():
-            return JsonResponse({
-                'success': False,
-                'error': 'Ya existe otro tipo de proyecto con un nombre similar'
-            }, status=400)
-        
-        # Actualizar los campos
         tipo.nombre = nombre
-        tipo.slug = nuevo_slug
         tipo.descripcion = data.get('descripcion', '').strip() or None
         tipo.icono = data.get('icono', '').strip() or None
         tipo.color = data.get('color', '').strip() or None
         tipo.plantilla_vista = data.get('plantilla_vista', '').strip() or None
-        tipo.es_activo = data.get('es_activo', True)
-        tipo.orden = data.get('orden', 0)
-        
-        # Validar antes de guardar
-        tipo.full_clean()
+        tipo.es_activo = data.get('es_activo', tipo.es_activo)
+        tipo.orden = data.get('orden', tipo.orden)
         tipo.save()
-        
-        # Retornar los datos actualizados
-        tipo_dict = {
-            'id': tipo.id,
-            'nombre': tipo.nombre,
-            'slug': tipo.slug,
-            'descripcion': tipo.descripcion or '',
-            'icono': tipo.icono or '',
-            'color': tipo.color or '',
-            'plantilla_vista': tipo.plantilla_vista or '',
-            'es_activo': tipo.es_activo,
-            'orden': tipo.orden,
-            'fecha_creacion': tipo.fecha_creacion.isoformat() if tipo.fecha_creacion else None,
-            'campos_count': tipo.campos.count(),
-            'proyectos_count': tipo.proyectos.count(),
-        }
         
         return JsonResponse({
             'success': True,
             'message': 'Tipo de proyecto actualizado exitosamente',
-            'data': tipo_dict
+            'data': {
+                'id': tipo.id,
+                'nombre': tipo.nombre,
+                'slug': tipo.slug,
+            }
         })
-        
-    except ValidationError as e:
-        return JsonResponse({
-            'success': False,
-            'error': str(e)
-        }, status=400)
-    except json.JSONDecodeError:
-        return JsonResponse({
-            'success': False,
-            'error': 'JSON inválido'
-        }, status=400)
     except Exception as e:
-        return JsonResponse({
-            'success': False,
-            'error': f'Error al actualizar tipo de proyecto: {str(e)}'
-        }, status=500)
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 
 @login_required
 @require_http_methods(["POST", "DELETE"])
+@transaction.atomic
 def tipo_proyecto_delete(request, tipo_proyecto_id):
     """Elimina un tipo de proyecto"""
     try:
         tipo = get_object_or_404(TipoProyecto, id=tipo_proyecto_id)
         
-        # Manejar tanto POST con _method como DELETE directo
         if request.method == 'POST':
             data = json.loads(request.body) if request.body else {}
             if data.get('_method') != 'DELETE':
-                return JsonResponse({
-                    'success': False,
-                    'error': 'Método no permitido'
-                }, status=405)
+                return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
         
-        # Verificar si tiene proyectos asociados
         if tipo.proyectos.exists():
             return JsonResponse({
                 'success': False,
                 'error': 'No se puede eliminar este tipo de proyecto porque tiene proyectos asociados'
             }, status=400)
         
-        # Eliminar el tipo
         tipo_nombre = tipo.nombre
         tipo.delete()
         
@@ -324,12 +206,8 @@ def tipo_proyecto_delete(request, tipo_proyecto_id):
             'success': True,
             'message': f'Tipo de proyecto "{tipo_nombre}" eliminado exitosamente'
         })
-        
     except Exception as e:
-        return JsonResponse({
-            'success': False,
-            'error': f'Error al eliminar tipo de proyecto: {str(e)}'
-        }, status=500)
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 
 # ============================================================================
@@ -339,8 +217,8 @@ def tipo_proyecto_delete(request, tipo_proyecto_id):
 @login_required
 @require_http_methods(["GET"])
 def campos_tipo_proyecto_list(request):
-    """Lista todos los campos de tipo de proyecto en formato JSON"""
-    campos = CampoTipoProyecto.objects.select_related('tipo_proyecto').all()
+    """Lista todos los campos de tipo de proyecto"""
+    campos = CampoTipoProyecto.objects.select_related('tipo_proyecto').all().order_by('tipo_proyecto__nombre', 'orden', 'nombre')
     campos_data = []
     
     for campo in campos:
@@ -350,152 +228,97 @@ def campos_tipo_proyecto_list(request):
             'tipo_proyecto_nombre': campo.tipo_proyecto.nombre,
             'nombre': campo.nombre,
             'slug': campo.slug,
-            'etiqueta': campo.etiqueta,
-            'descripcion': campo.descripcion or '',
             'tipo_dato': campo.tipo_dato,
-            'tipo_dato_display': campo.get_tipo_dato_display(),
             'es_obligatorio': campo.es_obligatorio,
             'es_repetible': campo.es_repetible,
-            'es_buscable': campo.es_buscable,
-            'es_indexable': campo.es_indexable,
             'orden': campo.orden,
-            'valores_posibles': campo.valores_posibles,
-            'validador': campo.validador or '',
-            'valor_por_defecto': campo.valor_por_defecto or '',
-            'ayuda': campo.ayuda or '',
-            'categoria': campo.categoria or '',
-            'fecha_creacion': campo.fecha_creacion.isoformat() if campo.fecha_creacion else None,
+            'descripcion': campo.descripcion or '',
+            'valores_posibles': campo.valores_posibles or [],
         }
         campos_data.append(campo_dict)
     
     return JsonResponse({
         'success': True,
-        'data': campos_data,
-        'total': len(campos_data)
+        'data': campos_data
     })
 
 
 @login_required
+@require_http_methods(["GET"])
+def campos_por_tipo_proyecto(request, tipo_proyecto_id):
+    """Lista los campos de un tipo de proyecto específico"""
+    try:
+        tipo_proyecto = get_object_or_404(TipoProyecto, id=tipo_proyecto_id)
+        campos = CampoTipoProyecto.objects.filter(tipo_proyecto=tipo_proyecto).order_by('orden', 'nombre')
+        campos_data = []
+        
+        for campo in campos:
+            campo_dict = {
+                'id': campo.id,
+                'nombre': campo.nombre,
+                'slug': campo.slug,
+                'tipo_dato': campo.tipo_dato,
+                'es_obligatorio': campo.es_obligatorio,
+                'es_repetible': campo.es_repetible,
+                'orden': campo.orden,
+                'descripcion': campo.descripcion or '',
+                'valores_posibles': campo.valores_posibles or [],
+            }
+            campos_data.append(campo_dict)
+        
+        return JsonResponse({
+            'success': True,
+            'data': campos_data
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@login_required
 @require_http_methods(["POST"])
+@transaction.atomic
 def campo_tipo_proyecto_create(request):
     """Crea un nuevo campo de tipo de proyecto"""
     try:
         data = json.loads(request.body)
         
-        # Validar campos requeridos
         tipo_proyecto_id = data.get('tipo_proyecto_id')
         if not tipo_proyecto_id:
-            return JsonResponse({
-                'success': False,
-                'error': 'El tipo de proyecto es obligatorio'
-            }, status=400)
+            return JsonResponse({'success': False, 'error': 'El tipo de proyecto es obligatorio'}, status=400)
         
         tipo_proyecto = get_object_or_404(TipoProyecto, id=tipo_proyecto_id)
         
         nombre = data.get('nombre', '').strip()
         if not nombre:
-            return JsonResponse({
-                'success': False,
-                'error': 'El nombre es obligatorio'
-            }, status=400)
+            return JsonResponse({'success': False, 'error': 'El nombre es obligatorio'}, status=400)
         
-        etiqueta = data.get('etiqueta', '').strip()
-        if not etiqueta:
-            return JsonResponse({
-                'success': False,
-                'error': 'La etiqueta es obligatoria'
-            }, status=400)
-        
-        # Validar que el slug no exista para este tipo de proyecto
-        slug = data.get('slug', '').strip()
-        if not slug:
-            # Generar slug desde el nombre si no se proporciona
-            slug = slugify(nombre)
-        
+        slug = slugify(nombre)
         if CampoTipoProyecto.objects.filter(tipo_proyecto=tipo_proyecto, slug=slug).exists():
-            return JsonResponse({
-                'success': False,
-                'error': 'Ya existe un campo con este nombre/slug para este tipo de proyecto'
-            }, status=400)
+            return JsonResponse({'success': False, 'error': 'Ya existe un campo con este nombre en este tipo de proyecto'}, status=400)
         
-        # Procesar valores_posibles si es JSON string
-        valores_posibles = data.get('valores_posibles')
-        if valores_posibles and isinstance(valores_posibles, str):
-            try:
-                valores_posibles = json.loads(valores_posibles)
-            except:
-                # Si no es JSON válido, tratarlo como lista separada por comas
-                valores_posibles = [v.strip() for v in valores_posibles.split(',') if v.strip()]
-        
-        # Crear el campo
-        campo = CampoTipoProyecto(
+        campo = CampoTipoProyecto.objects.create(
             tipo_proyecto=tipo_proyecto,
             nombre=nombre,
             slug=slug,
-            etiqueta=etiqueta,
-            descripcion=data.get('descripcion', '').strip() or None,
             tipo_dato=data.get('tipo_dato', 'texto'),
             es_obligatorio=data.get('es_obligatorio', False),
             es_repetible=data.get('es_repetible', False),
-            es_buscable=data.get('es_buscable', True),
-            es_indexable=data.get('es_indexable', True),
             orden=data.get('orden', 0),
-            valores_posibles=valores_posibles,
-            validador=data.get('validador', '').strip() or None,
-            valor_por_defecto=data.get('valor_por_defecto', '').strip() or None,
-            ayuda=data.get('ayuda', '').strip() or None,
-            categoria=data.get('categoria', '').strip() or None,
+            descripcion=data.get('descripcion', '').strip() or None,
+            valores_posibles=data.get('valores_posibles', []) if data.get('valores_posibles') else None,
         )
-        
-        # Validar antes de guardar
-        campo.full_clean()
-        campo.save()
-        
-        # Retornar los datos del campo creado
-        campo_dict = {
-            'id': campo.id,
-            'tipo_proyecto_id': campo.tipo_proyecto.id,
-            'tipo_proyecto_nombre': campo.tipo_proyecto.nombre,
-            'nombre': campo.nombre,
-            'slug': campo.slug,
-            'etiqueta': campo.etiqueta,
-            'descripcion': campo.descripcion or '',
-            'tipo_dato': campo.tipo_dato,
-            'tipo_dato_display': campo.get_tipo_dato_display(),
-            'es_obligatorio': campo.es_obligatorio,
-            'es_repetible': campo.es_repetible,
-            'es_buscable': campo.es_buscable,
-            'es_indexable': campo.es_indexable,
-            'orden': campo.orden,
-            'valores_posibles': campo.valores_posibles,
-            'validador': campo.validador or '',
-            'valor_por_defecto': campo.valor_por_defecto or '',
-            'ayuda': campo.ayuda or '',
-            'categoria': campo.categoria or '',
-            'fecha_creacion': campo.fecha_creacion.isoformat() if campo.fecha_creacion else None,
-        }
         
         return JsonResponse({
             'success': True,
-            'message': 'Campo de tipo de proyecto creado exitosamente',
-            'data': campo_dict
+            'message': 'Campo creado exitosamente',
+            'data': {
+                'id': campo.id,
+                'nombre': campo.nombre,
+                'slug': campo.slug,
+            }
         })
-        
-    except ValidationError as e:
-        return JsonResponse({
-            'success': False,
-            'error': str(e)
-        }, status=400)
-    except json.JSONDecodeError:
-        return JsonResponse({
-            'success': False,
-            'error': 'JSON inválido'
-        }, status=400)
     except Exception as e:
-        return JsonResponse({
-            'success': False,
-            'error': f'Error al crear campo de tipo de proyecto: {str(e)}'
-        }, status=500)
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 
 @login_required
@@ -504,222 +327,89 @@ def campo_tipo_proyecto_detail(request, campo_id):
     """Obtiene los detalles de un campo de tipo de proyecto"""
     try:
         campo = get_object_or_404(CampoTipoProyecto, id=campo_id)
-        
-        campo_dict = {
-            'id': campo.id,
-            'tipo_proyecto_id': campo.tipo_proyecto.id,
-            'tipo_proyecto_nombre': campo.tipo_proyecto.nombre,
-            'nombre': campo.nombre,
-            'slug': campo.slug,
-            'etiqueta': campo.etiqueta,
-            'descripcion': campo.descripcion or '',
-            'tipo_dato': campo.tipo_dato,
-            'tipo_dato_display': campo.get_tipo_dato_display(),
-            'es_obligatorio': campo.es_obligatorio,
-            'es_repetible': campo.es_repetible,
-            'es_buscable': campo.es_buscable,
-            'es_indexable': campo.es_indexable,
-            'orden': campo.orden,
-            'valores_posibles': campo.valores_posibles,
-            'validador': campo.validador or '',
-            'valor_por_defecto': campo.valor_por_defecto or '',
-            'ayuda': campo.ayuda or '',
-            'categoria': campo.categoria or '',
-            'fecha_creacion': campo.fecha_creacion.isoformat() if campo.fecha_creacion else None,
-        }
-        
         return JsonResponse({
             'success': True,
-            'data': campo_dict
+            'data': {
+                'id': campo.id,
+                'tipo_proyecto_id': campo.tipo_proyecto.id,
+                'tipo_proyecto_nombre': campo.tipo_proyecto.nombre,
+                'nombre': campo.nombre,
+                'slug': campo.slug,
+                'tipo_dato': campo.tipo_dato,
+                'es_obligatorio': campo.es_obligatorio,
+                'es_repetible': campo.es_repetible,
+                'orden': campo.orden,
+                'descripcion': campo.descripcion or '',
+                'valores_posibles': campo.valores_posibles or [],
+            }
         })
-        
     except Exception as e:
-        return JsonResponse({
-            'success': False,
-            'error': f'Error al obtener campo de tipo de proyecto: {str(e)}'
-        }, status=500)
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 
 @login_required
 @require_http_methods(["POST", "PUT"])
+@transaction.atomic
 def campo_tipo_proyecto_update(request, campo_id):
     """Actualiza un campo de tipo de proyecto"""
     try:
         campo = get_object_or_404(CampoTipoProyecto, id=campo_id)
-        
-        # Manejar tanto POST con _method como PUT directo
-        if request.method == 'POST':
-            data = json.loads(request.body)
-            if data.get('_method') != 'PUT':
-                return JsonResponse({
-                    'success': False,
-                    'error': 'Método no permitido'
-                }, status=405)
-        else:
-            data = json.loads(request.body)
-        
-        # Validar campos requeridos
-        tipo_proyecto_id = data.get('tipo_proyecto_id')
-        if not tipo_proyecto_id:
-            return JsonResponse({
-                'success': False,
-                'error': 'El tipo de proyecto es obligatorio'
-            }, status=400)
-        
-        tipo_proyecto = get_object_or_404(TipoProyecto, id=tipo_proyecto_id)
+        data = json.loads(request.body)
         
         nombre = data.get('nombre', '').strip()
         if not nombre:
-            return JsonResponse({
-                'success': False,
-                'error': 'El nombre es obligatorio'
-            }, status=400)
+            return JsonResponse({'success': False, 'error': 'El nombre es obligatorio'}, status=400)
         
-        etiqueta = data.get('etiqueta', '').strip()
-        if not etiqueta:
-            return JsonResponse({
-                'success': False,
-                'error': 'La etiqueta es obligatoria'
-            }, status=400)
+        nuevo_slug = slugify(nombre)
+        if nuevo_slug != campo.slug:
+            if CampoTipoProyecto.objects.filter(tipo_proyecto=campo.tipo_proyecto, slug=nuevo_slug).exclude(id=campo_id).exists():
+                return JsonResponse({'success': False, 'error': 'Ya existe un campo con este nombre en este tipo de proyecto'}, status=400)
+            campo.slug = nuevo_slug
         
-        # Validar que el slug no exista en otro campo del mismo tipo
-        slug = data.get('slug', '').strip()
-        if not slug:
-            slug = slugify(nombre)
-        
-        if CampoTipoProyecto.objects.filter(tipo_proyecto=tipo_proyecto, slug=slug).exclude(id=campo_id).exists():
-            return JsonResponse({
-                'success': False,
-                'error': 'Ya existe otro campo con este nombre/slug para este tipo de proyecto'
-            }, status=400)
-        
-        # Procesar valores_posibles
-        valores_posibles = data.get('valores_posibles')
-        if valores_posibles and isinstance(valores_posibles, str):
-            try:
-                valores_posibles = json.loads(valores_posibles)
-            except:
-                valores_posibles = [v.strip() for v in valores_posibles.split(',') if v.strip()]
-        
-        # Actualizar los campos
-        campo.tipo_proyecto = tipo_proyecto
         campo.nombre = nombre
-        campo.slug = slug
-        campo.etiqueta = etiqueta
+        campo.tipo_dato = data.get('tipo_dato', campo.tipo_dato)
+        campo.es_obligatorio = data.get('es_obligatorio', campo.es_obligatorio)
+        campo.es_repetible = data.get('es_repetible', campo.es_repetible)
+        campo.orden = data.get('orden', campo.orden)
         campo.descripcion = data.get('descripcion', '').strip() or None
-        campo.tipo_dato = data.get('tipo_dato', 'texto')
-        campo.es_obligatorio = data.get('es_obligatorio', False)
-        campo.es_repetible = data.get('es_repetible', False)
-        campo.es_buscable = data.get('es_buscable', True)
-        campo.es_indexable = data.get('es_indexable', True)
-        campo.orden = data.get('orden', 0)
-        campo.valores_posibles = valores_posibles
-        campo.validador = data.get('validador', '').strip() or None
-        campo.valor_por_defecto = data.get('valor_por_defecto', '').strip() or None
-        campo.ayuda = data.get('ayuda', '').strip() or None
-        campo.categoria = data.get('categoria', '').strip() or None
-        
-        # Validar antes de guardar
-        campo.full_clean()
+        campo.valores_posibles = data.get('valores_posibles', []) if data.get('valores_posibles') else None
         campo.save()
-        
-        # Retornar los datos actualizados
-        campo_dict = {
-            'id': campo.id,
-            'tipo_proyecto_id': campo.tipo_proyecto.id,
-            'tipo_proyecto_nombre': campo.tipo_proyecto.nombre,
-            'nombre': campo.nombre,
-            'slug': campo.slug,
-            'etiqueta': campo.etiqueta,
-            'descripcion': campo.descripcion or '',
-            'tipo_dato': campo.tipo_dato,
-            'tipo_dato_display': campo.get_tipo_dato_display(),
-            'es_obligatorio': campo.es_obligatorio,
-            'es_repetible': campo.es_repetible,
-            'es_buscable': campo.es_buscable,
-            'es_indexable': campo.es_indexable,
-            'orden': campo.orden,
-            'valores_posibles': campo.valores_posibles,
-            'validador': campo.validador or '',
-            'valor_por_defecto': campo.valor_por_defecto or '',
-            'ayuda': campo.ayuda or '',
-            'categoria': campo.categoria or '',
-            'fecha_creacion': campo.fecha_creacion.isoformat() if campo.fecha_creacion else None,
-        }
         
         return JsonResponse({
             'success': True,
-            'message': 'Campo de tipo de proyecto actualizado exitosamente',
-            'data': campo_dict
+            'message': 'Campo actualizado exitosamente',
+            'data': {
+                'id': campo.id,
+                'nombre': campo.nombre,
+                'slug': campo.slug,
+            }
         })
-        
-    except ValidationError as e:
-        return JsonResponse({
-            'success': False,
-            'error': str(e)
-        }, status=400)
-    except json.JSONDecodeError:
-        return JsonResponse({
-            'success': False,
-            'error': 'JSON inválido'
-        }, status=400)
     except Exception as e:
-        return JsonResponse({
-            'success': False,
-            'error': f'Error al actualizar campo de tipo de proyecto: {str(e)}'
-        }, status=500)
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 
 @login_required
 @require_http_methods(["POST", "DELETE"])
+@transaction.atomic
 def campo_tipo_proyecto_delete(request, campo_id):
     """Elimina un campo de tipo de proyecto"""
     try:
         campo = get_object_or_404(CampoTipoProyecto, id=campo_id)
         
-        # Manejar tanto POST con _method como DELETE directo
         if request.method == 'POST':
             data = json.loads(request.body) if request.body else {}
             if data.get('_method') != 'DELETE':
-                return JsonResponse({
-                    'success': False,
-                    'error': 'Método no permitido'
-                }, status=405)
+                return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
         
-        # Verificar si tiene valores asociados
-        if campo.valores.exists():
-            return JsonResponse({
-                'success': False,
-                'error': 'No se puede eliminar este campo porque tiene valores asociados en proyectos'
-            }, status=400)
-        
-        # Eliminar el campo
-        campo_etiqueta = campo.etiqueta
+        campo_nombre = campo.nombre
         campo.delete()
         
         return JsonResponse({
             'success': True,
-            'message': f'Campo "{campo_etiqueta}" eliminado exitosamente'
+            'message': f'Campo "{campo_nombre}" eliminado exitosamente'
         })
-        
     except Exception as e:
-        return JsonResponse({
-            'success': False,
-            'error': f'Error al eliminar campo de tipo de proyecto: {str(e)}'
-        }, status=500)
-
-
-@login_required
-@require_http_methods(["GET"])
-def tipos_proyecto_for_select(request):
-    """Obtiene la lista de tipos de proyecto para usar en select"""
-    tipos = TipoProyecto.objects.filter(es_activo=True).order_by('orden', 'nombre')
-    tipos_data = [{'id': tipo.id, 'nombre': tipo.nombre} for tipo in tipos]
-    
-    return JsonResponse({
-        'success': True,
-        'data': tipos_data
-    })
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 
 # ============================================================================
@@ -730,40 +420,27 @@ def tipos_proyecto_for_select(request):
 @require_http_methods(["GET"])
 def proyectos_list(request):
     """Lista todos los proyectos en formato JSON"""
-    from publicaciones.models import Publicacion
-    proyectos = Proyecto.objects.select_related('tipo_proyecto', 'creador').prefetch_related('categorias', 'etiquetas', 'autores', 'publicaciones').all()
+    proyectos = Proyecto.objects.select_related('tipo_proyecto', 'creador', 'documento').prefetch_related('autores__usuario', 'categorias', 'etiquetas').all().order_by('-fecha_creacion')
     proyectos_data = []
     
     for proyecto in proyectos:
-        # Obtener autores del proyecto
         autores = []
-        for autor in proyecto.autores.select_related('usuario').all().order_by('orden_autor'):
+        for autor in proyecto.autores.all():
             autores.append({
                 'id': autor.id,
                 'usuario_id': autor.usuario.id,
                 'usuario_nombre': autor.usuario.get_full_name() or autor.usuario.username,
-                'nombre_completo': autor.get_nombre_completo(),
-                'email': autor.get_email(),
-                'afiliacion': autor.get_afiliacion(),
-                'orcid_id': autor.get_orcid_id(),
+                'afiliacion': autor.afiliacion or '',
                 'orden_autor': autor.orden_autor,
                 'es_correspondiente': autor.es_correspondiente,
                 'es_autor_principal': autor.es_autor_principal,
+                'orcid_id': autor.orcid_id or ''
             })
-        
-        # Obtener la primera publicación pública relacionada
-        publicacion_publica = proyecto.publicaciones.filter(
-            estado='publicada',
-            visibilidad='publico'
-        ).first()
-        
-        publicacion_slug = publicacion_publica.slug if publicacion_publica else None
         
         proyecto_dict = {
             'id': proyecto.id,
             'titulo': proyecto.titulo,
             'slug': proyecto.slug,
-            'publicacion_slug': publicacion_slug,
             'tipo_proyecto_id': proyecto.tipo_proyecto.id,
             'tipo_proyecto_nombre': proyecto.tipo_proyecto.nombre,
             'creador_id': proyecto.creador.id,
@@ -782,7 +459,13 @@ def proyectos_list(request):
             'etiquetas_count': proyecto.etiquetas.count(),
             'autores_count': proyecto.autores.count(),
             'autores': autores,
+            'documento_id': None,
         }
+        try:
+            proyecto_dict['documento_id'] = proyecto.documento.id
+        except Exception:
+            # RelatedObjectDoesNotExist o cualquier otra excepción
+            proyecto_dict['documento_id'] = None
         proyectos_data.append(proyecto_dict)
     
     return JsonResponse({
@@ -795,78 +478,18 @@ def proyectos_list(request):
 @login_required
 @require_http_methods(["GET"])
 def proyectos_por_tipo(request, tipo_proyecto_id):
-    """Lista los proyectos de un tipo específico"""
-    tipo_proyecto = get_object_or_404(TipoProyecto, id=tipo_proyecto_id)
-    proyectos = Proyecto.objects.filter(tipo_proyecto=tipo_proyecto).select_related('creador').prefetch_related('categorias', 'etiquetas')
-    proyectos_data = []
-    
-    for proyecto in proyectos:
-        proyecto_dict = {
-            'id': proyecto.id,
-            'titulo': proyecto.titulo,
-            'slug': proyecto.slug,
-            'creador_id': proyecto.creador.id,
-            'creador_nombre': proyecto.creador.get_full_name() or proyecto.creador.username,
-            'estado': proyecto.estado,
-            'estado_display': proyecto.get_estado_display(),
-            'fecha_creacion': proyecto.fecha_creacion.isoformat() if proyecto.fecha_creacion else None,
-            'fecha_publicacion': proyecto.fecha_publicacion.isoformat() if proyecto.fecha_publicacion else None,
-        }
-        proyectos_data.append(proyecto_dict)
-    
-    return JsonResponse({
-        'success': True,
-        'data': proyectos_data,
-        'tipo_proyecto': {
-            'id': tipo_proyecto.id,
-            'nombre': tipo_proyecto.nombre
-        },
-        'total': len(proyectos_data)
-    })
-
-
-@login_required
-@require_http_methods(["GET"])
-def campos_por_tipo_proyecto(request, tipo_proyecto_id):
-    """Obtiene los campos dinámicos de un tipo de proyecto"""
+    """Lista proyectos de un tipo específico"""
     try:
         tipo_proyecto = get_object_or_404(TipoProyecto, id=tipo_proyecto_id)
-        campos = CampoTipoProyecto.objects.filter(tipo_proyecto=tipo_proyecto).order_by('orden', 'categoria', 'nombre')
-        
-        campos_data = []
-        for campo in campos:
-            campo_dict = {
-                'id': campo.id,
-                'nombre': campo.nombre,
-                'slug': campo.slug,
-                'etiqueta': campo.etiqueta,
-                'descripcion': campo.descripcion or '',
-                'tipo_dato': campo.tipo_dato,
-                'tipo_dato_display': campo.get_tipo_dato_display(),
-                'es_obligatorio': campo.es_obligatorio,
-                'es_repetible': campo.es_repetible,
-                'valores_posibles': campo.valores_posibles,
-                'valor_por_defecto': campo.valor_por_defecto or '',
-                'ayuda': campo.ayuda or '',
-                'categoria': campo.categoria or '',
-                'orden': campo.orden,
-            }
-            campos_data.append(campo_dict)
+        proyectos = Proyecto.objects.filter(tipo_proyecto=tipo_proyecto).order_by('-fecha_creacion')
+        proyectos_data = [{'id': p.id, 'titulo': p.titulo, 'slug': p.slug} for p in proyectos]
         
         return JsonResponse({
             'success': True,
-            'data': campos_data,
-            'tipo_proyecto': {
-                'id': tipo_proyecto.id,
-                'nombre': tipo_proyecto.nombre
-            }
+            'data': proyectos_data
         })
-        
     except Exception as e:
-        return JsonResponse({
-            'success': False,
-            'error': f'Error al obtener campos: {str(e)}'
-        }, status=500)
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 
 @login_required
@@ -874,41 +497,30 @@ def campos_por_tipo_proyecto(request, tipo_proyecto_id):
 def proyecto_detail(request, proyecto_id):
     """Obtiene los detalles de un proyecto"""
     try:
-        proyecto = get_object_or_404(
-            Proyecto.objects.select_related('tipo_proyecto', 'creador').prefetch_related('autores'), 
-            id=proyecto_id
-        )
+        proyecto = get_object_or_404(Proyecto, id=proyecto_id)
         
-        # Obtener valores de campos dinámicos
-        valores_campos = {}
-        for valor_campo in proyecto.valores_campos.select_related('campo_tipo_proyecto').all():
-            campo_slug = valor_campo.campo_tipo_proyecto.slug
-            if campo_slug not in valores_campos:
-                valores_campos[campo_slug] = []
-            
-            valores_campos[campo_slug].append({
-                'valor': valor_campo.get_valor(),
-                'orden': valor_campo.orden
-            })
-        
-        # Obtener autores del proyecto
         autores = []
-        for autor in proyecto.autores.all().select_related('usuario').order_by('orden_autor'):
+        for autor in proyecto.autores.all():
             autores.append({
                 'id': autor.id,
                 'usuario_id': autor.usuario.id,
                 'usuario_nombre': autor.usuario.get_full_name() or autor.usuario.username,
-                'usuario_username': autor.usuario.username,
-                'nombre_completo': autor.get_nombre_completo(),
-                'nombre': autor.get_nombre(),
-                'apellidos': autor.get_apellidos(),
-                'email': autor.get_email(),
-                'afiliacion': autor.get_afiliacion(),
-                'orcid_id': autor.get_orcid_id(),
+                'afiliacion': autor.afiliacion or '',
                 'orden_autor': autor.orden_autor,
                 'es_correspondiente': autor.es_correspondiente,
                 'es_autor_principal': autor.es_autor_principal,
+                'orcid_id': autor.orcid_id or ''
             })
+        
+        valores_campos = {}
+        for valor in proyecto.valores_campos.select_related('campo_tipo_proyecto').all():
+            campo_slug = valor.campo_tipo_proyecto.slug
+            if valor.campo_tipo_proyecto.es_repetible:
+                if campo_slug not in valores_campos:
+                    valores_campos[campo_slug] = []
+                valores_campos[campo_slug].append(valor.get_valor())
+            else:
+                valores_campos[campo_slug] = valor.get_valor()
         
         proyecto_dict = {
             'id': proyecto.id,
@@ -933,7 +545,13 @@ def proyecto_detail(request, proyecto_id):
             'autores_count': proyecto.autores.count(),
             'autores': autores,
             'valores_campos': valores_campos,
+            'documento_id': None,
         }
+        try:
+            proyecto_dict['documento_id'] = proyecto.documento.id
+        except Exception:
+            # RelatedObjectDoesNotExist o cualquier otra excepción
+            proyecto_dict['documento_id'] = None
         
         return JsonResponse({
             'success': True,
@@ -947,8 +565,6 @@ def proyecto_detail(request, proyecto_id):
         }, status=500)
 
 
-from repositorio.models import Documento, VersionDocumento, Archivo
-
 @login_required
 @require_http_methods(["POST"])
 @transaction.atomic
@@ -959,20 +575,37 @@ def proyecto_create(request):
         data = request.POST
         
         # Validar campos requeridos
-        titulo = data.get('titulo', '').strip()
-        if not titulo:
-            return JsonResponse({'success': False, 'error': 'El título es obligatorio'}, status=400)
-        
         tipo_proyecto_id = data.get('tipo_proyecto_id')
         if not tipo_proyecto_id:
             return JsonResponse({'success': False, 'error': 'El tipo de proyecto es obligatorio'}, status=400)
         
         tipo_proyecto = get_object_or_404(TipoProyecto, id=tipo_proyecto_id)
         
+        # Validar documento (ahora es requerido)
+        documento_id = data.get('documento_id')
+        if not documento_id:
+            return JsonResponse({'success': False, 'error': 'El documento es obligatorio'}, status=400)
+        
+        try:
+            from repositorio.models import Documento
+            documento = Documento.objects.get(id=documento_id)
+            # Verificar que el documento no tenga ya un proyecto asociado
+            if documento.proyecto:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Este documento ya está asociado a otro proyecto'
+                }, status=400)
+        except Documento.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'El documento no existe'}, status=400)
+        
+        # Obtener título y resumen del documento
+        titulo = documento.get_titulo() if hasattr(documento, 'get_titulo') else (documento.titulo or f'Proyecto #{Documento.objects.count() + 1}')
+        resumen = documento.get_resumen() if hasattr(documento, 'get_resumen') else (documento.resumen or None)
+        
         # Generar slug
         nuevo_slug = slugify(titulo)
         if not nuevo_slug:
-            return JsonResponse({'success': False, 'error': 'El título no puede generar un slug válido'}, status=400)
+            return JsonResponse({'success': False, 'error': 'El título del documento no puede generar un slug válido'}, status=400)
         
         contador = 1
         slug_base = nuevo_slug
@@ -986,7 +619,7 @@ def proyecto_create(request):
             slug=nuevo_slug,
             tipo_proyecto=tipo_proyecto,
             creador=request.user,
-            resumen=data.get('resumen', '').strip() or None,
+            resumen=resumen,
             descripcion=data.get('descripcion', '').strip() or None,
             estado=data.get('estado', 'borrador'),
             visibilidad=data.get('visibilidad', 'publico'),
@@ -995,25 +628,9 @@ def proyecto_create(request):
         proyecto.full_clean()
         proyecto.save()
         
-        # Relacionar documento existente con el proyecto (opcional)
-        documento_id = data.get('documento_id')
-        if documento_id:
-            try:
-                documento = Documento.objects.get(id=documento_id)
-                # Verificar que el documento no tenga ya un proyecto asociado
-                if documento.proyecto:
-                    return JsonResponse({
-                        'success': False,
-                        'error': 'Este documento ya está asociado a otro proyecto'
-                    }, status=400)
-                # Asociar el documento al proyecto
-                documento.proyecto = proyecto
-                documento.save()
-            except Documento.DoesNotExist:
-                return JsonResponse({
-                    'success': False,
-                    'error': 'El documento seleccionado no existe'
-                }, status=400)
+        # Asociar el documento al proyecto (requerido)
+        documento.proyecto = proyecto
+        documento.save()
 
         # Procesar campos dinámicos (enviados como JSON en un campo de texto)
         campos_dinamicos_str = data.get('campos_dinamicos', '{}')
@@ -1034,70 +651,98 @@ def proyecto_create(request):
         # Procesar autores (enviados como JSON en un campo de texto)
         autores_str = data.get('autores', '[]')
         autores_data = json.loads(autores_str)
-        for autor_data in autores_data:
+        for idx, autor_data in enumerate(autores_data):
             usuario_id = autor_data.get('usuario_id')
             if usuario_id:
-                usuario = get_object_or_404(User, id=usuario_id)
-                if not ProyectoAutor.objects.filter(proyecto=proyecto, usuario=usuario).exists():
+                try:
+                    usuario = User.objects.get(id=usuario_id)
                     ProyectoAutor.objects.create(
                         proyecto=proyecto,
                         usuario=usuario,
-                        orden_autor=autor_data.get('orden_autor', 1)
+                        afiliacion=autor_data.get('afiliacion', '').strip() or None,
+                        orden_autor=autor_data.get('orden_autor', idx + 1),
+                        es_correspondiente=autor_data.get('es_correspondiente', False),
+                        es_autor_principal=autor_data.get('es_autor_principal', False),
+                        orcid_id=autor_data.get('orcid_id', '').strip() or None
                     )
-
-        # Retornar respuesta
+                except User.DoesNotExist:
+                    continue
+        
         return JsonResponse({
             'success': True,
             'message': 'Proyecto creado exitosamente',
-            'data': {'id': proyecto.id, 'titulo': proyecto.titulo}
+            'data': {
+                'id': proyecto.id,
+                'titulo': proyecto.titulo,
+                'slug': proyecto.slug,
+            }
         })
-        
-    except (ValidationError, json.JSONDecodeError) as e:
+    except ValidationError as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=400)
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'error': 'JSON inválido en campos dinámicos o autores'}, status=400)
     except Exception as e:
-        return JsonResponse({'success': False, 'error': f'Error inesperado: {str(e)}'}, status=500)
+        return JsonResponse({'success': False, 'error': f'Error al crear proyecto: {str(e)}'}, status=500)
 
 
 @login_required
 @require_http_methods(["POST", "PUT"])
+@transaction.atomic
 def proyecto_update(request, proyecto_id):
     """Actualiza un proyecto existente"""
     try:
         proyecto = get_object_or_404(Proyecto, id=proyecto_id)
         
-        # Manejar tanto POST con _method como PUT directo
         if request.method == 'POST':
-            data = json.loads(request.body)
-            if data.get('_method') != 'PUT':
-                return JsonResponse({
-                    'success': False,
-                    'error': 'Método no permitido'
-                }, status=405)
+            data = request.POST
         else:
             data = json.loads(request.body)
         
-        # Validar campos requeridos
-        titulo = data.get('titulo', '').strip()
-        if not titulo:
-            return JsonResponse({
-                'success': False,
-                'error': 'El título es obligatorio'
-            }, status=400)
+        # Título y resumen vienen del documento, no se actualizan aquí
+        # Si se cambia el documento, actualizar título y resumen
+        nuevo_documento_id = data.get('documento_id')
+        try:
+            documento_actual = proyecto.documento
+            documento_actual_id = str(documento_actual.id)
+        except Exception:
+            # RelatedObjectDoesNotExist o cualquier otra excepción
+            documento_actual = None
+            documento_actual_id = ''
         
-        # Actualizar campos básicos
-        proyecto.titulo = titulo
-        
-        # Actualizar slug si cambió el título
-        nuevo_slug = slugify(titulo)
-        if nuevo_slug != proyecto.slug:
-            slug_base = nuevo_slug
-            contador = 1
-            while Proyecto.objects.filter(slug=nuevo_slug).exclude(id=proyecto_id).exists():
-                nuevo_slug = f"{slug_base}-{contador}"
-                contador += 1
-            proyecto.slug = nuevo_slug
-        
-        proyecto.resumen = data.get('resumen', '').strip() or None
+        if nuevo_documento_id and str(nuevo_documento_id) != documento_actual_id:
+            try:
+                from repositorio.models import Documento
+                nuevo_documento = Documento.objects.get(id=nuevo_documento_id)
+                if nuevo_documento.proyecto and nuevo_documento.proyecto.id != proyecto.id:
+                    return JsonResponse({
+                        'success': False,
+                        'error': 'Este documento ya está asociado a otro proyecto'
+                    }, status=400)
+                # Desasociar documento anterior
+                if documento_actual:
+                    documento_actual.proyecto = None
+                    documento_actual.save()
+                # Asociar nuevo documento
+                nuevo_documento.proyecto = proyecto
+                nuevo_documento.save()
+                # Actualizar título y resumen del proyecto
+                proyecto.titulo = nuevo_documento.get_titulo() if hasattr(nuevo_documento, 'get_titulo') else (nuevo_documento.titulo or proyecto.titulo)
+                proyecto.resumen = nuevo_documento.get_resumen() if hasattr(nuevo_documento, 'get_resumen') else (nuevo_documento.resumen or proyecto.resumen)
+                # Regenerar slug
+                nuevo_slug = slugify(proyecto.titulo)
+                if nuevo_slug and nuevo_slug != proyecto.slug:
+                    slug_base = nuevo_slug
+                    contador = 1
+                    while Proyecto.objects.filter(slug=nuevo_slug).exclude(id=proyecto_id).exists():
+                        nuevo_slug = f"{slug_base}-{contador}"
+                        contador += 1
+                    proyecto.slug = nuevo_slug
+            except Documento.DoesNotExist:
+                return JsonResponse({'success': False, 'error': 'El documento no existe'}, status=400)
+        elif documento_actual:
+            # Si no se cambia el documento, actualizar título y resumen desde el documento actual
+            proyecto.titulo = documento_actual.get_titulo() if hasattr(documento_actual, 'get_titulo') else (documento_actual.titulo or proyecto.titulo)
+            proyecto.resumen = documento_actual.get_resumen() if hasattr(documento_actual, 'get_resumen') else (documento_actual.resumen or proyecto.resumen)
         proyecto.descripcion = data.get('descripcion', '').strip() or None
         proyecto.estado = data.get('estado', proyecto.estado)
         proyecto.visibilidad = data.get('visibilidad', proyecto.visibilidad)
@@ -1107,6 +752,8 @@ def proyecto_update(request, proyecto_id):
         
         # Actualizar valores de campos dinámicos
         campos_dinamicos = data.get('campos_dinamicos', {})
+        if isinstance(campos_dinamicos, str):
+            campos_dinamicos = json.loads(campos_dinamicos)
         if campos_dinamicos:
             # Eliminar valores existentes
             proyecto.valores_campos.all().delete()
@@ -1118,130 +765,45 @@ def proyecto_update(request, proyecto_id):
                     
                     if campo_tipo.es_repetible and isinstance(valores, list):
                         for orden, valor in enumerate(valores):
-                            valor_campo = ValorCampoProyecto(
-                                proyecto=proyecto,
-                                campo_tipo_proyecto=campo_tipo,
-                                orden=orden
-                            )
-                            valor_campo.set_valor(valor)
-                            valor_campo.save()
+                            ValorCampoProyecto.objects.create(proyecto=proyecto, campo_tipo_proyecto=campo_tipo, orden=orden).set_valor(valor)
                     else:
                         valor = valores[0] if isinstance(valores, list) and valores else valores
                         if valor is not None and valor != '':
-                            valor_campo = ValorCampoProyecto(
-                                proyecto=proyecto,
-                                campo_tipo_proyecto=campo_tipo,
-                                orden=0
-                            )
-                            valor_campo.set_valor(valor)
-                            valor_campo.save()
+                            ValorCampoProyecto.objects.create(proyecto=proyecto, campo_tipo_proyecto=campo_tipo, orden=0).set_valor(valor)
                 except CampoTipoProyecto.DoesNotExist:
                     continue
         
-        # Actualizar autores del proyecto
+        # Actualizar autores
         autores_data = data.get('autores', [])
+        if isinstance(autores_data, str):
+            autores_data = json.loads(autores_data)
         if autores_data is not None:
-            # Obtener IDs de autores que se van a mantener (solo los que tienen ID y no son None)
-            autores_ids_mantener = [int(a.get('id')) for a in autores_data if a.get('id') and a.get('id') is not None]
-            
-            # Obtener IDs de usuarios que se van a agregar (nuevos autores)
-            usuarios_ids_nuevos = [int(a.get('usuario_id')) for a in autores_data if a.get('usuario_id')]
-            
-            # Eliminar autores existentes que no estén en la nueva lista
-            if autores_ids_mantener:
-                ProyectoAutor.objects.filter(proyecto=proyecto).exclude(id__in=autores_ids_mantener).delete()
-            else:
-                # Si no hay IDs para mantener, eliminar todos los autores existentes
-                ProyectoAutor.objects.filter(proyecto=proyecto).delete()
-            
-            # Actualizar o crear autores
-            for autor_data in autores_data:
+            proyecto.autores.all().delete()
+            for idx, autor_data in enumerate(autores_data):
                 usuario_id = autor_data.get('usuario_id')
-                if not usuario_id:
-                    continue  # Saltar si no hay usuario_id
-                
-                usuario = get_object_or_404(User, id=usuario_id)
-                autor_id = autor_data.get('id')
-                
-                if autor_id and autor_id is not None:
-                    # Actualizar autor existente
+                if usuario_id:
                     try:
-                        autor = ProyectoAutor.objects.get(id=autor_id, proyecto=proyecto)
-                        # Verificar que el usuario no haya cambiado (no se permite cambiar usuario)
-                        if autor.usuario.id != usuario.id:
-                            # Si cambió el usuario, eliminar el autor antiguo y crear uno nuevo
-                            autor.delete()
-                            ProyectoAutor.objects.create(
-                                proyecto=proyecto,
-                                usuario=usuario,
-                                afiliacion=autor_data.get('afiliacion') or None,
-                                orcid_id=autor_data.get('orcid_id') or None,
-                                orden_autor=autor_data.get('orden_autor', 1),
-                                es_correspondiente=autor_data.get('es_correspondiente', False),
-                                es_autor_principal=autor_data.get('es_autor_principal', False),
-                            )
-                        else:
-                            # Actualizar campos opcionales
-                            autor.afiliacion = autor_data.get('afiliacion') or None
-                            autor.orcid_id = autor_data.get('orcid_id') or None
-                            autor.orden_autor = autor_data.get('orden_autor', autor.orden_autor)
-                            autor.es_correspondiente = autor_data.get('es_correspondiente', False)
-                            autor.es_autor_principal = autor_data.get('es_autor_principal', False)
-                            autor.save()
-                    except (ProyectoAutor.DoesNotExist, ValueError):
-                        # Si el autor no existe o el ID es inválido, crear uno nuevo
-                        # Verificar que el usuario no sea ya autor de este proyecto
-                        if not ProyectoAutor.objects.filter(proyecto=proyecto, usuario=usuario).exists():
-                            ProyectoAutor.objects.create(
-                                proyecto=proyecto,
-                                usuario=usuario,
-                                afiliacion=autor_data.get('afiliacion') or None,
-                                orcid_id=autor_data.get('orcid_id') or None,
-                                orden_autor=autor_data.get('orden_autor', 1),
-                                es_correspondiente=autor_data.get('es_correspondiente', False),
-                                es_autor_principal=autor_data.get('es_autor_principal', False),
-                            )
-                else:
-                    # Crear nuevo autor (sin ID o ID es None)
-                    # Verificar que el usuario no sea ya autor de este proyecto
-                    if not ProyectoAutor.objects.filter(proyecto=proyecto, usuario=usuario).exists():
+                        usuario = User.objects.get(id=usuario_id)
                         ProyectoAutor.objects.create(
                             proyecto=proyecto,
                             usuario=usuario,
-                            afiliacion=autor_data.get('afiliacion') or None,
-                            orcid_id=autor_data.get('orcid_id') or None,
-                            orden_autor=autor_data.get('orden_autor', 1),
+                            afiliacion=autor_data.get('afiliacion', '').strip() or None,
+                            orden_autor=autor_data.get('orden_autor', idx + 1),
                             es_correspondiente=autor_data.get('es_correspondiente', False),
                             es_autor_principal=autor_data.get('es_autor_principal', False),
+                            orcid_id=autor_data.get('orcid_id', '').strip() or None
                         )
-        
-        # Retornar los datos actualizados
-        proyecto.refresh_from_db()
-        autores = []
-        for autor in proyecto.autores.select_related('usuario').all().order_by('orden_autor'):
-            autores.append({
-                'id': autor.id,
-                'usuario_id': autor.usuario.id,
-                'usuario_nombre': autor.usuario.get_full_name() or autor.usuario.username,
-                'nombre_completo': autor.get_nombre_completo(),
-            })
-        
-        proyecto_dict = {
-            'id': proyecto.id,
-            'titulo': proyecto.titulo,
-            'slug': proyecto.slug,
-            'tipo_proyecto_id': proyecto.tipo_proyecto.id,
-            'tipo_proyecto_nombre': proyecto.tipo_proyecto.nombre,
-            'estado': proyecto.estado,
-            'estado_display': proyecto.get_estado_display(),
-            'autores_count': proyecto.autores.count(),
-            'autores': autores,
-        }
+                    except User.DoesNotExist:
+                        continue
         
         return JsonResponse({
             'success': True,
             'message': 'Proyecto actualizado exitosamente',
-            'data': proyecto_dict
+            'data': {
+                'id': proyecto.id,
+                'titulo': proyecto.titulo,
+                'slug': proyecto.slug,
+            }
         })
         
     except ValidationError as e:
@@ -1262,43 +824,13 @@ def proyecto_update(request, proyecto_id):
 
 
 @login_required
-@require_http_methods(["GET"])
-def usuarios_for_select(request):
-    """Obtiene los usuarios activos para usar en selects de autores"""
-    try:
-        usuarios = User.objects.filter(is_active=True).order_by('first_name', 'last_name', 'username')
-        usuarios_data = []
-        
-        for usuario in usuarios:
-            nombre_completo = usuario.get_full_name() or usuario.username
-            usuarios_data.append({
-                'id': usuario.id,
-                'text': nombre_completo,
-                'username': usuario.username,
-                'email': usuario.email or '',
-                'first_name': usuario.first_name or '',
-                'last_name': usuario.last_name or '',
-            })
-        
-        return JsonResponse({
-            'success': True,
-            'data': usuarios_data
-        })
-    except Exception as e:
-        return JsonResponse({
-            'success': False,
-            'error': f'Error al obtener usuarios: {str(e)}'
-        }, status=500)
-
-
-@login_required
 @require_http_methods(["POST", "DELETE"])
+@transaction.atomic
 def proyecto_delete(request, proyecto_id):
     """Elimina un proyecto"""
     try:
         proyecto = get_object_or_404(Proyecto, id=proyecto_id)
         
-        # Manejar tanto POST con _method como DELETE directo
         if request.method == 'POST':
             data = json.loads(request.body) if request.body else {}
             if data.get('_method') != 'DELETE':
@@ -1307,7 +839,6 @@ def proyecto_delete(request, proyecto_id):
                     'error': 'Método no permitido'
                 }, status=405)
         
-        # Eliminar el proyecto (esto también eliminará los valores de campos por CASCADE)
         proyecto_titulo = proyecto.titulo
         proyecto.delete()
         
@@ -1321,3 +852,38 @@ def proyecto_delete(request, proyecto_id):
             'success': False,
             'error': f'Error al eliminar proyecto: {str(e)}'
         }, status=500)
+
+
+# ============================================================================
+# VISTAS AUXILIARES
+# ============================================================================
+
+@login_required
+@require_http_methods(["GET"])
+def usuarios_for_select(request):
+    """Lista usuarios para usar en selects"""
+    usuarios = User.objects.filter(is_active=True).order_by('username')
+    usuarios_data = [{'id': u.id, 'nombre': u.get_full_name() or u.username, 'username': u.username} for u in usuarios]
+    
+    return JsonResponse({
+        'success': True,
+        'data': usuarios_data
+    })
+
+
+# ============================================================================
+# WIZARD DE ACCESO RÁPIDO
+# ============================================================================
+
+@login_required
+@ensure_csrf_cookie
+@require_http_methods(["GET"])
+def wizard_rapido(request):
+    """Wizard de acceso rápido para crear Documento -> Archivo -> Proyecto -> Publicación"""
+    # Verificar permisos
+    if not (request.user.has_perm('proyectos.add_proyecto') or 
+            request.user.has_perm('repositorio.add_documento') or 
+            request.user.is_superuser):
+        messages.warning(request, 'No tienes permisos para acceder al wizard rápido.')
+        return redirect('usuarios:panel')
+    return render(request, 'proyectos/wizard_rapido.html')

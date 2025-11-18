@@ -7,7 +7,7 @@ $(document).ready(function() {
     // Variables globales - Declarar todas las tablas al inicio
     let tableTiposRecurso, tableEstadosDocumento, tableComunidades, 
         tableColecciones, tableLicencias, tableDocumentos, 
-        tableAutores, tableColaboradores, tableArchivos;
+        tableAutores, tableColaboradores, tableVersiones, tableArchivos;
     
     // ========================================================================
     // FUNCIONES AUXILIARES
@@ -1346,6 +1346,9 @@ $(document).ready(function() {
     if ($('#tableColaboradores').length > 0) {
         initTableColaboradores();
     }
+    if ($('#tableVersiones').length > 0) {
+        initTableVersiones();
+    }
     if ($('#tableArchivos').length > 0) {
         initTableArchivos();
     }
@@ -1374,6 +1377,8 @@ $(document).ready(function() {
             tableAutores.columns.adjust().responsive.recalc();
         } else if (target === '#colaboradores' && typeof tableColaboradores !== 'undefined' && tableColaboradores) {
             tableColaboradores.columns.adjust().responsive.recalc();
+        } else if (target === '#versiones' && typeof tableVersiones !== 'undefined' && tableVersiones) {
+            tableVersiones.columns.adjust().responsive.recalc();
         } else if (target === '#archivos' && typeof tableArchivos !== 'undefined' && tableArchivos) {
             tableArchivos.columns.adjust().responsive.recalc();
         }
@@ -2443,6 +2448,355 @@ $(document).ready(function() {
     });
     
     // ========================================================================
+    // VERSIONES DE DOCUMENTO
+    // ========================================================================
+    
+    function initTableVersiones() {
+        if ($.fn.DataTable.isDataTable('#tableVersiones')) {
+            $('#tableVersiones').DataTable().destroy();
+        }
+        
+        tableVersiones = $('#tableVersiones').DataTable({
+            responsive: true,
+            processing: true,
+            serverSide: false,
+            ajax: {
+                url: REPOSITORIO_URLS.versionesList,
+                type: 'GET',
+                headers: { 'Accept': 'application/json' },
+                dataSrc: 'data',
+                error: function(xhr, error, thrown) {
+                    console.error('Error al cargar versiones:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Error al cargar las versiones'
+                    });
+                }
+            },
+            columns: [
+                { data: 'id' },
+                { 
+                    data: 'documento_titulo', 
+                    render: function(data, type, row) {
+                        return escapeHtml(data || 'N/A');
+                    }
+                },
+                { data: 'numero_version' },
+                { 
+                    data: 'notas_version', 
+                    render: function(data) {
+                        if (!data) return '-';
+                        const texto = escapeHtml(data);
+                        return texto.length > 50 ? texto.substring(0, 50) + '...' : texto;
+                    }
+                },
+                { 
+                    data: 'creado_por_nombre', 
+                    render: function(data) {
+                        return escapeHtml(data || 'N/A');
+                    }
+                },
+                { 
+                    data: 'es_version_actual', 
+                    render: function(data) {
+                        if (data) {
+                            return '<span class="badge badge-success">Sí</span>';
+                        }
+                        return '<span class="badge badge-secondary">No</span>';
+                    }
+                },
+                { data: 'archivos_count' },
+                { 
+                    data: 'fecha_creacion', 
+                    render: function(data) {
+                        if (!data) return '-';
+                        return escapeHtml(data);
+                    }
+                },
+                { 
+                    data: null, 
+                    orderable: false, 
+                    render: function(data, type, row) {
+                        return `
+                            <div class="btn-group btn-group-sm" role="group">
+                                <button type="button" class="btn btn-info btn-ver-version" data-id="${row.id}" title="Ver">
+                                    <i class="fas fa-eye"></i> <span>Ver</span>
+                                </button>
+                                <button type="button" class="btn btn-warning btn-editar-version" data-id="${row.id}" title="Editar">
+                                    <i class="fas fa-edit"></i> <span>Editar</span>
+                                </button>
+                                <button type="button" class="btn btn-danger btn-eliminar-version" data-id="${row.id}" title="Eliminar">
+                                    <i class="fas fa-trash"></i> <span>Eliminar</span>
+                                </button>
+                            </div>
+                        `;
+                    }
+                }
+            ],
+            order: [[0, 'desc']],
+            language: {
+                url: '/static/DataTables/i18n/Spanish.json'
+            }
+        });
+    }
+    
+    function loadDocumentosForVersion() {
+        $.ajax({
+            url: REPOSITORIO_URLS.documentosList,
+            method: 'GET',
+            headers: {
+                'X-CSRFToken': getCSRFToken(),
+                'Accept': 'application/json'
+            },
+            success: function(response) {
+                if (response.success) {
+                    const select = $('#versionDocumento');
+                    select.empty();
+                    select.append('<option value="">Seleccione un documento</option>');
+                    
+                    response.data.forEach(function(doc) {
+                        select.append(
+                            `<option value="${doc.id}">${escapeHtml(doc.titulo || `Doc #${doc.id}`)}</option>`
+                        );
+                    });
+                }
+            },
+            error: function() {
+                console.error('Error al cargar documentos');
+            }
+        });
+    }
+    
+    // Botón crear versión
+    $('#btnCrearVersion').on('click', function() {
+        $('#modalVersionLabel').text('Nueva Versión');
+        $('#formVersion')[0].reset();
+        $('#versionId').val('');
+        $('#versionActual').prop('checked', false);
+        loadDocumentosForVersion();
+        $('#modalVersion').modal('show');
+    });
+    
+    // Formulario de versión
+    $('#formVersion').on('submit', function(e) {
+        e.preventDefault();
+        
+        const versionId = $('#versionId').val();
+        const formData = {
+            documento_id: $('#versionDocumento').val(),
+            notas_version: $('#versionNotas').val().trim(),
+            es_version_actual: $('#versionActual').is(':checked')
+        };
+        
+        if (!formData.documento_id) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Debe seleccionar un documento'
+            });
+            return;
+        }
+        
+        const url = versionId ? REPOSITORIO_URLS.versionUpdate(versionId) : REPOSITORIO_URLS.versionCreate;
+        const method = versionId ? 'PUT' : 'POST';
+        
+        showLoading();
+        $.ajax({
+            url: url,
+            method: method,
+            headers: {
+                'X-CSRFToken': getCSRFToken(),
+                'Content-Type': 'application/json'
+            },
+            data: JSON.stringify(formData),
+            success: function(response) {
+                hideLoading();
+                if (response.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Éxito',
+                        text: response.message || 'Versión guardada exitosamente',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                    $('#modalVersion').modal('hide');
+                    if (tableVersiones) {
+                        tableVersiones.ajax.reload(null, false);
+                    }
+                }
+            },
+            error: function(xhr) {
+                hideLoading();
+                let errorMessage = 'Error al guardar la versión';
+                if (xhr.responseJSON && xhr.responseJSON.error) {
+                    errorMessage = xhr.responseJSON.error;
+                }
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: errorMessage
+                });
+            }
+        });
+    });
+    
+    // Botón editar versión
+    $(document).on('click', '.btn-editar-version', function() {
+        const versionId = $(this).data('id');
+        
+        showLoading();
+        $.ajax({
+            url: REPOSITORIO_URLS.versionDetail(versionId),
+            method: 'GET',
+            headers: {
+                'X-CSRFToken': getCSRFToken(),
+                'Accept': 'application/json'
+            },
+            success: function(response) {
+                hideLoading();
+                if (response.success) {
+                    const version = response.data;
+                    $('#versionId').val(version.id);
+                    $('#versionDocumento').val(version.documento_id);
+                    $('#versionNotas').val(version.notas_version || '');
+                    $('#versionActual').prop('checked', version.es_version_actual);
+                    $('#modalVersionLabel').text('Editar Versión');
+                    loadDocumentosForVersion();
+                    // Esperar a que se carguen los documentos antes de seleccionar
+                    setTimeout(function() {
+                        $('#versionDocumento').val(version.documento_id);
+                    }, 300);
+                    $('#modalVersion').modal('show');
+                }
+            },
+            error: function(xhr) {
+                hideLoading();
+                let errorMessage = 'Error al cargar la versión';
+                if (xhr.responseJSON && xhr.responseJSON.error) {
+                    errorMessage = xhr.responseJSON.error;
+                }
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: errorMessage
+                });
+            }
+        });
+    });
+    
+    // Botón ver versión
+    $(document).on('click', '.btn-ver-version', function() {
+        const versionId = $(this).data('id');
+        
+        showLoading();
+        $.ajax({
+            url: REPOSITORIO_URLS.versionDetail(versionId),
+            method: 'GET',
+            headers: {
+                'X-CSRFToken': getCSRFToken(),
+                'Accept': 'application/json'
+            },
+            success: function(response) {
+                hideLoading();
+                if (response.success) {
+                    const version = response.data;
+                    Swal.fire({
+                        icon: 'info',
+                        title: `Versión ${version.numero_version}`,
+                        html: `
+                            <div class="text-left">
+                                <p><strong>Documento:</strong> ${escapeHtml(version.documento_titulo)}</p>
+                                <p><strong>Número de Versión:</strong> ${version.numero_version}</p>
+                                <p><strong>Notas:</strong> ${escapeHtml(version.notas_version || 'Sin notas')}</p>
+                                <p><strong>Creado Por:</strong> ${escapeHtml(version.creado_por_nombre)}</p>
+                                <p><strong>Fecha Creación:</strong> ${escapeHtml(version.fecha_creacion || 'N/A')}</p>
+                                <p><strong>Es Versión Actual:</strong> ${version.es_version_actual ? 'Sí' : 'No'}</p>
+                                <p><strong>Archivos:</strong> ${version.archivos_count}</p>
+                            </div>
+                        `,
+                        confirmButtonText: 'Cerrar'
+                    });
+                }
+            },
+            error: function(xhr) {
+                hideLoading();
+                let errorMessage = 'Error al cargar la versión';
+                if (xhr.responseJSON && xhr.responseJSON.error) {
+                    errorMessage = xhr.responseJSON.error;
+                }
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: errorMessage
+                });
+            }
+        });
+    });
+    
+    // Botón eliminar versión
+    $(document).on('click', '.btn-eliminar-version', function() {
+        const versionId = $(this).data('id');
+        
+        Swal.fire({
+            icon: 'warning',
+            title: '¿Está seguro?',
+            text: 'Esta acción no se puede deshacer. Si la versión tiene archivos asociados, no se podrá eliminar.',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                showLoading();
+                $.ajax({
+                    url: REPOSITORIO_URLS.versionDelete(versionId),
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCSRFToken(),
+                        'Content-Type': 'application/json'
+                    },
+                    data: JSON.stringify({ _method: 'DELETE' }),
+                    success: function(response) {
+                        hideLoading();
+                        if (response.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Éxito',
+                                text: response.message || 'Versión eliminada exitosamente',
+                                timer: 2000,
+                                showConfirmButton: false
+                            });
+                            if (tableVersiones) {
+                                tableVersiones.ajax.reload(null, false);
+                            }
+                        }
+                    },
+                    error: function(xhr) {
+                        hideLoading();
+                        let errorMessage = 'Error al eliminar la versión';
+                        if (xhr.responseJSON && xhr.responseJSON.error) {
+                            errorMessage = xhr.responseJSON.error;
+                        }
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: errorMessage
+                        });
+                    }
+                });
+            }
+        });
+    });
+    
+    // Resetear formulario al cerrar modal
+    $('#modalVersion').on('hidden.bs.modal', function() {
+        $('#formVersion')[0].reset();
+        $('#versionId').val('');
+    });
+    
+    // ========================================================================
     // ARCHIVOS
     // ========================================================================
     
@@ -2831,14 +3185,20 @@ $(document).ready(function() {
     // ========================================================================
     
     // Inicializar tabla de archivos si existe
+    if ($('#tableVersiones').length > 0) {
+        initTableVersiones();
+    }
+    
     if ($('#tableArchivos').length > 0) {
         initTableArchivos();
     }
     
-    // Recargar tabla de archivos cuando se muestra el tab
+    // Recargar tablas cuando se muestra el tab
     $('a[data-toggle="tab"]').on('shown.bs.tab', function(e) {
         const target = $(e.target).attr('href');
-        if (target === '#archivos' && typeof tableArchivos !== 'undefined' && tableArchivos) {
+        if (target === '#versiones' && typeof tableVersiones !== 'undefined' && tableVersiones) {
+            tableVersiones.columns.adjust().responsive.recalc();
+        } else if (target === '#archivos' && typeof tableArchivos !== 'undefined' && tableArchivos) {
             tableArchivos.columns.adjust().responsive.recalc();
         }
     });
