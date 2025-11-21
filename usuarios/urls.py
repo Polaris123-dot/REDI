@@ -11,7 +11,11 @@ urlpatterns = [
     # Panel principal (accesible para todos los usuarios autenticados)
     path('panel/', views.panel, name='panel'),
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     path('perfil/', views.perfil_view, name='perfil'),
+=======
+    path('perfil/', views.perfil_usuario, name='perfil'),
+>>>>>>> Stashed changes
 =======
     path('perfil/', views.perfil_usuario, name='perfil'),
 >>>>>>> Stashed changes

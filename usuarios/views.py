@@ -538,6 +538,7 @@ def eliminar_grupo(request, grupo_id):
         'grupo': grupo,
     }
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     return render(request, 'usuarios/eliminar_grupo.html', context)
 
 
@@ -565,6 +566,8 @@ def perfil_view(request):
         'p_form': p_form,
         'title': 'Mi Perfil'
 =======
+=======
+>>>>>>> Stashed changes
 
 @login_required
 def perfil_usuario(request):
@@ -594,6 +597,9 @@ def perfil_usuario(request):
         'user_form': user_form,
         'persona_form': persona_form,
         'persona': persona
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
     }
     return render(request, 'usuarios/perfil.html', context)

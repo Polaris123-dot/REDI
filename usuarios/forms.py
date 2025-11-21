@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from .models import Persona
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 class UserUpdateForm(forms.ModelForm):
     email = forms.EmailField(label='Correo Electrónico', widget=forms.EmailInput(attrs={'class': 'form-control'}))
     first_name = forms.CharField(label='Nombre', widget=forms.TextInput(attrs={'class': 'form-control'}))
@@ -20,6 +21,8 @@ class UserUpdateForm(forms.ModelForm):
 
 class PersonaUpdateForm(forms.ModelForm):
 =======
+=======
+>>>>>>> Stashed changes
 class UserForm(forms.ModelForm):
     """Formulario para editar datos básicos del usuario"""
     class Meta:
@@ -38,11 +41,15 @@ class UserForm(forms.ModelForm):
 
 class PersonaForm(forms.ModelForm):
     """Formulario para editar datos extendidos del perfil"""
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
     class Meta:
         model = Persona
         fields = [
             'telefono', 'institucion', 'departamento', 'cargo', 
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
             'biografia', 'foto_perfil', 
             'orcid_id', 'google_scholar_id', 'researchgate_id', 'linkedin_url'
@@ -59,6 +66,8 @@ class PersonaForm(forms.ModelForm):
             'researchgate_id': forms.TextInput(attrs={'class': 'form-control'}),
             'linkedin_url': forms.URLInput(attrs={'class': 'form-control'}),
 =======
+=======
+>>>>>>> Stashed changes
             'biografia', 'foto_perfil', 'orcid_id', 
             'google_scholar_id', 'researchgate_id', 'linkedin_url',
             'preferencias_notificaciones'
@@ -75,5 +84,8 @@ class PersonaForm(forms.ModelForm):
             'researchgate_id': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'ID de ResearchGate'}),
             'linkedin_url': forms.URLInput(attrs={'class': 'form-control', 'placeholder': 'https://linkedin.com/in/usuario'}),
             'preferencias_notificaciones': forms.HiddenInput(), # Se manejará por separado si es necesario
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
         }
