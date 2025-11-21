@@ -32,19 +32,21 @@
         // Slug generado para la publicación
         let slugGenerado = null;
 
-        // URLs de las APIs
+        // URLs de las APIs (usando BASE_URL dinámica)
+        // BASE_URL se define en el template base y detecta automáticamente el entorno
+        const baseUrl = window.BASE_URL || window.location.origin;
         const WIZARD_URLS = {
-            tiposRecurso: '/repositorio/tipos-recurso/para-select/',
-            colecciones: '/repositorio/colecciones/para-select/',
-            tiposProyecto: '/proyectos/tipos-proyecto/select/',
-            usuarios: '/repositorio/usuarios/para-select/',
-            categorias: '/publicaciones/categorias/para-select/',
-            etiquetas: '/publicaciones/etiquetas/para-select/',
-            generarSlugPreview: '/publicaciones/generar-slug-preview/',
-            crearDocumento: '/repositorio/documentos/crear/',
-            crearAutor: '/repositorio/autores/crear/',
-            crearProyecto: '/proyectos/crear/',
-            crearPublicacion: '/publicaciones/crear/'
+            tiposRecurso: baseUrl + '/repositorio/tipos-recurso/para-select/',
+            colecciones: baseUrl + '/repositorio/colecciones/para-select/',
+            tiposProyecto: baseUrl + '/proyectos/tipos-proyecto/select/',
+            usuarios: baseUrl + '/repositorio/usuarios/para-select/',
+            categorias: baseUrl + '/publicaciones/categorias/para-select/',
+            etiquetas: baseUrl + '/publicaciones/etiquetas/para-select/',
+            generarSlugPreview: baseUrl + '/publicaciones/generar-slug-preview/',
+            crearDocumento: baseUrl + '/repositorio/documentos/crear/',
+            crearAutor: baseUrl + '/repositorio/autores/crear/',
+            crearProyecto: baseUrl + '/proyectos/crear/',
+            crearPublicacion: baseUrl + '/publicaciones/crear/'
         };
 
         // Función para obtener el token CSRF

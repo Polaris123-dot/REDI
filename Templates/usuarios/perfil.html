@@ -1,4 +1,5 @@
 {% load static %}
+<<<<<<< Updated upstream
 {% load widget_tweaks %}
 {% include 'Nucleo/arriba.html' %}
 
@@ -41,10 +42,32 @@
         height: 120px;
         object-fit: cover;
         transition: transform 0.3s ease;
+=======
+{% include 'Nucleo/arriba.html' %}
+
+<style>
+    /* Estilos para el perfil - Adaptables al tema */
+    .profile-card {
+        transition: all 0.3s ease;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .profile-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
+    }
+
+    .profile-user-img {
+        border: 3px solid #fff;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+>>>>>>> Stashed changes
     }
 
     .profile-user-img:hover {
         transform: scale(1.05);
+<<<<<<< Updated upstream
         border-color: var(--academic-accent);
     }
 
@@ -171,11 +194,178 @@
     .tag-warning {
         background-color: #ffc107;
         color: #1f2d3d;
+=======
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .profile-username {
+        font-weight: 600;
+        margin-top: 15px;
+        transition: color 0.3s ease;
+    }
+
+    .profile-info-item {
+        padding: 12px 15px;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        transition: all 0.3s ease;
+        background: rgba(0, 123, 255, 0.05);
+    }
+
+    .profile-info-item:hover {
+        background: rgba(0, 123, 255, 0.1);
+        transform: translateX(5px);
+    }
+
+    .form-section {
+        padding: 25px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        transition: all 0.3s ease;
+        background: rgba(0, 123, 255, 0.02);
+    }
+
+    .form-section:hover {
+        background: rgba(0, 123, 255, 0.05);
+    }
+
+    .section-title {
+        font-weight: 600;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #007bff;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .section-title i {
+        font-size: 1.2em;
+    }
+
+    .form-control {
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+
+    .form-control:focus {
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        border-color: #007bff;
+    }
+
+    .btn-action {
+        padding: 10px 25px;
+        border-radius: 8px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        margin-right: 10px;
+    }
+
+    .btn-action:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .breadcrumb {
+        background: transparent;
+        padding: 10px 0;
+    }
+
+    /* Estilos para modo oscuro */
+    body.dark-mode .profile-card {
+        background: #1e1e2e;
+        border-color: #2d2d44;
+    }
+
+    body.dark-mode .profile-info-item {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: #2d2d44;
+    }
+
+    body.dark-mode .profile-info-item:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    body.dark-mode .form-section {
+        background: rgba(255, 255, 255, 0.02);
+    }
+
+    body.dark-mode .form-section:hover {
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    body.dark-mode .section-title {
+        color: #e0e0e0;
+        border-bottom-color: #28a745;
+    }
+
+    body.dark-mode .form-control {
+        background-color: #2d2d44;
+        border-color: #3d3d54;
+        color: #e0e0e0;
+    }
+
+    body.dark-mode .form-control:focus {
+        background-color: #3d3d54;
+        border-color: #28a745;
+        color: #e0e0e0;
+        box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+    }
+
+    body.dark-mode .profile-user-img {
+        border-color: #2d2d44;
+    }
+
+    body.dark-mode .list-group-item {
+        background-color: #2d2d44;
+        border-color: #3d3d54;
+        color: #e0e0e0;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .form-group.row {
+            margin-bottom: 20px;
+        }
+
+        .col-form-label {
+            text-align: left !important;
+            margin-bottom: 8px;
+        }
+
+        .btn-action {
+            width: 100%;
+            margin-bottom: 10px;
+            margin-right: 0;
+        }
+
+        .profile-card {
+            margin-bottom: 20px;
+        }
+    }
+
+    /* Animaciones */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .animate-fade-in {
+        animation: fadeInUp 0.5s ease-out;
+>>>>>>> Stashed changes
     }
 </style>
 
 {% include 'Nucleo/centro.html' %}
 
+<<<<<<< Updated upstream
 <section class="content-header">
     <div class="container-fluid">
         <div class="row mb-2">
@@ -206,10 +396,51 @@
                             {% else %}
                             <img class="profile-user-img img-fluid img-circle" src="{% static 'img/user-default.png' %}"
                                 alt="Foto de perfil por defecto">
+=======
+{% block content %}
+<section class="content">
+    <div class="container-fluid">
+        <!-- Mensajes -->
+        {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show animate-fade-in" role="alert">
+            {{ message }}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        <!-- Breadcrumb -->
+        <div class="row mb-3">
+            <div class="col-12">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'usuarios:panel' %}"><i class="fas fa-home"></i>
+                            Inicio</a></li>
+                    <li class="breadcrumb-item active"><i class="fas fa-user"></i> Mi Perfil</li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Sidebar de perfil -->
+            <div class="col-lg-3 col-md-4 mb-4">
+                <div class="card card-primary card-outline profile-card animate-fade-in">
+                    <div class="card-body box-profile">
+                        <div class="text-center">
+                            {% if persona.foto_perfil %}
+                            <img class="profile-user-img img-fluid img-circle" src="{{ persona.foto_perfil.url }}"
+                                alt="Foto de perfil">
+                            {% else %}
+                            <img class="profile-user-img img-fluid img-circle"
+                                src="{% static 'lib/adminlte-3.2.0/img/user2-160x160.jpg' %}" alt="Foto de perfil">
+>>>>>>> Stashed changes
                             {% endif %}
                         </div>
 
                         <h3 class="profile-username text-center">{{ user.get_full_name|default:user.username }}</h3>
+<<<<<<< Updated upstream
 
                         <p class="text-muted text-center">
                             <i class="fas fa-id-badge mr-1"></i> {{ p_form.instance.cargo|default:"Investigador" }}
@@ -261,10 +492,33 @@
                                 class="text-muted small font-italic">No hay identificadores conectados.</span>{% endif
                             %}
                         </p>
+=======
+                        <p class="text-muted text-center mb-3">{{ persona.cargo|default:"Usuario" }}</p>
+
+                        <div class="profile-info-item">
+                            <i class="fas fa-building text-primary mr-2"></i>
+                            <strong>Institución:</strong><br>
+                            <small>{{ persona.institucion|default:"No definida" }}</small>
+                        </div>
+
+                        <div class="profile-info-item">
+                            <i class="fas fa-sitemap text-info mr-2"></i>
+                            <strong>Departamento:</strong><br>
+                            <small>{{ persona.departamento|default:"No definido" }}</small>
+                        </div>
+
+                        {% if persona.email_verificado %}
+                        <div class="text-center mt-3">
+                            <span class="badge badge-success"><i class="fas fa-check-circle"></i> Email
+                                Verificado</span>
+                        </div>
+                        {% endif %}
+>>>>>>> Stashed changes
                     </div>
                 </div>
             </div>
 
+<<<<<<< Updated upstream
             <!-- Columna Derecha: Formularios de Edición -->
             <div class="col-md-9">
                 <div class="card">
@@ -482,12 +736,161 @@
                                 </form>
                             </div>
                         </div>
+=======
+            <!-- Formulario de edición -->
+            <div class="col-lg-9 col-md-8">
+                <div class="card profile-card animate-fade-in">
+                    <div class="card-header bg-gradient-primary">
+                        <h3 class="card-title text-white"><i class="fas fa-user-edit"></i> Editar Perfil</h3>
+                    </div>
+                    <div class="card-body">
+                        <form method="post" enctype="multipart/form-data">
+                            {% csrf_token %}
+
+                            <!-- Datos Personales -->
+                            <div class="form-section">
+                                <h5 class="section-title text-primary">
+                                    <i class="fas fa-user"></i>
+                                    <span>Datos Personales</span>
+                                </h5>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="id_first_name"><i class="fas fa-user-tag"></i> Nombre</label>
+                                            {{ user_form.first_name }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="id_last_name"><i class="fas fa-user-tag"></i> Apellidos</label>
+                                            {{ user_form.last_name }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="id_email"><i class="fas fa-envelope"></i> Email</label>
+                                            {{ user_form.email }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="id_telefono"><i class="fas fa-phone"></i> Teléfono</label>
+                                            {{ persona_form.telefono }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Información Institucional -->
+                            <div class="form-section">
+                                <h5 class="section-title text-success">
+                                    <i class="fas fa-building"></i>
+                                    <span>Información Institucional</span>
+                                </h5>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="form-group">
+                                            <label for="id_institucion"><i class="fas fa-university"></i>
+                                                Institución</label>
+                                            {{ persona_form.institucion }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="id_departamento"><i class="fas fa-sitemap"></i>
+                                                Departamento</label>
+                                            {{ persona_form.departamento }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="id_cargo"><i class="fas fa-briefcase"></i> Cargo</label>
+                                            {{ persona_form.cargo }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Identificadores y Redes -->
+                            <div class="form-section">
+                                <h5 class="section-title text-info">
+                                    <i class="fas fa-id-card"></i>
+                                    <span>Identificadores y Redes Académicas</span>
+                                </h5>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="id_orcid_id"><i class="fab fa-orcid"></i> ORCID ID</label>
+                                            {{ persona_form.orcid_id }}
+                                            <small class="form-text text-muted">Formato: 0000-0000-0000-0000</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="id_google_scholar_id"><i class="fas fa-graduation-cap"></i>
+                                                Google Scholar</label>
+                                            {{ persona_form.google_scholar_id }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="id_researchgate_id"><i class="fab fa-researchgate"></i>
+                                                ResearchGate</label>
+                                            {{ persona_form.researchgate_id }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="id_linkedin_url"><i class="fab fa-linkedin"></i>
+                                                LinkedIn</label>
+                                            {{ persona_form.linkedin_url }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Biografía y Foto -->
+                            <div class="form-section">
+                                <h5 class="section-title text-warning">
+                                    <i class="fas fa-info-circle"></i>
+                                    <span>Información Adicional</span>
+                                </h5>
+                                <div class="form-group">
+                                    <label for="id_biografia"><i class="fas fa-file-alt"></i> Biografía</label>
+                                    {{ persona_form.biografia }}
+                                    <small class="form-text text-muted">Breve descripción profesional</small>
+                                </div>
+                                <div class="form-group">
+                                    <label for="id_foto_perfil"><i class="fas fa-camera"></i> Foto de Perfil</label>
+                                    {{ persona_form.foto_perfil }}
+                                    <small class="form-text text-muted">Formatos permitidos: JPG, PNG (máx. 2MB)</small>
+                                </div>
+                            </div>
+
+                            <!-- Botones de acción -->
+                            <div class="text-right mt-4">
+                                <a href="{% url 'usuarios:panel' %}" class="btn btn-secondary btn-action">
+                                    <i class="fas fa-times"></i> Cancelar
+                                </a>
+                                <button type="submit" class="btn btn-success btn-action">
+                                    <i class="fas fa-save"></i> Guardar Cambios
+                                </button>
+                            </div>
+                        </form>
+>>>>>>> Stashed changes
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </section>
+<<<<<<< Updated upstream
 
 <!-- Select2 JS -->
 <script src="{% static 'plugins/select2/js/select2.full.min.js' %}"></script>
@@ -507,5 +910,8 @@
         }
     });
 </script>
+=======
+{% endblock %}
+>>>>>>> Stashed changes
 
 {% include 'Nucleo/abajo.html' %}

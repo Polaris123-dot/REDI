@@ -1904,8 +1904,10 @@ jQuery(document).ready(function($) {
      * Carga los documentos disponibles (sin proyecto) para el select con Select2
      */
     function loadDocumentosDisponibles() {
+        // Usar BASE_URL dinámica (definida en template base)
+        const baseUrl = window.BASE_URL || (window.location.origin + '/redi');
         $.ajax({
-            url: '/repositorio/documentos/disponibles/',
+            url: baseUrl + '/repositorio/documentos/disponibles/',
             method: 'GET',
             headers: {
                 'X-CSRFToken': getCSRFToken(),

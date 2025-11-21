@@ -12,11 +12,13 @@ urlpatterns = [
     path('personal/', views.personal, name='personal'),
     
     # URLs para Tipos de Recurso
-    path('tipos-recurso/', views.tipos_recurso_list, name='tipos_recurso_list'),
+    # Rutas específicas primero (sin parámetros dinámicos)
+    path('tipos-recurso/para-select/', views.tipos_recurso_for_select, name='tipos_recurso_for_select'),
     path('tipos-recurso/crear/', views.tipo_recurso_create, name='tipo_recurso_create'),
     path('tipos-recurso/<int:tipo_recurso_id>/', views.tipo_recurso_detail, name='tipo_recurso_detail'),
     path('tipos-recurso/<int:tipo_recurso_id>/editar/', views.tipo_recurso_update, name='tipo_recurso_update'),
     path('tipos-recurso/<int:tipo_recurso_id>/eliminar/', views.tipo_recurso_delete, name='tipo_recurso_delete'),
+    path('tipos-recurso/', views.tipos_recurso_list, name='tipos_recurso_list'),
     
     # URLs para Estados de Documento
     path('estados-documento/', views.estados_documento_list, name='estados_documento_list'),
@@ -34,13 +36,14 @@ urlpatterns = [
     path('comunidades/<int:comunidad_id>/eliminar/', views.comunidad_delete, name='comunidad_delete'),
     
     # URLs para Colecciones
-    path('colecciones/', views.colecciones_list, name='colecciones_list'),
+    # Rutas específicas primero (sin parámetros dinámicos)
     path('colecciones/para-select/', views.colecciones_for_select, name='colecciones_for_select'),
-    path('colecciones/por-comunidad/<int:comunidad_id>/', views.colecciones_por_comunidad, name='colecciones_por_comunidad'),
     path('colecciones/crear/', views.coleccion_create, name='coleccion_create'),
+    path('colecciones/por-comunidad/<int:comunidad_id>/', views.colecciones_por_comunidad, name='colecciones_por_comunidad'),
     path('colecciones/<int:coleccion_id>/', views.coleccion_detail, name='coleccion_detail'),
     path('colecciones/<int:coleccion_id>/editar/', views.coleccion_update, name='coleccion_update'),
     path('colecciones/<int:coleccion_id>/eliminar/', views.coleccion_delete, name='coleccion_delete'),
+    path('colecciones/', views.colecciones_list, name='colecciones_list'),
     
     # URLs para Licencias
     path('licencias/', views.licencias_list, name='licencias_list'),
@@ -91,11 +94,10 @@ urlpatterns = [
     path('archivos/<int:archivo_id>/eliminar/', views.archivo_delete, name='archivo_delete'),
     path('archivos/<int:archivo_id>/descargar/', views.archivo_download, name='archivo_download'),
     
-    # URLs auxiliares para selects
+    # URLs auxiliares para selects (solo las que no tienen conflictos con otras rutas)
     path('usuarios/para-select/', views.usuarios_for_select, name='usuarios_for_select'),
     path('categorias/para-select/', views.categorias_for_select, name='categorias_for_select'),
     path('etiquetas/para-select/', views.etiquetas_for_select, name='etiquetas_for_select'),
-    path('tipos-recurso/para-select/', views.tipos_recurso_for_select, name='tipos_recurso_for_select'),
     path('estados-documento/para-select/', views.estados_documento_for_select, name='estados_documento_for_select'),
     path('licencias/para-select/', views.licencias_for_select, name='licencias_for_select'),
 ]

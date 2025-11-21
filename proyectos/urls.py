@@ -8,12 +8,13 @@ urlpatterns = [
     path('', views.index, name='index'),
     
     # URLs para Tipos de Proyecto
-    path('tipos-proyecto/', views.tipos_proyecto_list, name='tipos_proyecto_list'),
+    # Rutas específicas primero (sin parámetros dinámicos)
+    path('tipos-proyecto/select/', views.tipos_proyecto_for_select, name='tipos_proyecto_for_select'),
     path('tipos-proyecto/crear/', views.tipo_proyecto_create, name='tipo_proyecto_create'),
     path('tipos-proyecto/<int:tipo_proyecto_id>/', views.tipo_proyecto_detail, name='tipo_proyecto_detail'),
     path('tipos-proyecto/<int:tipo_proyecto_id>/editar/', views.tipo_proyecto_update, name='tipo_proyecto_update'),
     path('tipos-proyecto/<int:tipo_proyecto_id>/eliminar/', views.tipo_proyecto_delete, name='tipo_proyecto_delete'),
-    path('tipos-proyecto/select/', views.tipos_proyecto_for_select, name='tipos_proyecto_for_select'),
+    path('tipos-proyecto/', views.tipos_proyecto_list, name='tipos_proyecto_list'),
     
     # URLs para Campos de Tipo de Proyecto
     path('campos-tipo-proyecto/', views.campos_tipo_proyecto_list, name='campos_tipo_proyecto_list'),

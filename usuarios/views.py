@@ -537,6 +537,7 @@ def eliminar_grupo(request, grupo_id):
     context = {
         'grupo': grupo,
     }
+<<<<<<< Updated upstream
     return render(request, 'usuarios/eliminar_grupo.html', context)
 
 
@@ -563,5 +564,36 @@ def perfil_view(request):
         'u_form': u_form,
         'p_form': p_form,
         'title': 'Mi Perfil'
+=======
+
+@login_required
+def perfil_usuario(request):
+    """Vista para editar el perfil del usuario"""
+    from .models import Persona
+    from .forms import UserForm, PersonaForm
+    
+    # Asegurar que existe el objeto Persona para el usuario
+    persona, created = Persona.objects.get_or_create(user=request.user)
+    
+    if request.method == 'POST':
+        user_form = UserForm(request.POST, instance=request.user)
+        persona_form = PersonaForm(request.POST, request.FILES, instance=persona)
+        
+        if user_form.is_valid() and persona_form.is_valid():
+            user_form.save()
+            persona_form.save()
+            messages.success(request, 'Tu perfil ha sido actualizado exitosamente.')
+            return redirect('usuarios:perfil')
+        else:
+            messages.error(request, 'Por favor corrige los errores en el formulario.')
+    else:
+        user_form = UserForm(instance=request.user)
+        persona_form = PersonaForm(instance=persona)
+    
+    context = {
+        'user_form': user_form,
+        'persona_form': persona_form,
+        'persona': persona
+>>>>>>> Stashed changes
     }
     return render(request, 'usuarios/perfil.html', context)

@@ -47,6 +47,20 @@
 <!-- 6️⃣ Script de Django JS reverse -->
 {# TODO: Instalar django-js-reverse si es necesario y agregar: <script src="{% url 'js_reverse' %}"></script> #}
 
+<!-- Configuración global de URLs -->
+<script>
+  // Base URL dinámica para desarrollo y producción
+  // Detecta automáticamente el origen actual y agrega el prefijo /redi/
+  window.BASE_URL = window.location.origin;
+  
+  // Función helper para construir URLs completas
+  window.buildUrl = function(path) {
+    // Eliminar barras iniciales duplicadas
+    path = path.replace(/^\/+/, '');
+    return window.BASE_URL + '/' + path;
+  };
+</script>
+
 <script>
   var toggleSwitch = document.querySelector('.theme-switch input[type="checkbox"]');
   var currentTheme = localStorage.getItem('theme');

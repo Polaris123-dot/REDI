@@ -168,9 +168,10 @@ function enviarAlServidor(autores, etiquetas) {
     };
     console.log(datos)
 
-    // Realiza la solicitud al servidor
-    const buscarPublicacionesUrl = '/Proyectos/api/publicaciones/';
- // Usando django_js_reverse
+    // Realiza la solicitud al servidor (usando BASE_URL dinámica)
+    const baseUrl = window.BASE_URL || (window.location.origin + '/redi');
+    const buscarPublicacionesUrl = baseUrl + '/publicaciones/crear/';
+ // Usando BASE_URL dinámica
 
     console.log(buscarPublicacionesUrl)
 
