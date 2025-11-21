@@ -30,7 +30,7 @@ class Publicacion(models.Model):
     ]
     
     titulo = models.CharField(max_length=500, null=True, blank=True)
-    slug = models.SlugField(max_length=500, unique=True)
+    slug = models.SlugField(max_length=255, unique=True)
     descripcion = models.TextField(null=True, blank=True)
     tipo_publicacion = models.CharField(
         max_length=20,

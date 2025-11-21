@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'widget_tweaks',
     
     # Apps del sistema - Orden importante por dependencias
     'usuarios',          # 1. Base de usuarios y perfiles (Persona)

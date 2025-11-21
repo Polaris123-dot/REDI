@@ -1,0 +1,942 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REDIMA - Repositorio Digital de Investigación</title>
+    <link rel="icon" href="{% static 'img/LogoMr.ico' %}" type="image/x-icon">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link href="{% static 'plugins/fontawesome-free/css/all.min.css' %}" rel="stylesheet">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #6366f1;
+            --secondary-color: #8b5cf6;
+            --accent-color: #ec4899;
+            --tertiary-color: #06b6d4;
+            --dark-bg: #0f172a;
+            --darker-bg: #020617;
+            --card-bg: rgba(15, 23, 42, 0.85);
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --glow-color: rgba(99, 102, 241, 0.5);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--darker-bg);
+            color: var(--text-primary);
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Fondo animado de estrellas y galaxias */
+        #space-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%);
+        }
+
+        .stars {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 3s infinite;
+        }
+
+        @keyframes twinkle {
+
+            0%,
+            100% {
+                opacity: 0.3;
+            }
+
+            50% {
+                opacity: 1;
+            }
+        }
+
+        /* Shooting stars */
+        .shooting-star {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 0 10px 2px rgba(255, 255, 255, 0.8);
+            animation: shootingStar 3s linear infinite;
+        }
+
+        @keyframes shootingStar {
+            0% {
+                transform: translateX(0) translateY(0);
+                opacity: 1;
+            }
+
+            70% {
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateX(-300px) translateY(300px);
+                opacity: 0;
+            }
+        }
+
+        .shooting-star::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100px;
+            height: 2px;
+            background: linear-gradient(90deg, white, transparent);
+            transform: translateX(-100px);
+        }
+
+        /* Nebula clouds */
+        .nebula {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(60px);
+            opacity: 0.3;
+            animation: nebulaPulse 15s ease-in-out infinite;
+        }
+
+        @keyframes nebulaPulse {
+
+            0%,
+            100% {
+                transform: scale(1) rotate(0deg);
+                opacity: 0.2;
+            }
+
+            50% {
+                transform: scale(1.3) rotate(180deg);
+                opacity: 0.4;
+            }
+        }
+
+        /* Academic floating elements */
+        .academic-float {
+            position: absolute;
+            color: rgba(99, 102, 241, 0.3);
+            font-size: 24px;
+            animation: academicFloat 20s infinite ease-in-out;
+            pointer-events: none;
+        }
+
+        @keyframes academicFloat {
+
+            0%,
+            100% {
+                transform: translateY(0) translateX(0) rotate(0deg);
+                opacity: 0.2;
+            }
+
+            25% {
+                transform: translateY(-50px) translateX(30px) rotate(90deg);
+                opacity: 0.4;
+            }
+
+            50% {
+                transform: translateY(-100px) translateX(-20px) rotate(180deg);
+                opacity: 0.3;
+            }
+
+            75% {
+                transform: translateY(-50px) translateX(-40px) rotate(270deg);
+                opacity: 0.4;
+            }
+        }
+
+        /* Partículas flotantes mejoradas */
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
+            animation: particleFloat 20s infinite linear;
+        }
+
+        @keyframes particleFloat {
+            0% {
+                transform: translateY(100vh) translateX(0) scale(0) rotate(0deg);
+                opacity: 0;
+            }
+
+            10% {
+                opacity: 1;
+            }
+
+            90% {
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(-100vh) translateX(100px) scale(1) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        /* Contenedor principal */
+        .login-container {
+            position: relative;
+            z-index: 10;
+            width: 90%;
+            max-width: 1100px;
+            display: flex;
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow:
+                0 0 60px rgba(99, 102, 241, 0.3),
+                0 20px 60px rgba(0, 0, 0, 0.5),
+                inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+            animation: cardEntrance 0.8s ease-out;
+        }
+
+        @keyframes cardEntrance {
+            from {
+                opacity: 0;
+                transform: scale(0.9) translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        /* Panel izquierdo - Bienvenida */
+        .welcome-panel {
+            flex: 1;
+            padding: 60px 50px;
+            background: linear-gradient(135deg,
+                    rgba(99, 102, 241, 0.2) 0%,
+                    rgba(139, 92, 246, 0.2) 50%,
+                    rgba(236, 72, 153, 0.2) 100%);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .welcome-panel::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.1) 0%, transparent 70%);
+            animation: rotate 30s linear infinite;
+        }
+
+        @keyframes rotate {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .logo-container {
+            position: relative;
+            z-index: 2;
+            margin-bottom: 30px;
+        }
+
+        .logo-circle {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            color: white;
+            box-shadow:
+                0 0 40px rgba(99, 102, 241, 0.6),
+                0 0 80px rgba(99, 102, 241, 0.3);
+            animation: float 3s ease-in-out infinite;
+            position: relative;
+        }
+
+        .logo-circle::before {
+            content: '';
+            position: absolute;
+            inset: -5px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            opacity: 0.3;
+            filter: blur(10px);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-20px);
+            }
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 0.3;
+            }
+
+            50% {
+                transform: scale(1.1);
+                opacity: 0.5;
+            }
+        }
+
+        .welcome-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 42px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, #fff, var(--text-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            position: relative;
+            z-index: 2;
+        }
+
+        .welcome-subtitle {
+            font-size: 18px;
+            color: var(--text-secondary);
+            margin-bottom: 30px;
+            position: relative;
+            z-index: 2;
+            line-height: 1.6;
+        }
+
+        .feature-list {
+            list-style: none;
+            text-align: left;
+            position: relative;
+            z-index: 2;
+            margin-top: 30px;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            font-size: 14px;
+            color: var(--text-secondary);
+            transition: all 0.3s ease;
+        }
+
+        .feature-item:hover {
+            color: var(--text-primary);
+            transform: translateX(5px);
+        }
+
+        .feature-item i {
+            color: var(--primary-color);
+            margin-right: 12px;
+            font-size: 18px;
+            transition: all 0.3s ease;
+        }
+
+        .feature-item:hover i {
+            color: var(--accent-color);
+            transform: scale(1.2) rotate(10deg);
+        }
+
+        /* Panel derecho - Formulario */
+        .form-panel {
+            flex: 1;
+            padding: 60px 50px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .form-header {
+            margin-bottom: 40px;
+        }
+
+        .form-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .form-subtitle {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        /* Formulario */
+        .form-group {
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .input-wrapper {
+            position: relative;
+            transition: transform 0.3s ease;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            font-size: 18px;
+            transition: color 0.3s ease;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 14px 16px 14px 48px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 15px;
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .form-input:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1), 0 0 20px rgba(99, 102, 241, 0.2);
+        }
+
+        .form-input:focus~.input-icon {
+            color: var(--primary-color);
+        }
+
+        .form-input::placeholder {
+            color: rgba(203, 213, 225, 0.5);
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 18px;
+        }
+
+        .toggle-password:hover {
+            color: var(--primary-color);
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        /* Botón de login */
+        .btn-login {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .btn-login::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .btn-login:hover::before {
+            left: 100%;
+        }
+
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.4), 0 0 40px rgba(139, 92, 246, 0.3);
+        }
+
+        .btn-login:active {
+            transform: translateY(0);
+        }
+
+        .btn-login:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Enlaces */
+        .form-footer {
+            margin-top: 25px;
+            text-align: center;
+        }
+
+        .form-link {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .form-link a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .form-link a:hover {
+            color: var(--secondary-color);
+            text-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
+        }
+
+        /* Mensajes de error */
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: none;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .alert-danger {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+        }
+
+        .alert-success {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            color: #86efac;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .login-container {
+                flex-direction: column;
+                width: 95%;
+                max-width: 450px;
+            }
+
+            .welcome-panel {
+                padding: 40px 30px;
+            }
+
+            .form-panel {
+                padding: 40px 30px;
+            }
+
+            .welcome-title {
+                font-size: 32px;
+            }
+
+            .form-title {
+                font-size: 26px;
+            }
+
+            .logo-circle {
+                width: 100px;
+                height: 100px;
+                font-size: 40px;
+            }
+        }
+
+        /* Efecto de carga */
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Fondo espacial animado -->
+    <div id="space-background">
+        <div class="stars" id="stars-container"></div>
+        <div id="particles-container"></div>
+        <div id="shooting-stars-container"></div>
+        <div id="nebulas-container"></div>
+        <div id="academic-elements-container"></div>
+    </div>
+
+    <!-- Contenedor de login -->
+    <div class="login-container">
+        <!-- Panel de bienvenida -->
+        <div class="welcome-panel">
+            <div class="logo-container">
+                <div class="logo-circle">
+                    <i class="fas fa-graduation-cap"></i>
+                </div>
+            </div>
+            <h1 class="welcome-title">REDIMA</h1>
+            <p class="welcome-subtitle">
+                Repositorio Digital de Investigación<br>
+                Instituto Superior San José Marello
+            </p>
+            <ul class="feature-list">
+                <li class="feature-item">
+                    <i class="fas fa-book"></i>
+                    <span>Acceso a investigaciones académicas</span>
+                </li>
+                <li class="feature-item">
+                    <i class="fas fa-users"></i>
+                    <span>Colaboración entre investigadores</span>
+                </li>
+                <li class="feature-item">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Seguimiento de publicaciones</span>
+                </li>
+                <li class="feature-item">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>Plataforma segura y confiable</span>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Panel de formulario -->
+        <div class="form-panel">
+            <div class="form-header">
+                <h2 class="form-title">Iniciar Sesión</h2>
+                <p class="form-subtitle">Ingresa tus credenciales para acceder al sistema</p>
+            </div>
+
+            <!-- Mensaje de error general -->
+            <div id="general-error" class="alert alert-danger"></div>
+
+            <!-- Formulario de login -->
+            <form id="login-form" action="{% url 'usuarios:login' %}" method="post">
+                {% csrf_token %}
+
+                <div class="form-group">
+                    <label for="username" class="form-label">Usuario</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-user input-icon"></i>
+                        <input type="text" id="username" name="username" class="form-input"
+                            placeholder="Ingresa tu usuario" required autocomplete="username">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password" class="form-label">Contraseña</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-lock input-icon"></i>
+                        <input type="password" id="password" name="password" class="form-input"
+                            placeholder="Ingresa tu contraseña" required autocomplete="current-password">
+                        <i class="fas fa-eye toggle-password" id="toggle-password"></i>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-login" id="login-btn">
+                    Iniciar Sesión
+                </button>
+            </form>
+
+            <div class="form-footer">
+                <p class="form-link">
+                    ¿No tienes una cuenta? <a href="#" id="register-link">Regístrate aquí</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script src="{% static 'lib/adminlte-3.2.0/plugins/jquery/jquery.min.js' %}"></script>
+    <script>
+        // Crear estrellas
+        function createStars() {
+            const starsContainer = document.getElementById('stars-container');
+            const numStars = 300;
+
+            for (let i = 0; i < numStars; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.width = Math.random() * 3 + 'px';
+                star.style.height = star.style.width;
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.animationDelay = Math.random() * 3 + 's';
+                star.style.animationDuration = (Math.random() * 3 + 2) + 's';
+                starsContainer.appendChild(star);
+            }
+        }
+
+        // Crear estrellas fugaces
+        function createShootingStars() {
+            const container = document.getElementById('shooting-stars-container');
+            const numShootingStars = 5;
+
+            for (let i = 0; i < numShootingStars; i++) {
+                const star = document.createElement('div');
+                star.className = 'shooting-star';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 50 + '%';
+                star.style.animationDelay = Math.random() * 10 + 's';
+                star.style.animationDuration = (Math.random() * 2 + 2) + 's';
+                container.appendChild(star);
+            }
+        }
+
+        // Crear nebulosas
+        function createNebulas() {
+            const container = document.getElementById('nebulas-container');
+            const nebulas = [
+                { color: 'rgba(99, 102, 241, 0.3)', size: 300, left: '10%', top: '20%' },
+                { color: 'rgba(139, 92, 246, 0.3)', size: 400, left: '70%', top: '60%' },
+                { color: 'rgba(236, 72, 153, 0.3)', size: 350, left: '40%', top: '70%' },
+                { color: 'rgba(6, 182, 212, 0.3)', size: 250, left: '80%', top: '10%' }
+            ];
+
+            nebulas.forEach((nebula, index) => {
+                const div = document.createElement('div');
+                div.className = 'nebula';
+                div.style.width = nebula.size + 'px';
+                div.style.height = nebula.size + 'px';
+                div.style.background = nebula.color;
+                div.style.left = nebula.left;
+                div.style.top = nebula.top;
+                div.style.animationDelay = index * 3 + 's';
+                container.appendChild(div);
+            });
+        }
+
+        // Crear elementos académicos flotantes
+        function createAcademicElements() {
+            const container = document.getElementById('academic-elements-container');
+            const icons = [
+                'fa-book', 'fa-flask', 'fa-atom', 'fa-dna', 'fa-microscope',
+                'fa-graduation-cap', 'fa-user-graduate', 'fa-book-open',
+                'fa-calculator', 'fa-brain', 'fa-lightbulb', 'fa-rocket'
+            ];
+
+            for (let i = 0; i < 15; i++) {
+                const element = document.createElement('i');
+                element.className = `fas ${icons[Math.floor(Math.random() * icons.length)]} academic-float`;
+                element.style.left = Math.random() * 100 + '%';
+                element.style.top = Math.random() * 100 + '%';
+                element.style.fontSize = (Math.random() * 20 + 20) + 'px';
+                element.style.animationDelay = Math.random() * 20 + 's';
+                element.style.animationDuration = (Math.random() * 10 + 15) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Crear partículas flotantes mejoradas
+        function createParticles() {
+            const particlesContainer = document.getElementById('particles-container');
+            const numParticles = 40;
+            const colors = [
+                'radial-gradient(circle, rgba(99, 102, 241, 0.8) 0%, transparent 70%)',
+                'radial-gradient(circle, rgba(139, 92, 246, 0.8) 0%, transparent 70%)',
+                'radial-gradient(circle, rgba(236, 72, 153, 0.8) 0%, transparent 70%)',
+                'radial-gradient(circle, rgba(6, 182, 212, 0.8) 0%, transparent 70%)'
+            ];
+
+            for (let i = 0; i < numParticles; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                const size = Math.random() * 100 + 50;
+                particle.style.width = size + 'px';
+                particle.style.height = size + 'px';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.background = colors[Math.floor(Math.random() * colors.length)];
+                particle.style.animationDelay = Math.random() * 20 + 's';
+                particle.style.animationDuration = (Math.random() * 10 + 15) + 's';
+                particlesContainer.appendChild(particle);
+            }
+        }
+
+        // Toggle password visibility
+        document.getElementById('toggle-password').addEventListener('click', function () {
+            const passwordInput = document.getElementById('password');
+            const icon = this;
+
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        });
+
+        // Manejo del formulario
+        document.getElementById('login-form').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const btn = document.getElementById('login-btn');
+            const errorDiv = document.getElementById('general-error');
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            // Validación básica
+            if (!username || !password) {
+                errorDiv.textContent = 'Por favor completa todos los campos';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            // Mostrar loading
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span>Iniciando sesión...';
+            errorDiv.style.display = 'none';
+
+            // Enviar formulario
+            const formData = new FormData(this);
+
+            fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+                .then(response => {
+                    if (response.redirected) {
+                        window.location.href = response.url;
+                        return null;
+                    }
+                    return response.text();
+                })
+                .then(html => {
+                    if (html) {
+                        // Si hay HTML, significa que hubo un error
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(html, 'text/html');
+                        const messages = doc.querySelectorAll('.alert, .error-message');
+
+                        if (messages.length > 0) {
+                            errorDiv.textContent = messages[0].textContent.trim() || 'Usuario o contraseña incorrectos';
+                            errorDiv.style.display = 'block';
+                        } else {
+                            errorDiv.textContent = 'Usuario o contraseña incorrectos';
+                            errorDiv.style.display = 'block';
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    errorDiv.textContent = 'Error de conexión. Por favor intenta nuevamente.';
+                    errorDiv.style.display = 'block';
+                })
+                .finally(() => {
+                    btn.disabled = false;
+                    btn.innerHTML = 'Iniciar Sesión';
+                });
+        });
+
+        // Inicializar animaciones
+        createStars();
+        createShootingStars();
+        createNebulas();
+        createAcademicElements();
+        createParticles();
+
+        // Efecto de entrada para inputs
+        document.querySelectorAll('.form-input').forEach(input => {
+            input.addEventListener('focus', function () {
+                this.parentElement.style.transform = 'scale(1.02)';
+            });
+
+            input.addEventListener('blur', function () {
+                this.parentElement.style.transform = 'scale(1)';
+            });
+        });
+    </script>
+</body>
+
+</html>

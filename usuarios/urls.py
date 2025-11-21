@@ -10,6 +10,7 @@ urlpatterns = [
     
     # Panel principal (accesible para todos los usuarios autenticados)
     path('panel/', views.panel, name='panel'),
+    path('perfil/', views.perfil_view, name='perfil'),
     
     # URLs de usuarios
     path('usuarios/', views.lista_usuarios, name='lista_usuarios'),

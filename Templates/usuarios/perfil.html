@@ -1,0 +1,511 @@
+{% load static %}
+{% load widget_tweaks %}
+{% include 'Nucleo/arriba.html' %}
+
+<!-- Select2 CSS -->
+<link rel="stylesheet" href="{% static 'plugins/select2/css/select2.min.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css' %}">
+
+<style>
+    /* Variables CSS para adaptación de temas */
+    :root {
+        --academic-primary: #0056b3;
+        --academic-secondary: #6c757d;
+        --academic-accent: #17a2b8;
+        --academic-bg-light: #f4f6f9;
+        --academic-card-bg-light: #ffffff;
+        --academic-text-primary: #212529;
+        --academic-text-secondary: #6c757d;
+        --academic-border-light: #dee2e6;
+        --academic-input-bg: #ffffff;
+    }
+
+    body.dark-mode {
+        --academic-primary: #3f6ad8;
+        --academic-secondary: #adb5bd;
+        --academic-accent: #00bcd4;
+        --academic-bg-light: #454d55;
+        --academic-card-bg-light: #343a40;
+        --academic-text-primary: #e0e0e0;
+        --academic-text-secondary: #b0b0b0;
+        --academic-border-light: #4b545c;
+        --academic-input-bg: #3f474e;
+    }
+
+    /* Estilos específicos del perfil */
+    .profile-user-img {
+        border: 3px solid var(--academic-border-light);
+        margin: 0 auto;
+        padding: 3px;
+        width: 120px;
+        height: 120px;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+    }
+
+    .profile-user-img:hover {
+        transform: scale(1.05);
+        border-color: var(--academic-accent);
+    }
+
+    .profile-username {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-top: 10px;
+        color: var(--academic-text-primary);
+    }
+
+    .text-muted {
+        color: var(--academic-text-secondary) !important;
+    }
+
+    .list-group-item {
+        background-color: var(--academic-card-bg-light);
+        border-color: var(--academic-border-light);
+        color: var(--academic-text-primary);
+        padding: 1rem;
+    }
+
+    /* Tabs Styling */
+    .nav-pills .nav-link {
+        color: var(--academic-text-secondary);
+        font-weight: 500;
+        border-radius: 0.25rem;
+        transition: all 0.3s;
+    }
+
+    .nav-pills .nav-link.active,
+    .nav-pills .show>.nav-link {
+        background-color: var(--academic-primary);
+        color: #fff;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .nav-pills .nav-link:hover:not(.active) {
+        background-color: rgba(0, 0, 0, 0.05);
+        color: var(--academic-primary);
+    }
+
+    /* Card Styling */
+    .card {
+        background-color: var(--academic-card-bg-light);
+        color: var(--academic-text-primary);
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.05);
+        border: none;
+        margin-bottom: 1.5rem;
+        border-radius: 0.5rem;
+    }
+
+    .card-primary.card-outline {
+        border-top: 3px solid var(--academic-primary);
+    }
+
+    .card-header {
+        background-color: transparent;
+        border-bottom: 1px solid var(--academic-border-light);
+        padding: 1.25rem;
+    }
+
+    .card-title {
+        font-weight: 600;
+        color: var(--academic-primary);
+    }
+
+    /* Form Controls */
+    .form-control {
+        background-color: var(--academic-input-bg);
+        border: 1px solid var(--academic-border-light);
+        color: var(--academic-text-primary);
+        border-radius: 0.25rem;
+        transition: border-color 0.3s, box-shadow 0.3s;
+    }
+
+    .form-control:focus {
+        background-color: var(--academic-input-bg);
+        color: var(--academic-text-primary);
+        border-color: var(--academic-accent);
+        box-shadow: 0 0 0 0.2rem rgba(23, 162, 184, 0.25);
+    }
+
+    .input-group-text {
+        background-color: var(--academic-bg-light);
+        border-color: var(--academic-border-light);
+        color: var(--academic-text-secondary);
+    }
+
+    /* Custom File Input */
+    .custom-file-label {
+        background-color: var(--academic-input-bg);
+        color: var(--academic-text-primary);
+        border: 1px solid var(--academic-border-light);
+    }
+
+    .custom-file-label::after {
+        background-color: var(--academic-secondary);
+        color: white;
+    }
+
+    /* Badges */
+    .tag {
+        font-size: 0.85rem;
+        padding: 0.3em 0.6em;
+        border-radius: 0.25rem;
+        color: white;
+        margin-right: 5px;
+        display: inline-block;
+        margin-bottom: 5px;
+    }
+
+    .tag-success {
+        background-color: #28a745;
+    }
+
+    .tag-info {
+        background-color: #17a2b8;
+    }
+
+    .tag-primary {
+        background-color: #007bff;
+    }
+
+    .tag-warning {
+        background-color: #ffc107;
+        color: #1f2d3d;
+    }
+</style>
+
+{% include 'Nucleo/centro.html' %}
+
+<section class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1></h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="{% url 'usuarios:panel' %}">Inicio</a></li>
+                    <li class="breadcrumb-item active">Perfil de Usuario</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Columna Izquierda: Tarjeta de Perfil -->
+            <div class="col-md-3">
+                <div class="card card-primary card-outline">
+                    <div class="card-body box-profile">
+                        <div class="text-center">
+                            {% if p_form.instance.foto_perfil %}
+                            <img class="profile-user-img img-fluid img-circle"
+                                src="{{ p_form.instance.foto_perfil.url }}" alt="Foto de perfil de usuario">
+                            {% else %}
+                            <img class="profile-user-img img-fluid img-circle" src="{% static 'img/user-default.png' %}"
+                                alt="Foto de perfil por defecto">
+                            {% endif %}
+                        </div>
+
+                        <h3 class="profile-username text-center">{{ user.get_full_name|default:user.username }}</h3>
+
+                        <p class="text-muted text-center">
+                            <i class="fas fa-id-badge mr-1"></i> {{ p_form.instance.cargo|default:"Investigador" }}
+                        </p>
+
+                        <ul class="list-group list-group-unbordered mb-3">
+                            <li class="list-group-item">
+                                <b><i class="fas fa-university mr-1"></i> Institución</b>
+                                <a class="float-right">{{ p_form.instance.institucion|default:"-" }}</a>
+                            </li>
+                            <li class="list-group-item">
+                                <b><i class="fas fa-building mr-1"></i> Departamento</b>
+                                <a class="float-right">{{ p_form.instance.departamento|default:"-" }}</a>
+                            </li>
+                            <li class="list-group-item">
+                                <b><i class="fas fa-envelope mr-1"></i> Email</b>
+                                <a class="float-right" style="font-size: 0.8rem;">{{ user.email }}</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Caja "Acerca de mí" -->
+                <div class="card card-primary">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-info-circle mr-1"></i> Información</h3>
+                    </div>
+                    <div class="card-body">
+                        <strong><i class="fas fa-book mr-1"></i> Biografía</strong>
+                        <p class="text-muted">
+                            {{ p_form.instance.biografia|default:"Sin biografía registrada." }}
+                        </p>
+                        <hr>
+                        <strong><i class="fas fa-map-marker-alt mr-1"></i> Ubicación</strong>
+                        <p class="text-muted">{{ p_form.instance.institucion|default:"No especificada" }}</p>
+                        <hr>
+                        <strong><i class="fas fa-fingerprint mr-1"></i> Identificadores</strong>
+                        <p class="text-muted">
+                            {% if p_form.instance.orcid_id %}<span class="tag tag-success"><i class="fab fa-orcid"></i>
+                                ORCID</span>{% endif %}
+                            {% if p_form.instance.google_scholar_id %}<span class="tag tag-info"><i
+                                    class="fas fa-graduation-cap"></i> Scholar</span>{% endif %}
+                            {% if p_form.instance.researchgate_id %}<span class="tag tag-primary"><i
+                                    class="fab fa-researchgate"></i> RG</span>{% endif %}
+                            {% if p_form.instance.linkedin_url %}<span class="tag tag-primary"><i
+                                    class="fab fa-linkedin"></i> LinkedIn</span>{% endif %}
+                            {% if not p_form.instance.orcid_id and not p_form.instance.google_scholar_id and not
+                            p_form.instance.researchgate_id and not p_form.instance.linkedin_url %}<span
+                                class="text-muted small font-italic">No hay identificadores conectados.</span>{% endif
+                            %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Columna Derecha: Formularios de Edición -->
+            <div class="col-md-9">
+                <div class="card">
+                    <div class="card-header p-2">
+                        <ul class="nav nav-pills">
+                            <li class="nav-item"><a class="nav-link active" href="#personal" data-toggle="tab"><i
+                                        class="fas fa-user mr-1"></i> Información Personal</a></li>
+                            <li class="nav-item"><a class="nav-link" href="#academica" data-toggle="tab"><i
+                                        class="fas fa-graduation-cap mr-1"></i> Información Académica</a></li>
+                            <li class="nav-item"><a class="nav-link" href="#cuenta" data-toggle="tab"><i
+                                        class="fas fa-cog mr-1"></i> Cuenta</a></li>
+                        </ul>
+                    </div>
+                    <div class="card-body">
+                        <div class="tab-content">
+                            <!-- Tab Información Personal -->
+                            <div class="active tab-pane" id="personal">
+                                <form method="POST" enctype="multipart/form-data" class="form-horizontal">
+                                    {% csrf_token %}
+                                    <div class="form-group row">
+                                        <label for="inputName" class="col-sm-2 col-form-label">Nombre</label>
+                                        <div class="col-sm-10">
+                                            <div class="input-group">
+                                                <div class="input-group-prepend">
+                                                    <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                                </div>
+                                                {{ u_form.first_name }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <label for="inputEmail" class="col-sm-2 col-form-label">Apellidos</label>
+                                        <div class="col-sm-10">
+                                            <div class="input-group">
+                                                <div class="input-group-prepend">
+                                                    <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                                </div>
+                                                {{ u_form.last_name }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <label for="inputName2" class="col-sm-2 col-form-label">Teléfono</label>
+                                        <div class="col-sm-10">
+                                            <div class="input-group">
+                                                <div class="input-group-prepend">
+                                                    <span class="input-group-text"><i class="fas fa-phone"></i></span>
+                                                </div>
+                                                {{ p_form.telefono }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <label for="inputExperience" class="col-sm-2 col-form-label">Biografía</label>
+                                        <div class="col-sm-10">
+                                            {{ p_form.biografia }}
+                                            <small class="form-text text-muted">Breve descripción de tu trayectoria
+                                                académica y profesional.</small>
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <label for="inputSkills" class="col-sm-2 col-form-label">Foto de Perfil</label>
+                                        <div class="col-sm-10">
+                                            <div class="custom-file">
+                                                {{ p_form.foto_perfil }}
+                                                <label class="custom-file-label" for="customFile">Elegir
+                                                    archivo...</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <div class="offset-sm-2 col-sm-10">
+                                            <button type="submit" class="btn btn-primary"><i
+                                                    class="fas fa-save mr-1"></i>Guardar Cambios</button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <!-- Tab Información Académica -->
+                            <div class="tab-pane" id="academica">
+                                <form method="POST" class="form-horizontal">
+                                    {% csrf_token %}
+                                    <div class="form-group row">
+                                        <label class="col-sm-2 col-form-label">Institución</label>
+                                        <div class="col-sm-10">
+                                            <div class="input-group">
+                                                <div class="input-group-prepend">
+                                                    <span class="input-group-text"><i
+                                                            class="fas fa-university"></i></span>
+                                                </div>
+                                                {{ p_form.institucion }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <label class="col-sm-2 col-form-label">Departamento</label>
+                                        <div class="col-sm-10">
+                                            <div class="input-group">
+                                                <div class="input-group-prepend">
+                                                    <span class="input-group-text"><i
+                                                            class="fas fa-building"></i></span>
+                                                </div>
+                                                {{ p_form.departamento }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <label class="col-sm-2 col-form-label">Cargo</label>
+                                        <div class="col-sm-10">
+                                            <div class="input-group">
+                                                <div class="input-group-prepend">
+                                                    <span class="input-group-text"><i
+                                                            class="fas fa-id-card-alt"></i></span>
+                                                </div>
+                                                {{ p_form.cargo }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <hr>
+                                    <h5 class="mb-3 text-muted"><i class="fas fa-link mr-1"></i>Identificadores
+                                        Académicos</h5>
+                                    <div class="form-group row">
+                                        <label class="col-sm-2 col-form-label">ORCID ID</label>
+                                        <div class="col-sm-10">
+                                            <div class="input-group">
+                                                <div class="input-group-prepend">
+                                                    <span class="input-group-text"><i class="fab fa-orcid"></i></span>
+                                                </div>
+                                                {{ p_form.orcid_id }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <label class="col-sm-2 col-form-label">Google Scholar</label>
+                                        <div class="col-sm-10">
+                                            <div class="input-group">
+                                                <div class="input-group-prepend">
+                                                    <span class="input-group-text"><i
+                                                            class="fas fa-graduation-cap"></i></span>
+                                                </div>
+                                                {{ p_form.google_scholar_id }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <label class="col-sm-2 col-form-label">ResearchGate</label>
+                                        <div class="col-sm-10">
+                                            <div class="input-group">
+                                                <div class="input-group-prepend">
+                                                    <span class="input-group-text"><i
+                                                            class="fab fa-researchgate"></i></span>
+                                                </div>
+                                                {{ p_form.researchgate_id }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <label class="col-sm-2 col-form-label">LinkedIn</label>
+                                        <div class="col-sm-10">
+                                            <div class="input-group">
+                                                <div class="input-group-prepend">
+                                                    <span class="input-group-text"><i
+                                                            class="fab fa-linkedin"></i></span>
+                                                </div>
+                                                {{ p_form.linkedin_url }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <div class="offset-sm-2 col-sm-10">
+                                            <button type="submit" class="btn btn-primary"><i
+                                                    class="fas fa-save mr-1"></i>Guardar Cambios</button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <!-- Tab Cuenta -->
+                            <div class="tab-pane" id="cuenta">
+                                <form method="POST" class="form-horizontal">
+                                    {% csrf_token %}
+                                    <div class="form-group row">
+                                        <label class="col-sm-2 col-form-label">Usuario</label>
+                                        <div class="col-sm-10">
+                                            <div class="input-group">
+                                                <div class="input-group-prepend">
+                                                    <span class="input-group-text"><i
+                                                            class="fas fa-user-shield"></i></span>
+                                                </div>
+                                                {{ u_form.username }}
+                                            </div>
+                                            <small class="form-text text-muted">El nombre de usuario no se puede
+                                                cambiar.</small>
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <label class="col-sm-2 col-form-label">Email</label>
+                                        <div class="col-sm-10">
+                                            <div class="input-group">
+                                                <div class="input-group-prepend">
+                                                    <span class="input-group-text"><i
+                                                            class="fas fa-envelope"></i></span>
+                                                </div>
+                                                {{ u_form.email }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <div class="offset-sm-2 col-sm-10">
+                                            <button type="submit" class="btn btn-primary"><i
+                                                    class="fas fa-save mr-1"></i>Guardar Cambios</button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Select2 JS -->
+<script src="{% static 'plugins/select2/js/select2.full.min.js' %}"></script>
+<script src="{% static 'plugins/bs-custom-file-input/bs-custom-file-input.min.js' %}"></script>
+<script>
+    $(function () {
+        bsCustomFileInput.init();
+
+        // Mantener la tab activa después de recargar (si hay errores)
+        $('a[data-toggle="tab"]').on('show.bs.tab', function (e) {
+            localStorage.setItem('activeTab', $(e.target).attr('href'));
+        });
+
+        var activeTab = localStorage.getItem('activeTab');
+        if (activeTab) {
+            $('.nav-pills a[href="' + activeTab + '"]').tab('show');
+        }
+    });
+</script>
+
+{% include 'Nucleo/abajo.html' %}

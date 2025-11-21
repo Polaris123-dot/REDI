@@ -2,6 +2,8 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import user_passes_test, login_required, permission_required
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.models import User, Group, Permission
+from .models import Persona
+from .forms import UserUpdateForm, PersonaUpdateForm
 from django.contrib.contenttypes.models import ContentType
 from django.contrib import messages
 from django.db.models import Q
@@ -536,3 +538,30 @@ def eliminar_grupo(request, grupo_id):
         'grupo': grupo,
     }
     return render(request, 'usuarios/eliminar_grupo.html', context)
+
+
+@login_required
+def perfil_view(request):
+    """Vista para ver y editar el perfil del usuario"""
+    # Asegurar que el usuario tenga un objeto Persona asociado
+    persona, created = Persona.objects.get_or_create(user=request.user)
+    
+    if request.method == 'POST':
+        u_form = UserUpdateForm(request.POST, instance=request.user)
+        p_form = PersonaUpdateForm(request.POST, request.FILES, instance=persona)
+        
+        if u_form.is_valid() and p_form.is_valid():
+            u_form.save()
+            p_form.save()
+            messages.success(request, 'Tu perfil ha sido actualizado exitosamente.')
+            return redirect('usuarios:perfil')
+    else:
+        u_form = UserUpdateForm(instance=request.user)
+        p_form = PersonaUpdateForm(instance=persona)
+    
+    context = {
+        'u_form': u_form,
+        'p_form': p_form,
+        'title': 'Mi Perfil'
+    }
+    return render(request, 'usuarios/perfil.html', context)
